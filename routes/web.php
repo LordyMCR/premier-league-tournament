@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\PickController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +24,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Tournament routes
+    Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
+    Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
+    Route::post('/tournaments', [TournamentController::class, 'store'])->name('tournaments.store');
+    Route::get('/tournaments/join', [TournamentController::class, 'joinForm'])->name('tournaments.join-form');
+    Route::post('/tournaments/join', [TournamentController::class, 'join'])->name('tournaments.join');
+    Route::get('/tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
+    Route::get('/tournaments/{tournament}/leaderboard', [TournamentController::class, 'leaderboard'])->name('tournaments.leaderboard');
+    Route::delete('/tournaments/{tournament}', [TournamentController::class, 'destroy'])->name('tournaments.destroy');
+    
+    // Pick routes
+    Route::get('/tournaments/{tournament}/picks', [PickController::class, 'index'])->name('tournaments.picks');
+    Route::get('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'create'])->name('picks.create');
+    Route::post('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'store'])->name('picks.store');
+    Route::patch('/picks/{pick}/result', [PickController::class, 'updateResult'])->name('picks.update-result');
 });
 
 require __DIR__.'/auth.php';
