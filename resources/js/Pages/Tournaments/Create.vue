@@ -12,7 +12,7 @@ const form = useForm({
     description: '',
     start_date: '',
     end_date: '',
-    max_participants: 20,
+    max_participants: '20',
     is_private: false,
 });
 

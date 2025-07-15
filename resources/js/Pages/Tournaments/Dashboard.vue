@@ -22,7 +22,7 @@ const getStatusBadge = (status) => {
 
     <TournamentLayout>
         <template #header>
-            <div class="flex justify-between items-center">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-white">
                         My Tournaments
@@ -31,17 +31,17 @@ const getStatusBadge = (status) => {
                         Manage your Premier League prediction competitions
                     </p>
                 </div>
-                <div class="flex space-x-3">
-                    <Link :href="route('tournaments.join-form')">
-                        <button class="inline-flex items-center px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all">
+                <div class="flex flex-col xs:flex-row gap-2 xs:gap-3">
+                    <Link :href="route('tournaments.join-form')" class="w-full xs:w-auto">
+                        <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 616 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                             Join Tournament
                         </button>
                     </Link>
-                    <Link :href="route('tournaments.create')">
-                        <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg text-white hover:from-emerald-600 hover:to-green-700 transition-all">
+                    <Link :href="route('tournaments.create')" class="w-full xs:w-auto">
+                        <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg text-white hover:from-emerald-600 hover:to-green-700 transition-all">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -57,22 +57,22 @@ const getStatusBadge = (status) => {
             <div>
                 <h3 class="text-xl font-semibold text-white mb-6">Tournaments I'm In</h3>
                 
-                <div v-if="myTournaments.length === 0" class="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20 text-center">
-                    <svg class="mx-auto h-16 w-16 text-white/40 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div v-if="myTournaments.length === 0" class="bg-white/10 backdrop-blur-md rounded-xl p-4 sm:p-8 border border-white/20 text-center">
+                    <svg class="mx-auto h-12 sm:h-16 w-12 sm:w-16 text-white/40 mb-4 sm:mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 616 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <h4 class="text-xl font-semibold text-white mb-3">No tournaments yet!</h4>
-                    <p class="text-white/70 mb-6 max-w-md mx-auto">
+                    <h4 class="text-lg sm:text-xl font-semibold text-white mb-2 sm:mb-3">No tournaments yet!</h4>
+                    <p class="text-white/70 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base">
                         Join an existing tournament or create your own to get started with Premier League predictions.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Link :href="route('tournaments.join-form')">
-                            <button class="inline-flex items-center px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all">
+                    <div class="flex flex-col xs:flex-row gap-2 xs:gap-3 justify-center">
+                        <Link :href="route('tournaments.join-form')" class="w-full xs:w-auto">
+                            <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all">
                                 Join Tournament
                             </button>
                         </Link>
-                        <Link :href="route('tournaments.create')">
-                            <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg text-white hover:from-emerald-600 hover:to-green-700 transition-all">
+                        <Link :href="route('tournaments.create')" class="w-full xs:w-auto">
+                            <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg text-white hover:from-emerald-600 hover:to-green-700 transition-all">
                                 Create Tournament
                             </button>
                         </Link>

@@ -29,9 +29,9 @@ const activeTab = ref('profile')
 const extendedForm = useForm({
     bio: props.user.bio || '',
     location: props.user.location || '',
-    date_of_birth: props.user.date_of_birth || '',
+    date_of_birth: props.user.date_of_birth ? new Date(props.user.date_of_birth).toISOString().split('T')[0] : '',
     favorite_team_id: props.user.favorite_team_id || '',
-    supporter_since: props.user.supporter_since || '',
+    supporter_since: String(props.user.supporter_since || ''),
     twitter_handle: props.user.twitter_handle || '',
     instagram_handle: props.user.instagram_handle || '',
     display_name: props.user.display_name || '',
@@ -78,8 +78,15 @@ const avatarPreview = ref(null)
 const showCropper = ref(false)
 const selectedImageFile = ref(null)
 
+// Submit handler
 const submitExtendedProfile = () => {
-    extendedForm.patch(route('profile.update.extended'))
+    // Convert supporter_since back to number before submitting
+    const formData = { ...extendedForm.data() }
+    if (formData.supporter_since) {
+        formData.supporter_since = parseInt(formData.supporter_since)
+    }
+    extendedForm.clearErrors()
+    extendedForm.patch(route('profile.update.extended'), formData)
 }
 
 const submitPrivacySettings = () => {
@@ -143,13 +150,12 @@ const winRate = computed(() => {
 })
 
 const handleImageError = (event) => {
-    console.error('Error loading avatar image:', event.target.src)
     // Fallback to default avatar URL generator
     event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(props.user.name)}&background=10B981&color=fff&size=150`
 }
 
 const handleImageLoad = (event) => {
-    console.log('Avatar image loaded successfully:', event.target.src)
+    // Image loaded successfully, no need to do anything
 }
 </script>
 

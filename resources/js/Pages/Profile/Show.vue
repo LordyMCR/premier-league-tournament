@@ -20,11 +20,6 @@
                                      :style="{ backgroundColor: profileUser.favorite_team.primary_color || '#10B981', color: '#fff' }">
                                     {{ profileUser.favorite_team.short_name }}
                                 </div>
-                                <!-- Debug info (remove this in production) -->
-                                <div class="text-xs text-gray-400 mt-2 break-all" v-if="profileUser.avatar">
-                                    Avatar: {{ profileUser.avatar }}<br>
-                                    URL: {{ profileUser.avatar_url }}
-                                </div>
                             </div>
                             
                             <h1 class="text-3xl font-bold text-white mt-4">
