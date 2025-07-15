@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -33,134 +33,186 @@ form.end_date = endDate.toISOString().split('T')[0];
 <template>
     <Head title="Create Tournament" />
 
-    <AuthenticatedLayout>
+    <TournamentLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="text-2xl font-bold text-white">
                 Create New Tournament
             </h2>
+            <p class="text-white/70 mt-2">
+                Set up your Premier League prediction competition
+            </p>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="submit" class="space-y-6">
-                            <!-- Tournament Name -->
-                            <div>
-                                <InputLabel for="name" value="Tournament Name" />
-                                <TextInput
-                                    id="name"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    v-model="form.name"
-                                    required
-                                    autofocus
-                                    placeholder="e.g., Premier League Predictions 2024"
-                                />
-                                <InputError class="mt-2" :message="form.errors.name" />
-                            </div>
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20">
+                <form @submit.prevent="submit" class="space-y-8">
+                    <!-- Tournament Details Section -->
+                    <div class="space-y-6">
+                        <div class="border-b border-white/20 pb-4">
+                            <h3 class="text-lg font-semibold text-white mb-2">Tournament Details</h3>
+                            <p class="text-white/60 text-sm">Basic information about your tournament</p>
+                        </div>
 
-                            <!-- Description -->
-                            <div>
-                                <InputLabel for="description" value="Description (Optional)" />
-                                <textarea
-                                    id="description"
-                                    v-model="form.description"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    rows="3"
-                                    placeholder="Tell participants what this tournament is about..."
-                                ></textarea>
-                                <InputError class="mt-2" :message="form.errors.description" />
-                            </div>
+                        <!-- Tournament Name -->
+                        <div>
+                            <InputLabel for="name" value="Tournament Name" />
+                            <TextInput
+                                id="name"
+                                type="text"
+                                class="mt-2"
+                                v-model="form.name"
+                                required
+                                autofocus
+                                placeholder="e.g., Premier League Predictions 2025"
+                            />
+                            <InputError class="mt-2" :message="form.errors.name" />
+                        </div>
 
-                            <!-- Date Range -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <InputLabel for="start_date" value="Start Date" />
-                                    <TextInput
-                                        id="start_date"
-                                        type="date"
-                                        class="mt-1 block w-full"
-                                        v-model="form.start_date"
-                                        required
-                                    />
-                                    <InputError class="mt-2" :message="form.errors.start_date" />
-                                </div>
-
-                                <div>
-                                    <InputLabel for="end_date" value="End Date" />
-                                    <TextInput
-                                        id="end_date"
-                                        type="date"
-                                        class="mt-1 block w-full"
-                                        v-model="form.end_date"
-                                        required
-                                    />
-                                    <InputError class="mt-2" :message="form.errors.end_date" />
-                                </div>
-                            </div>
-
-                            <!-- Max Participants -->
-                            <div>
-                                <InputLabel for="max_participants" value="Maximum Participants" />
-                                <TextInput
-                                    id="max_participants"
-                                    type="number"
-                                    class="mt-1 block w-full"
-                                    v-model="form.max_participants"
-                                    required
-                                    min="2"
-                                    max="100"
-                                />
-                                <InputError class="mt-2" :message="form.errors.max_participants" />
-                                <p class="mt-1 text-sm text-gray-600">
-                                    Between 2 and 100 participants allowed
-                                </p>
-                            </div>
-
-                            <!-- Private Tournament -->
-                            <div class="flex items-center">
-                                <Checkbox
-                                    id="is_private"
-                                    v-model:checked="form.is_private"
-                                />
-                                <InputLabel for="is_private" value="Private Tournament" class="ml-2" />
-                            </div>
-                            <p class="text-sm text-gray-600">
-                                Private tournaments can only be joined with the join code
-                            </p>
-
-                            <!-- Tournament Rules -->
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h3 class="font-semibold text-blue-900 mb-2">Tournament Rules</h3>
-                                <ul class="text-sm text-blue-800 space-y-1">
-                                    <li>• Each game week, pick one Premier League team to win</li>
-                                    <li>• Win = 3 points, Draw = 1 point, Loss = 0 points</li>
-                                    <li>• Once you pick a team, you can't pick them again</li>
-                                    <li>• 20 game weeks total (one for each Premier League team)</li>
-                                    <li>• Highest total score wins the tournament!</li>
-                                </ul>
-                            </div>
-
-                            <div class="flex items-center justify-end space-x-4">
-                                <a
-                                    :href="route('tournaments.index')"
-                                    class="text-gray-600 hover:text-gray-900"
-                                >
-                                    Cancel
-                                </a>
-                                
-                                <PrimaryButton 
-                                    :class="{ 'opacity-25': form.processing }" 
-                                    :disabled="form.processing"
-                                >
-                                    Create Tournament
-                                </PrimaryButton>
-                            </div>
-                        </form>
+                        <!-- Description -->
+                        <div>
+                            <InputLabel for="description" value="Description (Optional)" />
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                class="mt-2 w-full rounded-lg border-0 bg-white/20 backdrop-blur-sm px-4 py-3 text-white placeholder-white/60 shadow-sm ring-1 ring-white/30 focus:ring-2 focus:ring-emerald-500 focus:bg-white/30 transition-all"
+                                rows="4"
+                                placeholder="Tell participants what this tournament is about..."
+                            ></textarea>
+                            <InputError class="mt-2" :message="form.errors.description" />
+                        </div>
                     </div>
-                </div>
+
+                    <!-- Tournament Settings Section -->
+                    <div class="space-y-6">
+                        <div class="border-b border-white/20 pb-4">
+                            <h3 class="text-lg font-semibold text-white mb-2">Tournament Settings</h3>
+                            <p class="text-white/60 text-sm">Configure the competition parameters</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Start Date -->
+                            <div>
+                                <InputLabel for="start_date" value="Start Date" />
+                                <TextInput
+                                    id="start_date"
+                                    type="date"
+                                    class="mt-2"
+                                    v-model="form.start_date"
+                                    required
+                                />
+                                <InputError class="mt-2" :message="form.errors.start_date" />
+                            </div>
+
+                            <!-- End Date -->
+                            <div>
+                                <InputLabel for="end_date" value="End Date" />
+                                <TextInput
+                                    id="end_date"
+                                    type="date"
+                                    class="mt-2"
+                                    v-model="form.end_date"
+                                    required
+                                />
+                                <InputError class="mt-2" :message="form.errors.end_date" />
+                            </div>
+                        </div>
+
+                        <!-- Max Participants -->
+                        <div>
+                            <InputLabel for="max_participants" value="Maximum Participants" />
+                            <TextInput
+                                id="max_participants"
+                                type="number"
+                                class="mt-2"
+                                v-model="form.max_participants"
+                                required
+                                min="2"
+                                max="100"
+                            />
+                            <p class="mt-1 text-sm text-white/60">
+                                Between 2 and 100 participants
+                            </p>
+                            <InputError class="mt-2" :message="form.errors.max_participants" />
+                        </div>
+
+                        <!-- Privacy Setting -->
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <label class="flex items-center space-x-3">
+                                <Checkbox name="is_private" v-model:checked="form.is_private" />
+                                <div>
+                                    <span class="text-white font-medium">Private Tournament</span>
+                                    <p class="text-white/60 text-sm">Only people with the join code can participate</p>
+                                </div>
+                            </label>
+                            <InputError class="mt-2" :message="form.errors.is_private" />
+                        </div>
+                    </div>
+
+                    <!-- Tournament Rules Section -->
+                    <div class="bg-gradient-to-r from-emerald-500/20 to-green-600/20 backdrop-blur-md rounded-xl p-6 border border-emerald-500/30">
+                        <div class="flex items-start space-x-3 mb-4">
+                            <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-white mb-2">Tournament Rules</h3>
+                                <div class="text-sm text-white/90 space-y-2">
+                                    <div class="flex items-start space-x-2">
+                                        <span class="font-semibold text-emerald-300">•</span>
+                                        <span>Each game week, pick one Premier League team to win their match</span>
+                                    </div>
+                                    <div class="flex items-start space-x-2">
+                                        <span class="font-semibold text-emerald-300">•</span>
+                                        <span>Scoring: Win = 3 points, Draw = 1 point, Loss = 0 points</span>
+                                    </div>
+                                    <div class="flex items-start space-x-2">
+                                        <span class="font-semibold text-emerald-300">•</span>
+                                        <span>Once you pick a team, you can't pick them again in this tournament</span>
+                                    </div>
+                                    <div class="flex items-start space-x-2">
+                                        <span class="font-semibold text-emerald-300">•</span>
+                                        <span>20 game weeks total (one for each Premier League team)</span>
+                                    </div>
+                                    <div class="flex items-start space-x-2">
+                                        <span class="font-semibold text-emerald-300">•</span>
+                                        <span>Highest total score wins the tournament!</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between pt-6 border-t border-white/20">
+                        <a
+                            :href="route('tournaments.index')"
+                            class="inline-flex items-center px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Cancel
+                        </a>
+                        
+                        <PrimaryButton 
+                            :class="{ 'opacity-50': form.processing }" 
+                            :disabled="form.processing"
+                            class="inline-flex items-center"
+                        >
+                            <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            {{ form.processing ? 'Creating...' : 'Create Tournament' }}
+                        </PrimaryButton>
+                    </div>
+                </form>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </TournamentLayout>
 </template> 

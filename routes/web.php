@@ -14,15 +14,24 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('welcome');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Public profile routes (accessible to all authenticated users)
+Route::middleware('auth')->group(function () {
+    Route::get('/users/{user:id}', [ProfileController::class, 'show'])->name('profile.show');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/extended', [ProfileController::class, 'updateExtended'])->name('profile.update.extended');
+    Route::patch('/profile/privacy', [ProfileController::class, 'updatePrivacy'])->name('profile.update.privacy');
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+    Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Tournament routes

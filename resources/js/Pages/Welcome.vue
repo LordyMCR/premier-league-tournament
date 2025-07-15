@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
+import AppHeader from '@/Components/AppHeader.vue';
 
 defineProps({
     canLogin: {
@@ -9,266 +10,235 @@ defineProps({
         type: Boolean,
     },
 });
+
+const page = usePage();
 </script>
 
 <template>
     <Head title="Premier League Tournament Host" />
     <div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <!-- Header -->
-        <header class="bg-white/10 backdrop-blur-md border-b border-white/20">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-6">
-                    <div class="flex items-center">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                            </div>
-                            <h1 class="text-2xl font-bold text-white">PL Tournament</h1>
-                        </div>
-                    </div>
-                    <nav v-if="canLogin" class="flex space-x-4">
-                        <Link
-                            v-if="$page.props.auth.user"
-                            :href="route('tournaments.index')"
-                            class="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                        >
-                            My Tournaments
-                        </Link>
-                        <template v-else>
-                            <Link
-                                :href="route('login')"
-                                class="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Login
-                            </Link>
-                            <Link
-                                v-if="canRegister"
-                                :href="route('register')"
-                                class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-all"
-                            >
-                                Join Now
-                            </Link>
-                        </template>
-                    </nav>
-                </div>
-            </div>
-                </header>
+        <!-- Shared Header -->
+        <AppHeader />
 
         <!-- Hero Section -->
         <main>
-            <div class="relative">
-                <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+            <div class="relative overflow-hidden">
+                <!-- Background Pattern -->
+                <div class="absolute inset-0 opacity-20"></div>
+                
+                <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
                     <div class="text-center">
-                        <h1 class="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">
-                            <span class="block">The Ultimate</span>
-                            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                        <!-- Hero Title -->
+                        <h1 class="text-5xl md:text-7xl font-bold text-white mb-6">
+                            <span class="bg-gradient-to-r from-yellow-400 via-red-500 to-purple-600 bg-clip-text text-transparent">
                                 Premier League
                             </span>
-                            <span class="block">Prediction Game</span>
+                            <br>
+                            <span class="text-white">Tournament Host</span>
                         </h1>
-                        <p class="mt-3 max-w-md mx-auto text-base text-gray-300 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-                            Pick winning teams across 20 game weeks. But here's the twist: once you pick a team, they're gone forever. Strategy meets football in the most challenging prediction game.
+                        
+                        <!-- Hero Subtitle -->
+                        <p class="text-xl md:text-2xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
+                            Create and compete in thrilling Premier League prediction tournaments. 
+                            Pick your teams, climb the leaderboard, and prove you're the ultimate football predictor.
                         </p>
                         
-                        <!-- CTA Buttons -->
-                        <div class="mt-5 max-w-4xl mx-auto sm:flex sm:justify-center md:mt-8">
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-                                <Link :href="route('tournaments.index')" class="rounded-md shadow-lg">
-                                    <div class="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg transition-all transform hover:scale-105">
-                                        🏆 My Tournaments
-                            </div>
-                                </Link>
-                                <Link :href="route('tournaments.create')" class="rounded-md shadow-lg">
-                                    <div class="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg transition-all transform hover:scale-105">
-                                        ⚽ Create Tournament
-                                    </div>
-                                </Link>
-                                <Link :href="route('tournaments.join-form')" class="rounded-md shadow-lg">
-                                    <div class="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 md:py-4 md:text-lg transition-all transform hover:scale-105">
-                                        🎯 Join Tournament
-                                    </div>
-                                </Link>
-                            </div>
+                        <!-- Hero Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <a
+                                href="#how-it-works"
+                                class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-2xl"
+                            >
+                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Start Playing
+                            </a>
+                            <a
+                                href="#features"
+                                class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all hover:bg-white/20"
+                            >
+                                Learn More
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- How It Works Section -->
-            <div class="py-16 bg-white/5 backdrop-blur-sm">
+            <section id="how-it-works" class="py-20">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="lg:text-center">
-                        <h2 class="text-base text-yellow-400 font-semibold tracking-wide uppercase">How It Works</h2>
-                        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-white sm:text-4xl">
-                            Simple Rules, Strategic Depth
-                        </p>
-                        <p class="mt-4 max-w-2xl text-xl text-gray-300 lg:mx-auto">
-                            Think you know football? Prove it with strategy that goes beyond just picking winners.
+                    <div class="text-center mb-16">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">How It Works</h2>
+                        <p class="text-xl text-white/70 max-w-2xl mx-auto">
+                            Simple rules, unlimited excitement. Here's how to dominate the leaderboard.
                         </p>
                     </div>
-
-                    <div class="mt-16">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white mx-auto mb-4">
-                                    <span class="text-2xl font-bold">1</span>
-                                </div>
-                                <h3 class="text-lg font-semibold text-white mb-2">Pick Your Team</h3>
-                                <p class="text-gray-300">Each game week, choose one Premier League team you think will win their match.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Step 1 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 text-center">
+                            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-2xl font-bold text-white">1</span>
                             </div>
-
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-green-500 to-blue-600 text-white mx-auto mb-4">
-                                    <span class="text-2xl font-bold">2</span>
-                                </div>
-                                <h3 class="text-lg font-semibold text-white mb-2">Earn Points</h3>
-                                <p class="text-gray-300">Win = 3 points, Draw = 1 point, Loss = 0 points. Simple scoring, maximum tension.</p>
-                            </div>
-
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-yellow-500 to-red-600 text-white mx-auto mb-4">
-                                    <span class="text-2xl font-bold">3</span>
-                                </div>
-                                <h3 class="text-lg font-semibold text-white mb-2">No Second Chances</h3>
-                                <p class="text-gray-300">Once you pick a team, they're eliminated from your options. Choose wisely!</p>
-                            </div>
-
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 text-white mx-auto mb-4">
-                                    <span class="text-2xl font-bold">4</span>
-                                </div>
-                                <h3 class="text-lg font-semibold text-white mb-2">Win the League</h3>
-                                <p class="text-gray-300">After 20 game weeks, highest total points wins. Strategy beats luck.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                            </div>
-
-            <!-- Strategy Section -->
-            <div class="py-16 bg-gradient-to-r from-indigo-900 to-purple-900">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
-                        <div>
-                            <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
-                                More Than Just Predictions
-                                </h2>
-                            <p class="mt-3 text-lg text-gray-300">
-                                This isn't your typical fantasy league. Every pick matters because every pick is final. Do you use Manchester City early for an "easy" win, or save them for a crucial later match?
+                            <h3 class="text-2xl font-bold text-white mb-4">Pick Your Teams</h3>
+                            <p class="text-white/70 leading-relaxed">
+                                Each gameweek, select one Premier League team to back. 
+                                Choose wisely - you can only use each team once per tournament!
                             </p>
-                            <div class="mt-8 space-y-4">
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0">
-                                        <div class="flex items-center justify-center h-8 w-8 rounded-md bg-yellow-500 text-white">
-                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h3 class="text-lg font-medium text-white">
-                                            Fixture Analysis Matters
-                                        </h3>
-                                        <p class="mt-1 text-gray-300">
-                                            Study upcoming fixtures, form, injuries. When is the best time to use each team?
-                                </p>
-                            </div>
-                                </div>
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0">
-                                        <div class="flex items-center justify-center h-8 w-8 rounded-md bg-green-500 text-white">
-                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h3 class="text-lg font-medium text-white">
-                                            Psychological Warfare
-                                        </h3>
-                                        <p class="mt-1 text-gray-300">
-                                            Watch opponents' picks. Did they waste Arsenal on a tough fixture? Exploit their mistakes.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                        <div class="mt-8 lg:mt-0">
-                            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-                                <h3 class="text-lg font-semibold text-white mb-4">Sample Tournament Progress</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-300">GW1: Liverpool vs Bournemouth</span>
-                                        <span class="text-green-400 font-semibold">✓ 3pts</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-300">GW2: Brighton vs Man Utd</span>
-                                        <span class="text-yellow-400 font-semibold">≈ 1pt</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-300">GW3: Arsenal vs ...</span>
-                                        <span class="text-gray-500">Available</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-500">Man City, Chelsea, Tottenham...</span>
-                                        <span class="text-gray-500">Remaining</span>
-                                    </div>
-                                </div>
-                                <div class="mt-4 pt-4 border-t border-white/20">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-white font-medium">Current Total:</span>
-                                        <span class="text-yellow-400 font-bold text-lg">4 points</span>
-                                    </div>
-                                </div>
+                        
+                        <!-- Step 2 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 text-center">
+                            <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-2xl font-bold text-white">2</span>
                             </div>
+                            <h3 class="text-2xl font-bold text-white mb-4">Earn Points</h3>
+                            <p class="text-white/70 leading-relaxed">
+                                Win = 3 points, Draw = 1 point, Loss = 0 points. 
+                                Strategic team selection is key to maximizing your score.
+                            </p>
+                        </div>
+                        
+                        <!-- Step 3 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 text-center">
+                            <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="text-2xl font-bold text-white">3</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-4">Climb the Leaderboard</h3>
+                            <p class="text-white/70 leading-relaxed">
+                                Compete with friends and football fans worldwide. 
+                                Track your progress and aim for tournament glory!
+                            </p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="py-20 bg-white/5">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Tournament Features</h2>
+                        <p class="text-xl text-white/70 max-w-2xl mx-auto">
+                            Everything you need for the ultimate Premier League prediction experience.
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Feature 1 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Private Tournaments</h3>
+                            <p class="text-white/70">Create private tournaments for friends, family, or colleagues with custom join codes.</p>
+                        </div>
+                        
+                        <!-- Feature 2 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Live Leaderboards</h3>
+                            <p class="text-white/70">Real-time rankings and detailed statistics to track your performance.</p>
+                        </div>
+                        
+                        <!-- Feature 3 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                            <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Season-Long</h3>
+                            <p class="text-white/70">Full Premier League season tournaments spanning all 38 gameweeks.</p>
+                        </div>
+                        
+                        <!-- Feature 4 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                            <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Strategic Gameplay</h3>
+                            <p class="text-white/70">One team per gameweek rule adds strategy - save the best teams for crucial moments.</p>
+                        </div>
+                        
+                        <!-- Feature 5 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Easy to Use</h3>
+                            <p class="text-white/70">Intuitive interface makes it simple to join tournaments and make your picks.</p>
+                        </div>
+                        
+                        <!-- Feature 6 -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                            <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Detailed Stats</h3>
+                            <p class="text-white/70">Track your picks, view team performance, and analyze your tournament history.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- CTA Section -->
-            <div class="bg-gradient-to-r from-green-600 to-blue-600">
-                <div class="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-                    <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
-                        <span class="block">Ready to Test Your</span>
-                        <span class="block">Football Knowledge?</span>
-                    </h2>
-                    <p class="mt-4 text-lg leading-6 text-green-100">
-                        Join thousands of football fans competing in the most strategic prediction game. Create private leagues with friends or join public tournaments.
-                    </p>
-                    <Link
-                        v-if="canRegister && !$page.props.auth.user"
-                        :href="route('register')"
-                        class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 sm:w-auto transform transition-all hover:scale-105"
-                    >
-                        🚀 Start Your Tournament Journey
-                    </Link>
-                    <Link
-                        v-else-if="!$page.props.auth.user"
-                        :href="route('login')"
-                        class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 sm:w-auto transform transition-all hover:scale-105"
-                    >
-                        🏆 Enter Tournament Arena
-                    </Link>
-                    <Link
-                        v-else
-                        :href="route('tournaments.index')"
-                        class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 sm:w-auto transform transition-all hover:scale-105"
-                    >
-                        🎯 View My Tournaments
-                    </Link>
+            <section v-if="!page.props.auth.user" class="py-20">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <div class="bg-gradient-to-r from-emerald-500/20 to-blue-600/20 backdrop-blur-md rounded-3xl p-12 border border-white/20">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+                            Ready to Start Your Tournament Journey?
+                        </h2>
+                        <p class="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+                            Join thousands of football fans already competing in exciting Premier League prediction tournaments.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a
+                                href="/register"
+                                class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-2xl"
+                            >
+                                Create Account
+                            </a>
+                            <a
+                                href="/login"
+                                class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all hover:bg-white/20"
+                            >
+                                Sign In
+                            </a>
                         </div>
                     </div>
-                </main>
+                </div>
+            </section>
+        </main>
 
         <!-- Footer -->
-        <footer class="bg-gray-900">
-            <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div class="text-center text-gray-400">
-                    <p>&copy; 2024 Premier League Tournament Host. The ultimate strategy game for football fans.</p>
-                    <p class="mt-2 text-sm text-gray-500">Not affiliated with the Premier League. All team names and logos are trademarks of their respective owners.</p>
+        <footer class="py-12 border-t border-white/20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">PL Tournament</h3>
+                    </div>
+                    <p class="text-white/60">
+                        © 2025 Premier League Tournament Host. Create amazing football prediction tournaments.
+                    </p>
                 </div>
             </div>
         </footer>
