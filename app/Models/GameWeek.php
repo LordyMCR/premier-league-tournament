@@ -14,6 +14,10 @@ class GameWeek extends Model
         'name',
         'start_date',
         'end_date',
+        'gameweek_start_time',
+        'gameweek_end_time',
+        'selection_deadline',
+        'selection_opens',
         'is_completed',
         'completed_at',
     ];
@@ -21,6 +25,10 @@ class GameWeek extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'gameweek_start_time' => 'datetime',
+        'gameweek_end_time' => 'datetime',
+        'selection_deadline' => 'datetime',
+        'selection_opens' => 'datetime',
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
     ];
@@ -48,6 +56,36 @@ class GameWeek extends Model
     {
         $now = now()->toDateString();
         return $now >= $this->start_date && $now <= $this->end_date && !$this->is_completed;
+    }
+
+    /**
+     * Check if selection window is currently open
+     */
+    public function isSelectionWindowOpen()
+    {
+        $now = now();
+        
+        return $this->selection_opens 
+            && $this->selection_deadline 
+            && $now >= $this->selection_opens 
+            && $now <= $this->selection_deadline
+            && !$this->is_completed;
+    }
+
+    /**
+     * Check if selection deadline has passed
+     */
+    public function isSelectionDeadlinePassed()
+    {
+        return $this->selection_deadline && now() > $this->selection_deadline;
+    }
+
+    /**
+     * Check if gameweek has started (first match kicked off)
+     */
+    public function hasStarted()
+    {
+        return $this->gameweek_start_time && now() >= $this->gameweek_start_time;
     }
 
     /**
@@ -85,6 +123,18 @@ class GameWeek extends Model
         return static::where('is_completed', false)
                      ->where('start_date', '<=', now())
                      ->where('end_date', '>=', now())
+                     ->first();
+    }
+
+    /**
+     * Get the gameweek currently available for selection
+     */
+    public static function getCurrentSelectionGameWeek()
+    {
+        return static::where('is_completed', false)
+                     ->where('selection_opens', '<=', now())
+                     ->where('selection_deadline', '>=', now())
+                     ->orderBy('week_number')
                      ->first();
     }
 

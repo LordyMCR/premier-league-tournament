@@ -8,6 +8,7 @@ const props = defineProps({
     isParticipant: Boolean,
     leaderboard: Array,
     currentGameweek: Object,
+    selectionGameweek: Object,
     userPicks: Array,
     currentPick: Object,
 });
@@ -167,20 +168,25 @@ const copyJoinCode = () => {
 
                     <!-- Current Gameweek & Picks -->
                     <div v-if="isParticipant && tournament.status === 'active'" class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                        <h3 class="text-lg font-semibold text-white mb-4">Current Gameweek</h3>
+                        <h3 class="text-lg font-semibold text-white mb-4">Team Selection</h3>
                         
-                        <div v-if="currentGameweek" class="space-y-4">
+                        <div v-if="selectionGameweek" class="space-y-4">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h4 class="text-white font-medium">{{ currentGameweek.name }}</h4>
+                                    <h4 class="text-white font-medium">Selection for {{ selectionGameweek.name }}</h4>
                                     <p class="text-white/60 text-sm">
-                                        {{ formatDate(currentGameweek.start_date) }} - {{ formatDate(currentGameweek.end_date) }}
+                                        Deadline: {{ formatDateTime(selectionGameweek.selection_deadline) }}
+                                    </p>
+                                    <p class="text-white/60 text-xs">
+                                        Games start: {{ formatDateTime(selectionGameweek.gameweek_start_time) }}
                                     </p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-xs px-2 py-1 rounded-full"
-                                          :class="currentGameweek.is_completed ? 'bg-gray-500 text-white' : 'bg-green-500 text-white'">
-                                        {{ currentGameweek.is_completed ? 'Completed' : 'Active' }}
+                                    <span v-if="isSelectionOpen(selectionGameweek)" class="text-xs px-2 py-1 rounded-full bg-green-500 text-white">
+                                        Selection Open
+                                    </span>
+                                    <span v-else class="text-xs px-2 py-1 rounded-full bg-red-500 text-white">
+                                        Selection Closed
                                     </span>
                                 </div>
                             </div>
@@ -197,7 +203,7 @@ const copyJoinCode = () => {
                                         </div>
                                         <div>
                                             <p class="text-white font-medium">{{ currentPick.team.name }}</p>
-                                            <p class="text-white/60 text-xs">Your pick for this gameweek</p>
+                                            <p class="text-white/60 text-xs">Your pick for {{ selectionGameweek.name }}</p>
                                         </div>
                                     </div>
                                     <div v-if="currentPick.points_earned !== null" class="text-right">
@@ -208,24 +214,27 @@ const copyJoinCode = () => {
                             </div>
 
                             <!-- Make Pick Button -->
-                            <div v-else-if="!currentGameweek.is_completed" class="text-center">
-                                <Link :href="route('tournaments.gameweeks.picks.create', [tournament.id, currentGameweek.id])"
+                            <div v-else-if="isSelectionOpen(selectionGameweek)" class="text-center">
+                                <Link :href="route('tournaments.gameweeks.picks.create', [tournament.id, selectionGameweek.id])"
                                       class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
-                                    Make Your Pick
+                                    Make Your Pick for {{ selectionGameweek.name }}
                                 </Link>
                             </div>
 
-                            <!-- Deadline Passed -->
+                            <!-- Selection Closed -->
                             <div v-else class="text-center py-4">
-                                <p class="text-white/60">This gameweek has ended</p>
+                                <p class="text-white/60">Selection window for {{ selectionGameweek.name }} has closed</p>
+                                <p class="text-white/40 text-sm">
+                                    Deadline was: {{ formatDateTime(selectionGameweek.selection_deadline) }}
+                                </p>
                             </div>
                         </div>
 
                         <div v-else class="text-center py-4">
-                            <p class="text-white/60">No active gameweek</p>
+                            <p class="text-white/60">No selection window currently open</p>
                         </div>
                     </div>
 
@@ -346,6 +355,31 @@ export default {
             navigator.clipboard.writeText(this.tournament.join_code).then(() => {
                 // TODO: Show success message
                 console.log('Join code copied to clipboard');
+            });
+        },
+        // Method to check if selection is open for a gameweek
+        isSelectionOpen(gameweek) {
+            if (!gameweek || !gameweek.selection_opens || !gameweek.selection_deadline) {
+                return false;
+            }
+            
+            const now = new Date();
+            const opensAt = new Date(gameweek.selection_opens);
+            const deadline = new Date(gameweek.selection_deadline);
+            
+            return now >= opensAt && now <= deadline;
+        },
+        // Format date and time for display
+        formatDateTime(dateString) {
+            if (!dateString) return 'N/A';
+            
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
             });
         }
     }

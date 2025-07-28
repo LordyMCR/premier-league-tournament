@@ -109,8 +109,9 @@ class TournamentController extends Controller
         $isParticipant = $tournament->hasParticipant($user->id);
         $leaderboard = $tournament->getLeaderboard();
         
-        // Get current game week
+        // Get current game week and selection gameweek
         $currentGameweek = GameWeek::getCurrentGameWeek();
+        $selectionGameweek = GameWeek::getCurrentSelectionGameWeek();
         
         // Get user's picks if participant
         $userPicks = null;
@@ -119,10 +120,10 @@ class TournamentController extends Controller
         if ($isParticipant) {
             $userPicks = Pick::getUserPicksInTournament($user->id, $tournament->id);
             
-            if ($currentGameweek) {
+            if ($selectionGameweek) {
                 $currentPick = Pick::where('tournament_id', $tournament->id)
                     ->where('user_id', $user->id)
-                    ->where('game_week_id', $currentGameweek->id)
+                    ->where('game_week_id', $selectionGameweek->id)
                     ->with('team')
                     ->first();
             }
@@ -133,6 +134,7 @@ class TournamentController extends Controller
             'isParticipant' => $isParticipant,
             'leaderboard' => $leaderboard,
             'currentGameweek' => $currentGameweek,
+            'selectionGameweek' => $selectionGameweek,
             'userPicks' => $userPicks,
             'currentPick' => $currentPick,
             'allTeams' => Team::all(),

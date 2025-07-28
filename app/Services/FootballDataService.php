@@ -145,27 +145,47 @@ class FootballDataService
             ->where('stage', 'REGULAR_SEASON')
             ->groupBy('matchday')
             ->map(function ($matchdayMatches, $matchday) {
-                $firstMatch = $matchdayMatches->first();
-                $lastMatch = $matchdayMatches->last();
+                // Sort matches by kick-off time to get first and last
+                $sortedMatches = $matchdayMatches->sortBy('utcDate');
+                $firstMatch = $sortedMatches->first();
+                $lastMatch = $sortedMatches->last();
                 
-                // Calculate start and end dates for the gameweek
-                $startDate = Carbon::parse($firstMatch['utcDate'])->startOfDay();
-                $endDate = Carbon::parse($lastMatch['utcDate'])->endOfDay();
+                // Use exact match times for gameweek boundaries
+                // Convert UTC times to Europe/London timezone for proper BST/GMT handling
+                $gameweekStart = Carbon::parse($firstMatch['utcDate'])->setTimezone('Europe/London');
+                $gameweekEnd = Carbon::parse($lastMatch['utcDate'])->setTimezone('Europe/London')->addHours(2); // Add 2 hours for match duration
                 
-                // Extend the gameweek to cover a full week if needed
-                if ($startDate->diffInDays($endDate) < 6) {
-                    $endDate = $startDate->copy()->addDays(6);
-                }
+                // Selection deadline: Day before gameweek starts (11:59 PM)
+                $selectionDeadline = $gameweekStart->copy()->subDay()->endOfDay();
+                
+                // Selection opens: After previous gameweek ends (or 1 week before for GW1)
+                $selectionOpens = $matchday == 1 
+                    ? $gameweekStart->copy()->subWeek() // 1 week before GW1
+                    : null; // Will be calculated based on previous gameweek end
 
                 return [
                     'week_number' => $matchday,
                     'name' => "Gameweek {$matchday}",
-                    'start_date' => $startDate->toDateString(),
-                    'end_date' => $endDate->toDateString(),
+                    'start_date' => $gameweekStart->toDateString(),
+                    'end_date' => $gameweekEnd->toDateString(),
+                    'gameweek_start_time' => $gameweekStart->toDateTimeString(),
+                    'gameweek_end_time' => $gameweekEnd->toDateTimeString(),
+                    'selection_deadline' => $selectionDeadline->toDateTimeString(),
+                    'selection_opens' => $selectionOpens?->toDateTimeString(),
                     'is_completed' => $this->isGameweekCompleted($matchdayMatches->toArray()),
                 ];
             })
             ->values()
+            ->each(function ($gameweek, $index) use (&$matchdays) {
+                // Set selection opens time based on previous gameweek end
+                if ($gameweek['week_number'] > 1 && $index > 0) {
+                    $previousGameweek = $matchdays[$index - 1] ?? null;
+                    if ($previousGameweek) {
+                        $gameweek['selection_opens'] = $previousGameweek['gameweek_end_time'];
+                    }
+                }
+                return $gameweek;
+            })
             ->toArray();
 
         return $matchdays;
@@ -195,7 +215,7 @@ class FootballDataService
                     'away_team_name' => $match['awayTeam']['name'],
                     'home_team_external_id' => $match['homeTeam']['id'],
                     'away_team_external_id' => $match['awayTeam']['id'],
-                    'kick_off_time' => Carbon::parse($match['utcDate']),
+                    'kick_off_time' => Carbon::parse($match['utcDate'])->setTimezone('Europe/London'),
                     'home_score' => $match['score']['fullTime']['home'],
                     'away_score' => $match['score']['fullTime']['away'],
                     'status' => $status,

@@ -24,7 +24,21 @@ class PickController extends Controller
             abort(403, 'You must be a participant in this tournament to make picks.');
         }
 
-        // Check if game week is still open for picks
+        // Check if selection window is open for this gameweek
+        if (!$gameWeek->isSelectionWindowOpen()) {
+            $message = 'Selection window is not currently open for this gameweek.';
+            
+            if ($gameWeek->selection_deadline && now() > $gameWeek->selection_deadline) {
+                $message = 'Selection deadline has passed for this gameweek.';
+            } elseif ($gameWeek->selection_opens && now() < $gameWeek->selection_opens) {
+                $message = 'Selection window has not opened yet for this gameweek.';
+            }
+            
+            return redirect()->route('tournaments.show', $tournament)
+                ->withErrors(['error' => $message]);
+        }
+
+        // Check if game week is still open for picks (legacy check)
         if ($gameWeek->hasPassed()) {
             return redirect()->route('tournaments.show', $tournament)
                 ->withErrors(['error' => 'This game week has already passed.']);
@@ -79,7 +93,20 @@ class PickController extends Controller
             abort(403, 'You must be a participant in this tournament to make picks.');
         }
 
-        // Check if game week is still open
+        // Check if selection window is open for this gameweek
+        if (!$gameWeek->isSelectionWindowOpen()) {
+            $message = 'Selection window is not currently open for this gameweek.';
+            
+            if ($gameWeek->selection_deadline && now() > $gameWeek->selection_deadline) {
+                $message = 'Selection deadline has passed for this gameweek.';
+            } elseif ($gameWeek->selection_opens && now() < $gameWeek->selection_opens) {
+                $message = 'Selection window has not opened yet for this gameweek.';
+            }
+            
+            return back()->withErrors(['error' => $message]);
+        }
+
+        // Check if game week is still open (legacy check)
         if ($gameWeek->hasPassed()) {
             return back()->withErrors(['error' => 'This game week has already passed.']);
         }
