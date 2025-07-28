@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Services\TestModeService;
 
 class FootballDataService
 {
@@ -188,15 +189,18 @@ class FootballDataService
             })
             ->toArray();
 
+        // Apply test mode timing conversion if enabled  
+        $matchdays = TestModeService::convertGameweekTiming($matchdays);
+
         return $matchdays;
     }
 
     /**
      * Format individual games data from fixtures
      */
-    private function formatGamesData(array $matches): array
+    private function formatGamesData(array $matches, int $gameweekNumber = null): array
     {
-        return collect($matches)
+        $games = collect($matches)
             ->where('stage', 'REGULAR_SEASON')
             ->map(function ($match) {
                 // Map API status to our status
@@ -223,6 +227,13 @@ class FootballDataService
                 ];
             })
             ->toArray();
+
+        // Apply test mode timing conversion if enabled and gameweek number provided
+        if ($gameweekNumber !== null) {
+            $games = TestModeService::convertGameTiming($games, $gameweekNumber);
+        }
+
+        return $games;
     }
 
     /**

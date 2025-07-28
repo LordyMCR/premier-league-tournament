@@ -11,6 +11,7 @@ const props = defineProps({
     selectionGameweek: Object,
     userPicks: Array,
     currentPick: Object,
+    testMode: Object,
 });
 
 const formatDate = (dateString) => {
@@ -53,6 +54,22 @@ const copyJoinCode = () => {
         </template>
 
         <div class="max-w-6xl mx-auto space-y-8">
+            <!-- Test Mode Banner -->
+            <div v-if="testMode.enabled" class="bg-yellow-500/20 border border-yellow-500/40 rounded-xl p-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-yellow-400 font-semibold">🧪 Test Mode Active</p>
+                        <p class="text-yellow-300 text-sm">{{ testMode.description }}</p>
+                        <p class="text-yellow-200/80 text-xs">Total duration: {{ testMode.totalDuration }}</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tournament Info Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <!-- Status -->
