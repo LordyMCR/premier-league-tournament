@@ -41,7 +41,14 @@ class TournamentController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Tournaments/Create');
+        $remainingGameWeeks = Tournament::getRemainingGameWeeksCount();
+        $nextGameWeekNumber = Tournament::getNextGameWeekNumber();
+        
+        return Inertia::render('Tournaments/Create', [
+            'remainingGameWeeks' => $remainingGameWeeks,
+            'nextGameWeekNumber' => $nextGameWeekNumber,
+            'maxGameWeeks' => min(20, $remainingGameWeeks), // Max 20 (one per team) or remaining gameweeks
+        ]);
     }
 
     /**
@@ -49,19 +56,33 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
+        $remainingGameWeeks = Tournament::getRemainingGameWeeksCount();
+        $maxGameWeeks = min(20, $remainingGameWeeks);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'start_date' => 'required|date|after:today',
-            'end_date' => 'required|date|after:start_date',
+            'start_game_week' => 'required|integer|min:' . Tournament::getNextGameWeekNumber(),
+            'total_game_weeks' => 'required|integer|min:1|max:' . $maxGameWeeks,
             'max_participants' => 'required|integer|min:2|max:100',
             'is_private' => 'boolean',
         ]);
+
+        // Validate that the tournament doesn't exceed available gameweeks
+        $endGameWeek = $validated['start_game_week'] + $validated['total_game_weeks'] - 1;
+        $maxAvailableGameWeek = GameWeek::max('week_number') ?? 38;
+        
+        if ($endGameWeek > $maxAvailableGameWeek) {
+            return back()->withErrors([
+                'total_game_weeks' => 'Tournament would extend beyond available gameweeks.'
+            ]);
+        }
 
         $tournament = Tournament::create([
             ...$validated,
             'creator_id' => Auth::id(),
             'status' => 'pending',
+            'current_game_week' => $validated['start_game_week'],
         ]);
 
         // Automatically add creator as participant

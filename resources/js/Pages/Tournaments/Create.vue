@@ -6,12 +6,28 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
+import { computed } from 'vue';
+
+const props = defineProps({
+    remainingGameWeeks: {
+        type: Number,
+        default: 38
+    },
+    nextGameWeekNumber: {
+        type: Number,
+        default: 1
+    },
+    maxGameWeeks: {
+        type: Number,
+        default: 20
+    },
+});
 
 const form = useForm({
     name: '',
     description: '',
-    start_date: '',
-    end_date: '',
+    start_game_week: props.nextGameWeekNumber || 1,
+    total_game_weeks: String(Math.min(20, props.maxGameWeeks || 20)),
     max_participants: '20',
     is_private: false,
 });
@@ -20,14 +36,10 @@ const submit = () => {
     form.post(route('tournaments.store'));
 };
 
-// Set default dates (start tomorrow, end in 20 weeks)
-const tomorrow = new Date();
-tomorrow.setDate(tomorrow.getDate() + 1);
-const endDate = new Date();
-endDate.setDate(endDate.getDate() + (20 * 7)); // 20 weeks from now
-
-form.start_date = tomorrow.toISOString().split('T')[0];
-form.end_date = endDate.toISOString().split('T')[0];
+// Calculate end gameweek
+const endGameWeek = computed(() => {
+    return parseInt(form.start_game_week) + parseInt(form.total_game_weeks) - 1;
+});
 </script>
 
 <template>
@@ -90,30 +102,43 @@ form.end_date = endDate.toISOString().split('T')[0];
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Start Date -->
+                            <!-- Start Gameweek -->
                             <div>
-                                <InputLabel for="start_date" value="Start Date" />
-                                <TextInput
-                                    id="start_date"
-                                    type="date"
-                                    class="mt-2"
-                                    v-model="form.start_date"
+                                <InputLabel for="start_game_week" value="Start Gameweek" />
+                                <select
+                                    id="start_game_week"
+                                    v-model.number="form.start_game_week"
+                                    class="mt-2 w-full rounded-lg border-0 bg-white/20 backdrop-blur-sm px-4 py-3 text-white shadow-sm ring-1 ring-white/30 focus:ring-2 focus:ring-emerald-500 focus:bg-white/30 transition-all"
                                     required
-                                />
-                                <InputError class="mt-2" :message="form.errors.start_date" />
+                                >
+                                    <option v-for="week in 38" :key="week" :value="week" 
+                                            :disabled="week < (nextGameWeekNumber || 1)"
+                                            class="bg-gray-800 text-white">
+                                        Gameweek {{ week }}{{ week < (nextGameWeekNumber || 1) ? ' (Completed)' : '' }}
+                                    </option>
+                                </select>
+                                <p class="mt-1 text-sm text-white/60">
+                                    Choose which gameweek your tournament starts
+                                </p>
+                                <InputError class="mt-2" :message="form.errors.start_game_week" />
                             </div>
 
-                            <!-- End Date -->
+                            <!-- Total Gameweeks -->
                             <div>
-                                <InputLabel for="end_date" value="End Date" />
+                                <InputLabel for="total_game_weeks" value="Number of Gameweeks" />
                                 <TextInput
-                                    id="end_date"
-                                    type="date"
+                                    id="total_game_weeks"
+                                    type="number"
                                     class="mt-2"
-                                    v-model="form.end_date"
+                                    v-model="form.total_game_weeks"
                                     required
+                                    :min="1"
+                                    :max="maxGameWeeks"
                                 />
-                                <InputError class="mt-2" :message="form.errors.end_date" />
+                                <p class="mt-1 text-sm text-white/60">
+                                    Tournament will run for {{ form.total_game_weeks }} gameweeks (Gameweek {{ form.start_game_week }} to {{ endGameWeek }})
+                                </p>
+                                <InputError class="mt-2" :message="form.errors.total_game_weeks" />
                             </div>
                         </div>
 
@@ -161,7 +186,7 @@ form.end_date = endDate.toISOString().split('T')[0];
                                 <div class="text-sm text-white/90 space-y-2">
                                     <div class="flex items-start space-x-2">
                                         <span class="font-semibold text-emerald-300">•</span>
-                                        <span>Each game week, pick one Premier League team to win their match</span>
+                                        <span>Each gameweek, pick one Premier League team to win their match</span>
                                     </div>
                                     <div class="flex items-start space-x-2">
                                         <span class="font-semibold text-emerald-300">•</span>
@@ -173,11 +198,15 @@ form.end_date = endDate.toISOString().split('T')[0];
                                     </div>
                                     <div class="flex items-start space-x-2">
                                         <span class="font-semibold text-emerald-300">•</span>
-                                        <span>20 game weeks total (one for each Premier League team)</span>
+                                        <span>Tournament runs for {{ form.total_game_weeks }} gameweeks (maximum 20 - one per team)</span>
                                     </div>
                                     <div class="flex items-start space-x-2">
                                         <span class="font-semibold text-emerald-300">•</span>
                                         <span>Highest total score wins the tournament!</span>
+                                    </div>
+                                    <div class="flex items-start space-x-2">
+                                        <span class="font-semibold text-emerald-300">•</span>
+                                        <span class="text-emerald-200">{{ remainingGameWeeks || 38 }} gameweeks remaining in the season</span>
                                     </div>
                                 </div>
                             </div>

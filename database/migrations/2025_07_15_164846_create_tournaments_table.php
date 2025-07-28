@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreignId('creator_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['pending', 'active', 'completed'])->default('pending');
             $table->integer('current_game_week')->default(1);
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->integer('start_game_week'); // First gameweek of tournament
+            $table->integer('total_game_weeks')->default(20); // Number of gameweeks (max 20 for 20 teams)
             $table->integer('max_participants')->default(50);
             $table->string('join_code', 8)->unique(); // Unique code for joining
             $table->boolean('is_private')->default(false);

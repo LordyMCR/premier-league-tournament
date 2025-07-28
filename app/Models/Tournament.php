@@ -16,16 +16,14 @@ class Tournament extends Model
         'creator_id',
         'status',
         'current_game_week',
-        'start_date',
-        'end_date',
+        'start_game_week',
+        'total_game_weeks',
         'max_participants',
         'join_code',
         'is_private',
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
         'is_private' => 'boolean',
     ];
 
@@ -116,5 +114,77 @@ class Tournament extends Model
             ]);
         }
         return false;
+    }
+
+    /**
+     * Get the end gameweek number for this tournament
+     */
+    public function getEndGameWeekAttribute()
+    {
+        return $this->start_game_week + $this->total_game_weeks - 1;
+    }
+
+    /**
+     * Get the actual start date from the gameweek
+     */
+    public function getStartDateAttribute()
+    {
+        $gameWeek = GameWeek::where('week_number', $this->start_game_week)->first();
+        return $gameWeek ? $gameWeek->start_date : null;
+    }
+
+    /**
+     * Get the actual end date from the final gameweek
+     */
+    public function getEndDateAttribute()
+    {
+        $endGameWeek = $this->start_game_week + $this->total_game_weeks - 1;
+        $gameWeek = GameWeek::where('week_number', $endGameWeek)->first();
+        return $gameWeek ? $gameWeek->end_date : null;
+    }
+
+    /**
+     * Get all gameweeks for this tournament
+     */
+    public function gameWeeks()
+    {
+        $endGameWeek = $this->start_game_week + $this->total_game_weeks - 1;
+        return GameWeek::whereBetween('week_number', [$this->start_game_week, $endGameWeek])
+                      ->orderBy('week_number');
+    }
+
+    /**
+     * Get current gameweek model
+     */
+    public function currentGameWeek()
+    {
+        return GameWeek::where('week_number', $this->current_game_week)->first();
+    }
+
+    /**
+     * Check if tournament is currently active (between start and end gameweeks)
+     */
+    public function isActiveForCurrentGameWeek()
+    {
+        $currentGameWeekNumber = GameWeek::where('is_completed', false)->min('week_number') ?? 1;
+        return $currentGameWeekNumber >= $this->start_game_week && 
+               $currentGameWeekNumber <= $this->end_game_week;
+    }
+
+    /**
+     * Get remaining gameweeks count
+     */
+    public static function getRemainingGameWeeksCount()
+    {
+        return GameWeek::where('is_completed', false)->count();
+    }
+
+    /**
+     * Get next available gameweek number
+     */
+    public static function getNextGameWeekNumber()
+    {
+        $currentGameWeek = GameWeek::where('is_completed', false)->orderBy('week_number')->first();
+        return $currentGameWeek ? $currentGameWeek->week_number : 1;
     }
 }
