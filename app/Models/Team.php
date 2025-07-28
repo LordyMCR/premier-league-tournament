@@ -29,6 +29,31 @@ class Team extends Model
     }
 
     /**
+     * Get home games for this team
+     */
+    public function homeGames()
+    {
+        return $this->hasMany(Game::class, 'home_team_id');
+    }
+
+    /**
+     * Get away games for this team
+     */
+    public function awayGames()
+    {
+        return $this->hasMany(Game::class, 'away_team_id');
+    }
+
+    /**
+     * Get all games for this team (home and away)
+     */
+    public function games()
+    {
+        return Game::where('home_team_id', $this->id)
+                  ->orWhere('away_team_id', $this->id);
+    }
+
+    /**
      * Get picks for this team in a specific tournament
      */
     public function picksInTournament($tournamentId)

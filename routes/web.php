@@ -46,8 +46,8 @@ Route::middleware('auth')->group(function () {
     
     // Pick routes
     Route::get('/tournaments/{tournament}/picks', [PickController::class, 'index'])->name('tournaments.picks');
-    Route::get('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'create'])->name('picks.create');
-    Route::post('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'store'])->name('picks.store');
+    Route::get('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'create'])->name('tournaments.gameweeks.picks.create');
+    Route::post('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'store'])->name('tournaments.gameweeks.picks.store');
     Route::patch('/picks/{pick}/result', [PickController::class, 'updateResult'])->name('picks.update-result');
 });
 

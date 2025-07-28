@@ -79,6 +79,38 @@ class FootballDataService
     }
 
     /**
+     * Get detailed games data for each match
+     */
+    public function getPremierLeagueGames(): array
+    {
+        try {
+            // Get current season matches
+            $response = Http::withHeaders([
+                'X-Auth-Token' => $this->apiKey
+            ])->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
+                'season' => $this->getCurrentSeason()
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return $this->formatGamesData($data['matches'] ?? []);
+            }
+
+            Log::error('Failed to fetch Premier League games', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+
+            return [];
+        } catch (\Exception $e) {
+            Log::error('Exception fetching Premier League games', [
+                'message' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    /**
      * Format teams data for database insertion
      */
     private function formatTeamsData(array $teams): array
@@ -137,6 +169,40 @@ class FootballDataService
             ->toArray();
 
         return $matchdays;
+    }
+
+    /**
+     * Format individual games data from fixtures
+     */
+    private function formatGamesData(array $matches): array
+    {
+        return collect($matches)
+            ->where('stage', 'REGULAR_SEASON')
+            ->map(function ($match) {
+                // Map API status to our status
+                $status = match($match['status']) {
+                    'SCHEDULED', 'TIMED' => 'SCHEDULED',
+                    'IN_PLAY', 'PAUSED' => 'LIVE',
+                    'FINISHED' => 'FINISHED',
+                    'POSTPONED' => 'POSTPONED',
+                    'CANCELLED' => 'CANCELLED',
+                    default => 'SCHEDULED'
+                };
+
+                return [
+                    'matchday' => $match['matchday'],
+                    'home_team_name' => $match['homeTeam']['name'],
+                    'away_team_name' => $match['awayTeam']['name'],
+                    'home_team_external_id' => $match['homeTeam']['id'],
+                    'away_team_external_id' => $match['awayTeam']['id'],
+                    'kick_off_time' => Carbon::parse($match['utcDate']),
+                    'home_score' => $match['score']['fullTime']['home'],
+                    'away_score' => $match['score']['fullTime']['away'],
+                    'status' => $status,
+                    'external_id' => $match['id'],
+                ];
+            })
+            ->toArray();
     }
 
     /**

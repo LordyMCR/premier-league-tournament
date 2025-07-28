@@ -1,16 +1,31 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     tournament: Object,
     isParticipant: Boolean,
     leaderboard: Array,
-    currentGameWeek: Object,
+    currentGameweek: Object,
     userPicks: Array,
-    availableTeams: Array,
-    userPickForCurrentWeek: Object,
+    currentPick: Object,
 });
+
+const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+};
+
+const copyJoinCode = () => {
+    navigator.clipboard.writeText(props.tournament.join_code).then(() => {
+        // TODO: Show success message
+        console.log('Join code copied to clipboard');
+    });
+};
 </script>
 
 <template>
@@ -146,6 +161,106 @@ const props = defineProps({
                             <div class="flex justify-between items-center py-2">
                                 <span class="text-white/70">Total Duration:</span>
                                 <span class="text-white font-medium">{{ tournament.total_game_weeks }} gameweeks</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Gameweek & Picks -->
+                    <div v-if="isParticipant && tournament.status === 'active'" class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                        <h3 class="text-lg font-semibold text-white mb-4">Current Gameweek</h3>
+                        
+                        <div v-if="currentGameweek" class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-white font-medium">{{ currentGameweek.name }}</h4>
+                                    <p class="text-white/60 text-sm">
+                                        {{ formatDate(currentGameweek.start_date) }} - {{ formatDate(currentGameweek.end_date) }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs px-2 py-1 rounded-full"
+                                          :class="currentGameweek.is_completed ? 'bg-gray-500 text-white' : 'bg-green-500 text-white'">
+                                        {{ currentGameweek.is_completed ? 'Completed' : 'Active' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Current Pick Status -->
+                            <div v-if="currentPick" class="bg-green-500/20 border border-green-500/30 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                             :style="{ backgroundColor: currentPick.team.primary_color }">
+                                            <span class="font-bold text-white text-xs">
+                                                {{ currentPick.team.short_name }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p class="text-white font-medium">{{ currentPick.team.name }}</p>
+                                            <p class="text-white/60 text-xs">Your pick for this gameweek</p>
+                                        </div>
+                                    </div>
+                                    <div v-if="currentPick.points_earned !== null" class="text-right">
+                                        <span class="text-white font-bold">{{ currentPick.points_earned }} pts</span>
+                                        <p class="text-white/60 text-xs capitalize">{{ currentPick.result }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Make Pick Button -->
+                            <div v-else-if="!currentGameweek.is_completed" class="text-center">
+                                <Link :href="route('tournaments.gameweeks.picks.create', [tournament.id, currentGameweek.id])"
+                                      class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Make Your Pick
+                                </Link>
+                            </div>
+
+                            <!-- Deadline Passed -->
+                            <div v-else class="text-center py-4">
+                                <p class="text-white/60">This gameweek has ended</p>
+                            </div>
+                        </div>
+
+                        <div v-else class="text-center py-4">
+                            <p class="text-white/60">No active gameweek</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Picks -->
+                    <div v-if="isParticipant && userPicks && userPicks.length > 0" class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                        <h3 class="text-lg font-semibold text-white mb-4">Your Recent Picks</h3>
+                        <div class="space-y-3">
+                            <div v-for="pick in userPicks.slice(0, 5)" :key="pick.id"
+                                 class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                         :style="{ backgroundColor: pick.team.primary_color }">
+                                        <span class="font-bold text-white text-xs">
+                                            {{ pick.team.short_name }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="text-white font-medium">{{ pick.team.name }}</p>
+                                        <p class="text-white/60 text-xs">{{ pick.game_week.name }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div v-if="pick.points_earned !== null" class="flex items-center space-x-2">
+                                        <span class="text-white font-bold">{{ pick.points_earned }} pts</span>
+                                        <span class="text-xs px-2 py-1 rounded-full capitalize"
+                                              :class="{
+                                                  'bg-green-500 text-white': pick.result === 'win',
+                                                  'bg-yellow-500 text-white': pick.result === 'draw',
+                                                  'bg-red-500 text-white': pick.result === 'loss'
+                                              }">
+                                            {{ pick.result }}
+                                        </span>
+                                    </div>
+                                    <div v-else class="text-white/60 text-xs">Pending</div>
+                                </div>
                             </div>
                         </div>
                     </div>

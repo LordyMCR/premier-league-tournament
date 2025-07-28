@@ -34,6 +34,14 @@ class GameWeek extends Model
     }
 
     /**
+     * Get all games for this game week
+     */
+    public function games()
+    {
+        return $this->hasMany(Game::class);
+    }
+
+    /**
      * Check if this game week is currently active (within date range)
      */
     public function isActive()

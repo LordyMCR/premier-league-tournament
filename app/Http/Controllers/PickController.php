@@ -43,11 +43,22 @@ class PickController extends Controller
 
         // Get available teams (not yet picked by this user in this tournament)
         $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id);
+        
+        // Get teams already used by this user in this tournament
+        $usedTeamIds = Pick::where('tournament_id', $tournament->id)
+            ->where('user_id', $user->id)
+            ->pluck('team_id');
+        $usedTeams = Team::whereIn('id', $usedTeamIds)->get();
+        
+        // Get games for this gameweek
+        $gameWeekGames = $gameWeek->games()->with(['homeTeam', 'awayTeam'])->get();
 
         return Inertia::render('Tournaments/SelectTeam', [
             'tournament' => $tournament,
             'gameWeek' => $gameWeek,
             'availableTeams' => $availableTeams,
+            'usedTeams' => $usedTeams,
+            'gameWeekGames' => $gameWeekGames,
         ]);
     }
 
