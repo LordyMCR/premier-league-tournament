@@ -6,7 +6,6 @@ use App\Models\Tournament;
 use App\Models\Team;
 use App\Models\GameWeek;
 use App\Models\Pick;
-use App\Services\TestModeService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -139,11 +138,6 @@ class TournamentController extends Controller
             'userPicks' => $userPicks,
             'currentPick' => $currentPick,
             'allTeams' => Team::all(),
-            'testMode' => [
-                'enabled' => TestModeService::isEnabled(),
-                'description' => TestModeService::getTimelineDescription(),
-                'totalDuration' => TestModeService::getTotalTestDuration(),
-            ],
         ]);
     }
 
