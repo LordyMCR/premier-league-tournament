@@ -16,9 +16,11 @@ return new class extends Migration
             $table->string('name')->unique(); // e.g., "Arsenal", "Chelsea"
             $table->string('short_name', 4)->unique(); // e.g., "ARS", "CHE"
             $table->string('logo_url')->nullable(); // URL to team logo
-            $table->integer('api_id')->nullable()->unique(); // External API reference
+            $table->integer('external_id')->nullable()->unique(); // External API reference
             $table->string('primary_color', 7)->nullable(); // Hex color code
             $table->string('secondary_color', 7)->nullable(); // Hex color code
+            $table->integer('founded')->nullable(); // Year founded
+            $table->string('venue')->nullable(); // Stadium name
             $table->timestamps();
         });
     }

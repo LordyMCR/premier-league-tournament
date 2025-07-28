@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Team;
+use App\Services\FootballDataService;
 use Illuminate\Database\Seeder;
 
 class PremierLeagueTeamsSeeder extends Seeder
@@ -11,6 +12,40 @@ class PremierLeagueTeamsSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
+    {
+        $footballService = new FootballDataService();
+
+        if (!$footballService->isConfigured()) {
+            $this->command->warn('Football Data API key not configured. Using fallback data.');
+            $this->seedFallbackTeams();
+            return;
+        }
+
+        $this->command->info('Fetching Premier League teams from API...');
+        $teams = $footballService->getPremierLeagueTeams();
+
+        if (empty($teams)) {
+            $this->command->warn('Failed to fetch teams from API. Using fallback data.');
+            $this->seedFallbackTeams();
+            return;
+        }
+
+        $this->command->info('Seeding ' . count($teams) . ' teams...');
+
+        foreach ($teams as $team) {
+            Team::updateOrCreate(
+                ['short_name' => $team['short_name']],
+                $team
+            );
+        }
+
+        $this->command->info('Teams seeded successfully!');
+    }
+
+    /**
+     * Fallback method to seed teams when API is unavailable
+     */
+    private function seedFallbackTeams(): void
     {
         $teams = [
             [

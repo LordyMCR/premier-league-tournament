@@ -13,9 +13,11 @@ class Team extends Model
         'name',
         'short_name',
         'logo_url',
-        'api_id',
+        'external_id',
         'primary_color',
         'secondary_color',
+        'founded',
+        'venue',
     ];
 
     /**
