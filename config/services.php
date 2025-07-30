@@ -39,4 +39,16 @@ return [
         'api_key' => env('FOOTBALL_DATA_API_KEY'),
     ],
 
+    'news_api' => [
+        'api_key' => env('NEWS_API_KEY'),
+    ],
+
+    'football_api' => [
+        'api_key' => env('FOOTBALL_API_KEY'), // APIFootball.com (free)
+    ],
+
+    'sports_db' => [
+        'api_key' => env('SPORTS_DB_API_KEY', '123'), // TheSportsDB (free)
+    ],
+
 ];

@@ -6,6 +6,7 @@ use App\Models\GameWeek;
 use App\Models\Game;
 use App\Models\Team;
 use App\Services\HistoricalDataService;
+use App\Services\TeamNewsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -158,12 +159,20 @@ class ScheduleController extends Controller
         // Enhanced analytics
         $analytics = $this->calculateTeamAnalytics($team, $completedGames, $upcomingGames);
 
+        // Phase 2B: Team News Integration
+        $teamNewsService = app(TeamNewsService::class);
+        $teamNews = [
+            'news' => $teamNewsService->getTeamNews($team->name, 5),
+            'injuries' => $teamNewsService->getTeamInjuries($team->id),
+        ];
+
         return Inertia::render('Schedule/Team', [
             'team' => $team,
             'completedGames' => $completedGames,
             'upcomingGames' => $upcomingGames,
             'stats' => $stats,
             'analytics' => $analytics,
+            'teamNews' => $teamNews,
         ]);
     }
 

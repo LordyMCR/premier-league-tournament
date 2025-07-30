@@ -8,6 +8,7 @@ const props = defineProps({
     upcomingGames: Array,
     stats: Object,
     analytics: Object,
+    teamNews: Object,
 });
 
 const formatDate = (dateString) => {
@@ -445,6 +446,88 @@ const getScoreDisplay = (game, team) => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2B: Team News Integration -->
+            <div v-if="teamNews" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Team News -->
+                <div class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600/20 to-indigo-600/20 p-4 lg:p-6 border-b border-white/20">
+                        <h3 class="text-lg lg:text-xl font-semibold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd" />
+                                <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z" />
+                            </svg>
+                            Latest News
+                        </h3>
+                    </div>
+                    <div class="p-4 lg:p-6">
+                        <div v-if="teamNews.news && teamNews.news.length > 0" class="space-y-4">
+                            <div v-for="article in teamNews.news" :key="article.url" 
+                                 class="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+                                 @click="window.open(article.url, '_blank')">
+                                <h4 class="text-white font-medium text-sm mb-2 line-clamp-2">{{ article.title }}</h4>
+                                <p class="text-white/70 text-xs mb-2 line-clamp-2">{{ article.content_snippet }}</p>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-white/50">{{ article.source }}</span>
+                                    <span class="text-white/50">{{ article.published_at }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center text-white/60 py-8">
+                            <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                            </svg>
+                            <p class="text-sm">No recent news available</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Injuries -->
+                <div class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-600/20 to-orange-600/20 p-4 lg:p-6 border-b border-white/20">
+                        <h3 class="text-lg lg:text-xl font-semibold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H9a1 1 0 110-2H8.771l-.748-1.029A1 1 0 017.5 8.5l-.5.5L8 10l.771 2z" clip-rule="evenodd" />
+                            </svg>
+                            Injury Report
+                        </h3>
+                    </div>
+                    <div class="p-4 lg:p-6">
+                        <div v-if="teamNews.injuries && teamNews.injuries.length > 0" class="space-y-3">
+                            <div v-for="injury in teamNews.injuries" :key="injury.player_name" 
+                                 class="p-3 bg-white/5 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-white font-medium text-sm">{{ injury.player_name }}</h4>
+                                    <span :class="{
+                                        'bg-red-500/20 text-red-300': injury.severity === 'major',
+                                        'bg-yellow-500/20 text-yellow-300': injury.severity === 'moderate',
+                                        'bg-green-500/20 text-green-300': injury.severity === 'minor'
+                                    }" class="px-2 py-1 rounded text-xs">
+                                        {{ injury.severity }}
+                                    </span>
+                                </div>
+                                <p class="text-white/70 text-xs mb-1">{{ injury.injury_type }}</p>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-white/50">{{ injury.position }}</span>
+                                    <span :class="{
+                                        'text-green-400': injury.status === 'returning_soon',
+                                        'text-yellow-400': injury.status === 'ongoing',
+                                        'text-gray-400': injury.status === 'long_term'
+                                    }">
+                                        {{ injury.expected_return }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center text-white/60 py-8">
+                            <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                            </svg>
+                            <p class="text-sm">No injury concerns</p>
                         </div>
                     </div>
                 </div>
