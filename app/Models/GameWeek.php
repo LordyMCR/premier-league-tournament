@@ -147,4 +147,15 @@ class GameWeek extends Model
                      ->orderBy('start_date')
                      ->first();
     }
+
+    /**
+     * Get the next upcoming selection gameweek
+     */
+    public static function getNextSelectionGameWeek()
+    {
+        return static::where('is_completed', false)
+                     ->where('selection_opens', '>', now())
+                     ->orderBy('selection_opens')
+                     ->first();
+    }
 }

@@ -112,6 +112,7 @@ class TournamentController extends Controller
         // Get current game week and selection gameweek
         $currentGameweek = GameWeek::getCurrentGameWeek();
         $selectionGameweek = GameWeek::getCurrentSelectionGameWeek();
+        $nextSelectionGameweek = GameWeek::getNextSelectionGameWeek();
         
         // Get user's picks if participant
         $userPicks = null;
@@ -135,6 +136,7 @@ class TournamentController extends Controller
             'leaderboard' => $leaderboard,
             'currentGameweek' => $currentGameweek,
             'selectionGameweek' => $selectionGameweek,
+            'nextSelectionGameweek' => $nextSelectionGameweek,
             'userPicks' => $userPicks,
             'currentPick' => $currentPick,
             'allTeams' => Team::all(),

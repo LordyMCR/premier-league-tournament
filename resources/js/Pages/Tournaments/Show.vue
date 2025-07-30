@@ -9,6 +9,7 @@ const props = defineProps({
     leaderboard: Array,
     currentGameweek: Object,
     selectionGameweek: Object,
+    nextSelectionGameweek: Object,
     userPicks: Array,
     currentPick: Object,
 });
@@ -27,6 +28,29 @@ const copyJoinCode = () => {
         console.log('Join code copied to clipboard');
     });
 };
+
+// Computed property to get time until next selection window
+const timeUntilNextSelection = computed(() => {
+    if (!props.nextSelectionGameweek?.selection_opens) return null;
+    
+    const now = new Date();
+    const opensAt = new Date(props.nextSelectionGameweek.selection_opens);
+    const diffInMs = opensAt - now;
+    
+    if (diffInMs <= 0) return null;
+    
+    const days = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) {
+        return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    } else {
+        return `${minutes}m`;
+    }
+});
 </script>
 
 <template>
@@ -234,7 +258,38 @@ const copyJoinCode = () => {
                         </div>
 
                         <div v-else class="text-center py-4">
-                            <p class="text-white/60">No selection window currently open</p>
+                            <div v-if="nextSelectionGameweek" class="space-y-3">
+                                <div class="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <p class="text-white font-medium">Next Selection Window</p>
+                                        <div v-if="timeUntilNextSelection" class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                            Opens in {{ timeUntilNextSelection }}
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-white/70">Gameweek:</span>
+                                            <span class="text-white font-medium">{{ nextSelectionGameweek.name }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-white/70">Opens:</span>
+                                            <span class="text-white font-medium">{{ formatDateTime(nextSelectionGameweek.selection_opens) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-white/70">Deadline:</span>
+                                            <span class="text-white font-medium">{{ formatDateTime(nextSelectionGameweek.selection_deadline) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-white/70">Games start:</span>
+                                            <span class="text-white font-medium">{{ formatDateTime(nextSelectionGameweek.gameweek_start_time) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <p class="text-white/60">No upcoming selection windows</p>
+                                <p class="text-white/40 text-sm">Tournament may have ended or no more gameweeks scheduled</p>
+                            </div>
                         </div>
                     </div>
 
