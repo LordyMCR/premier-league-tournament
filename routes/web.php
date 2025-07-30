@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
     Route::get('/schedule/gameweek/{gameweek}', [ScheduleController::class, 'gameweek'])->name('schedule.gameweek');
     Route::get('/schedule/team/{team}', [ScheduleController::class, 'team'])->name('schedule.team');
+    Route::get('/schedule/match/{game}', [ScheduleController::class, 'match'])->name('schedule.match');
     Route::patch('/picks/{pick}/result', [PickController::class, 'updateResult'])->name('picks.update-result');
 });
 

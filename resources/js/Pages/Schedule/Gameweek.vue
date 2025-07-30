@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 
 const props = defineProps({
@@ -48,6 +48,10 @@ const getGameStatusBadge = (game) => {
         default:
             return { class: 'bg-gray-500 text-white', text: game.status };
     }
+};
+
+const viewMatch = (game) => {
+    router.visit(route('schedule.match', { game: game.id }));
 };
 
 const getGamesByDate = () => {
@@ -172,7 +176,8 @@ const gamesByDate = getGamesByDate();
                     <div class="p-6">
                         <div class="space-y-4">
                             <div v-for="game in games" :key="game.id"
-                                 class="bg-white/5 rounded-lg p-6 hover:bg-white/10 transition-all">
+                                 @click="viewMatch(game)"
+                                 class="bg-white/5 rounded-lg p-6 hover:bg-white/10 transition-all cursor-pointer">
                                 
                                 <!-- Game Time and Status -->
                                 <div class="flex items-center justify-between mb-4">

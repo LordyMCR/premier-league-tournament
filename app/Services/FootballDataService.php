@@ -110,8 +110,154 @@ class FootballDataService
         }
     }
 
+        /**
+     * Get head-to-head data between two teams from the API
+     */
+    public function getHeadToHeadData($homeTeamExternalId, $awayTeamExternalId): array
+    {
+        try {
+            // The API requires finding a recent match between these teams to get H2H data
+            // We'll search for matches in the current season that include both teams
+            $response = Http::withHeaders([
+                'X-Auth-Token' => $this->apiKey
+            ])->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
+                'status' => 'FINISHED',
+                'limit' => 100 // Get more matches to find one with both teams
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $matches = $data['matches'] ?? [];
+                
+                // Find a match between these two teams to get their external match ID
+                foreach ($matches as $match) {
+                    $homeTeamId = $match['homeTeam']['id'] ?? null;
+                    $awayTeamId = $match['awayTeam']['id'] ?? null;
+                    
+                    if (($homeTeamId == $homeTeamExternalId && $awayTeamId == $awayTeamExternalId) ||
+                        ($homeTeamId == $awayTeamExternalId && $awayTeamId == $homeTeamExternalId)) {
+                        
+                        // Get detailed match data which includes head2head
+                        return $this->getMatchHeadToHead($match['id']);
+                    }
+                }
+                
+                // If no direct match found, try to get H2H from team matches in previous seasons
+                return $this->getHistoricalHeadToHead($homeTeamExternalId, $awayTeamExternalId);
+            }
+
+            return $this->getEmptyHeadToHeadData();
+        } catch (\Exception $e) {
+            Log::error('Exception fetching head-to-head data', [
+                'message' => $e->getMessage(),
+                'home_team' => $homeTeamExternalId,
+                'away_team' => $awayTeamExternalId
+            ]);
+            return $this->getEmptyHeadToHeadData();
+        }
+    }
+
     /**
-     * Format teams data for database insertion
+     * Get head-to-head data from a specific match
+     */
+    private function getMatchHeadToHead($matchId): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-Auth-Token' => $this->apiKey
+            ])->get("{$this->baseUrl}/matches/{$matchId}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $h2h = $data['head2head'] ?? null;
+                
+                if ($h2h) {
+                    return [
+                        'total_matches' => $h2h['numberOfMatches'] ?? 0,
+                        'home_team' => [
+                            'wins' => $h2h['homeTeam']['wins'] ?? 0,
+                            'draws' => $h2h['homeTeam']['draws'] ?? 0,
+                            'losses' => $h2h['homeTeam']['losses'] ?? 0,
+                        ],
+                        'away_team' => [
+                            'wins' => $h2h['awayTeam']['wins'] ?? 0,
+                            'draws' => $h2h['awayTeam']['draws'] ?? 0,
+                            'losses' => $h2h['awayTeam']['losses'] ?? 0,
+                        ],
+                        'total_goals' => $h2h['totalGoals'] ?? 0,
+                    ];
+                }
+            }
+
+            return $this->getEmptyHeadToHeadData();
+        } catch (\Exception $e) {
+            Log::error('Exception fetching match head-to-head data', [
+                'message' => $e->getMessage(),
+                'match_id' => $matchId
+            ]);
+            return $this->getEmptyHeadToHeadData();
+        }
+    }
+
+    /**
+     * Get historical head-to-head data by searching previous seasons
+     */
+    private function getHistoricalHeadToHead($homeTeamExternalId, $awayTeamExternalId): array
+    {
+        try {
+            // Search for matches from previous seasons (2023, 2022, 2021)
+            $previousYears = [2023, 2022, 2021, 2020];
+            
+            foreach ($previousYears as $year) {
+                $response = Http::withHeaders([
+                    'X-Auth-Token' => $this->apiKey
+                ])->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
+                    'season' => $year,
+                    'status' => 'FINISHED',
+                    'limit' => 100
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $matches = $data['matches'] ?? [];
+                    
+                    foreach ($matches as $match) {
+                        $homeTeamId = $match['homeTeam']['id'] ?? null;
+                        $awayTeamId = $match['awayTeam']['id'] ?? null;
+                        
+                        if (($homeTeamId == $homeTeamExternalId && $awayTeamId == $awayTeamExternalId) ||
+                            ($homeTeamId == $awayTeamExternalId && $awayTeamId == $homeTeamExternalId)) {
+                            
+                            return $this->getMatchHeadToHead($match['id']);
+                        }
+                    }
+                }
+            }
+
+            return $this->getEmptyHeadToHeadData();
+        } catch (\Exception $e) {
+            Log::error('Exception fetching historical head-to-head data', [
+                'message' => $e->getMessage()
+            ]);
+            return $this->getEmptyHeadToHeadData();
+        }
+    }
+
+    /**
+     * Get empty head-to-head data structure
+     */
+    private function getEmptyHeadToHeadData(): array
+    {
+        return [
+            'total_matches' => 0,
+            'home_team' => ['wins' => 0, 'draws' => 0, 'losses' => 0],
+            'away_team' => ['wins' => 0, 'draws' => 0, 'losses' => 0],
+            'total_goals' => 0,
+        ];
+    }
+
+    /**
+     * Format teams data from the API response
      */
     private function formatTeamsData(array $teams): array
     {
