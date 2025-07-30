@@ -158,10 +158,8 @@ class FootballDataService
                 // Selection deadline: Day before gameweek starts (11:59 PM)
                 $selectionDeadline = $gameweekStart->copy()->subDay()->endOfDay();
                 
-                // Selection opens: After previous gameweek ends (or 1 week before for GW1)
-                $selectionOpens = $matchday == 1 
-                    ? $gameweekStart->copy()->subWeek() // 1 week before GW1
-                    : null; // Will be calculated based on previous gameweek end
+                // Selection opens: 1 week before gameweek starts at 00:00 (start of day)
+                $selectionOpens = $gameweekStart->copy()->subWeek()->startOfDay();
 
                 return [
                     'week_number' => $matchday,
@@ -171,21 +169,11 @@ class FootballDataService
                     'gameweek_start_time' => $gameweekStart->toDateTimeString(),
                     'gameweek_end_time' => $gameweekEnd->toDateTimeString(),
                     'selection_deadline' => $selectionDeadline->toDateTimeString(),
-                    'selection_opens' => $selectionOpens?->toDateTimeString(),
+                    'selection_opens' => $selectionOpens->toDateTimeString(),
                     'is_completed' => $this->isGameweekCompleted($matchdayMatches->toArray()),
                 ];
             })
             ->values()
-            ->each(function ($gameweek, $index) use (&$matchdays) {
-                // Set selection opens time based on previous gameweek end
-                if ($gameweek['week_number'] > 1 && $index > 0) {
-                    $previousGameweek = $matchdays[$index - 1] ?? null;
-                    if ($previousGameweek) {
-                        $gameweek['selection_opens'] = $previousGameweek['gameweek_end_time'];
-                    }
-                }
-                return $gameweek;
-            })
             ->toArray();
 
         return $matchdays;
