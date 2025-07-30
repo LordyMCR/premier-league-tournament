@@ -770,11 +770,8 @@ class ScheduleController extends Controller
         $needed = 5 - count($currentForm);
         for ($i = 0; $i < min($needed, count($historicalForm)); $i++) {
             $result = $historicalForm[$i];
-            $combinedForm[] = [
-                'result' => $result,
-                'class' => $result === 'W' ? 'bg-green-500' : ($result === 'L' ? 'bg-red-500' : 'bg-yellow-500'),
-                'historical' => true
-            ];
+            // HistoricalDataService already returns properly formatted objects
+            $combinedForm[] = $result;
         }
         
         return $combinedForm;
