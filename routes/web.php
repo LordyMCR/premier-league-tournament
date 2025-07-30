@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\PickController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -48,6 +49,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/tournaments/{tournament}/picks', [PickController::class, 'index'])->name('tournaments.picks');
     Route::get('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'create'])->name('tournaments.gameweeks.picks.create');
     Route::post('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'store'])->name('tournaments.gameweeks.picks.store');
+    
+    // Schedule routes
+    Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
+    Route::get('/schedule/gameweek/{gameweek}', [ScheduleController::class, 'gameweek'])->name('schedule.gameweek');
+    Route::get('/schedule/team/{team}', [ScheduleController::class, 'team'])->name('schedule.team');
     Route::patch('/picks/{pick}/result', [PickController::class, 'updateResult'])->name('picks.update-result');
 });
 

@@ -47,6 +47,12 @@ const logout = () => {
                         My Tournaments
                     </Link>
                     <Link
+                        :href="route('schedule.index')"
+                        class="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                        Schedule
+                    </Link>
+                    <Link
                         :href="route('tournaments.create')"
                         class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 px-3 py-2 rounded-md text-sm font-medium transition-all"
                     >
@@ -171,6 +177,12 @@ const logout = () => {
                         class="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
                     >
                         My Tournaments
+                    </Link>
+                    <Link
+                        :href="route('schedule.index')"
+                        class="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
+                    >
+                        Schedule
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
