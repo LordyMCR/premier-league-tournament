@@ -158,4 +158,15 @@ class GameWeek extends Model
                      ->orderBy('selection_opens')
                      ->first();
     }
+
+    /**
+     * Get gameweeks where selection deadline has passed but auto-assignment may be needed
+     */
+    public static function getGameweeksNeedingAutoAssignment()
+    {
+        return static::where('selection_deadline', '<', now())
+                     ->where('is_completed', false)
+                     ->orderBy('selection_deadline', 'desc')
+                     ->get();
+    }
 }
