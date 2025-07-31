@@ -29,6 +29,22 @@ class Team extends Model
     }
 
     /**
+     * Get all players for this team
+     */
+    public function players()
+    {
+        return $this->hasMany(Player::class);
+    }
+
+    /**
+     * Get players on loan to this team
+     */
+    public function loanPlayers()
+    {
+        return $this->hasMany(Player::class, 'loan_from_team_id');
+    }
+
+    /**
      * Get home games for this team
      */
     public function homeGames()

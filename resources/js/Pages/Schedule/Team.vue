@@ -9,6 +9,7 @@ const props = defineProps({
     stats: Object,
     analytics: Object,
     teamNews: Object,
+    squadData: Object,
 });
 
 const formatDate = (dateString) => {
@@ -528,6 +529,235 @@ const getScoreDisplay = (game, team) => {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                             </svg>
                             <p class="text-sm">No injury concerns</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2C: Squad Information -->
+            <div v-if="squadData" class="space-y-6 lg:space-y-8">
+                <!-- Squad Overview by Position -->
+                <div v-if="squadData.squad_by_position && Object.keys(squadData.squad_by_position).length > 0" 
+                     class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-4 lg:p-6 border-b border-white/20">
+                        <h3 class="text-lg lg:text-xl font-semibold text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                            </svg>
+                            Squad Overview
+                        </h3>
+                        <p class="text-white/60 text-sm mt-1">Current squad organized by position</p>
+                    </div>
+                    <div class="p-4 lg:p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                            <!-- Goalkeepers -->
+                            <div v-if="squadData.squad_by_position.goalkeepers?.length > 0" class="space-y-3">
+                                <h4 class="text-white font-semibold text-sm flex items-center">
+                                    🥅 Goalkeepers
+                                    <span class="ml-2 bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                                        {{ squadData.squad_by_position.goalkeepers.length }}
+                                    </span>
+                                </h4>
+                                <div class="space-y-2">
+                                    <div v-for="player in squadData.squad_by_position.goalkeepers" :key="player.id"
+                                         class="flex items-center space-x-3 p-2 bg-white/5 rounded-lg">
+                                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ player.shirt_number || '?' }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-white text-sm font-medium truncate">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.nationality }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Defenders -->
+                            <div v-if="squadData.squad_by_position.defenders?.length > 0" class="space-y-3">
+                                <h4 class="text-white font-semibold text-sm flex items-center">
+                                    🛡️ Defenders
+                                    <span class="ml-2 bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                                        {{ squadData.squad_by_position.defenders.length }}
+                                    </span>
+                                </h4>
+                                <div class="space-y-2">
+                                    <div v-for="player in squadData.squad_by_position.defenders" :key="player.id"
+                                         class="flex items-center space-x-3 p-2 bg-white/5 rounded-lg">
+                                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ player.shirt_number || '?' }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-white text-sm font-medium truncate">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.nationality }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Midfielders -->
+                            <div v-if="squadData.squad_by_position.midfielders?.length > 0" class="space-y-3">
+                                <h4 class="text-white font-semibold text-sm flex items-center">
+                                    ⚽ Midfielders
+                                    <span class="ml-2 bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                                        {{ squadData.squad_by_position.midfielders.length }}
+                                    </span>
+                                </h4>
+                                <div class="space-y-2">
+                                    <div v-for="player in squadData.squad_by_position.midfielders" :key="player.id"
+                                         class="flex items-center space-x-3 p-2 bg-white/5 rounded-lg">
+                                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ player.shirt_number || '?' }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-white text-sm font-medium truncate">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.nationality }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Attackers -->
+                            <div v-if="squadData.squad_by_position.attackers?.length > 0" class="space-y-3">
+                                <h4 class="text-white font-semibold text-sm flex items-center">
+                                    🎯 Attackers
+                                    <span class="ml-2 bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                                        {{ squadData.squad_by_position.attackers.length }}
+                                    </span>
+                                </h4>
+                                <div class="space-y-2">
+                                    <div v-for="player in squadData.squad_by_position.attackers" :key="player.id"
+                                         class="flex items-center space-x-3 p-2 bg-white/5 rounded-lg">
+                                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ player.shirt_number || '?' }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-white text-sm font-medium truncate">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.nationality }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Performers -->
+                <div v-if="squadData.top_performers" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Top Scorers -->
+                    <div v-if="squadData.top_performers.top_scorers?.length > 0" 
+                         class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                        <div class="bg-gradient-to-r from-green-600/20 to-emerald-600/20 p-4 border-b border-white/20">
+                            <h3 class="text-lg font-semibold text-white flex items-center">
+                                ⚽ Top Scorers
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-3">
+                                <div v-for="(player, index) in squadData.top_performers.top_scorers" :key="player.id"
+                                     class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ index + 1 }}
+                                        </div>
+                                        <div>
+                                            <p class="text-white text-sm font-medium">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.position }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-white font-bold text-lg">{{ player.goals }}</p>
+                                        <p class="text-white/60 text-xs">goals</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Assists -->
+                    <div v-if="squadData.top_performers.top_assists?.length > 0" 
+                         class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 p-4 border-b border-white/20">
+                            <h3 class="text-lg font-semibold text-white flex items-center">
+                                🎯 Top Assists
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-3">
+                                <div v-for="(player, index) in squadData.top_performers.top_assists" :key="player.id"
+                                     class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ index + 1 }}
+                                        </div>
+                                        <div>
+                                            <p class="text-white text-sm font-medium">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.position }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-white font-bold text-lg">{{ player.assists }}</p>
+                                        <p class="text-white/60 text-xs">assists</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Most Appearances -->
+                    <div v-if="squadData.top_performers.most_appearances?.length > 0" 
+                         class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-4 border-b border-white/20">
+                            <h3 class="text-lg font-semibold text-white flex items-center">
+                                👤 Most Appearances
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-3">
+                                <div v-for="(player, index) in squadData.top_performers.most_appearances" :key="player.id"
+                                     class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {{ index + 1 }}
+                                        </div>
+                                        <div>
+                                            <p class="text-white text-sm font-medium">{{ player.name }}</p>
+                                            <p class="text-white/60 text-xs">{{ player.position }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-white font-bold text-lg">{{ player.appearances }}</p>
+                                        <p class="text-white/60 text-xs">apps</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transfers -->
+                <div class="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600/20 to-indigo-600/20 p-4 border-b border-white/20">
+                        <h3 class="text-lg font-semibold text-white flex items-center">
+                            � Recent Transfers
+                        </h3>
+                        <p class="text-white/60 text-sm mt-1">Transfer data availability</p>
+                    </div>
+                    <div class="p-6 text-center">
+                        <div class="mb-4">
+                            <svg class="w-12 h-12 text-white/30 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h4 class="text-white font-medium mb-2">Transfer Data Not Available</h4>
+                            <p class="text-white/60 text-sm leading-relaxed max-w-md mx-auto">
+                                The Football Data API free tier does not include transfer information. 
+                                Access to transfer data requires a paid subscription plan.
+                            </p>
+                        </div>
+                        <div class="space-y-2 text-xs text-white/50">
+                            <p>💡 To get transfer data, you would need:</p>
+                            <p>• A paid Football Data API subscription</p>
+                            <p>• Alternative transfer data providers</p>
+                            <p>• Web scraping from transfer news sites</p>
                         </div>
                     </div>
                 </div>

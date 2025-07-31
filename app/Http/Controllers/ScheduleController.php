@@ -166,6 +166,14 @@ class ScheduleController extends Controller
             'injuries' => $teamNewsService->getTeamInjuries($team->id),
         ];
 
+        // Phase 2C: Squad Information
+        $squadService = app(\App\Services\SquadService::class);
+        $squadData = [
+            'squad_by_position' => $squadService->getSquadByPosition($team),
+            'top_performers' => $squadService->getTopPerformers($team),
+            'recent_transfers' => $squadService->getRecentTransfers($team),
+        ];
+
         return Inertia::render('Schedule/Team', [
             'team' => $team,
             'completedGames' => $completedGames,
@@ -173,6 +181,7 @@ class ScheduleController extends Controller
             'stats' => $stats,
             'analytics' => $analytics,
             'teamNews' => $teamNews,
+            'squadData' => $squadData,
         ]);
     }
 
