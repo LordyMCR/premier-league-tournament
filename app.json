@@ -1,0 +1,55 @@
+{
+  "name": "Premier League Tournament",
+  "description": "A Laravel application for Premier League tournament management",
+  "keywords": ["laravel", "php", "premier-league", "tournament"],
+  "website": "https://github.com/LordyMCR/premier-league-tournament",
+  "repository": "https://github.com/LordyMCR/premier-league-tournament",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "success_url": "/",
+  "scripts": {
+    "postdeploy": "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+  },
+  "env": {
+    "APP_KEY": {
+      "description": "Laravel application key",
+      "generator": "secret"
+    },
+    "APP_NAME": {
+      "description": "The name of the application",
+      "value": "Premier League Tournament"
+    },
+    "APP_ENV": {
+      "description": "The application environment",
+      "value": "production"
+    },
+    "APP_DEBUG": {
+      "description": "Enable debug mode",
+      "value": "false"
+    },
+    "LOG_CHANNEL": {
+      "description": "Log channel",
+      "value": "errorlog"
+    },
+    "FOOTBALL_DATA_API_KEY": {
+      "description": "Your Football Data API key",
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    "jawsdb:kitefin"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "heroku/php"
+    }
+  ]
+}
