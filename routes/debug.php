@@ -8,6 +8,10 @@ Route::get('/debug/historical-data', function () {
     $output = [];
     
     try {
+        // Clear cache first
+        \Illuminate\Support\Facades\Cache::forget('historical_premier_league_data');
+        $output[] = 'Cache cleared!';
+        
         // Test storage paths
         $output[] = '0. Storage path debugging...';
         $output[] = 'Storage local disk root: ' . Storage::disk('local')->path('');
@@ -37,7 +41,7 @@ Route::get('/debug/historical-data', function () {
         
         // Test 1: Check if files exist
         $output[] = '1. Checking if JSON files exist...';
-        $files = Storage::disk('local')->files('private/historical_data');
+        $files = Storage::disk('local')->files('historical_data');
         $output[] = 'Found files: ' . json_encode($files);
         
         // Test 2: Try to read one file

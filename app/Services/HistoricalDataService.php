@@ -22,7 +22,7 @@ class HistoricalDataService
 
         // Cache for 1 hour since this data doesn't change often
         $this->historicalData = Cache::remember('historical_premier_league_data', 3600, function () {
-            $files = Storage::disk('local')->files('private/historical_data');
+            $files = Storage::disk('local')->files('historical_data');
             $allData = [];
             
             // Add debug logging
