@@ -22,51 +22,74 @@ class ProfileController extends Controller
      */
     public function show(Request $request, User $user): Response
     {
-        // Check if profile is viewable
-        if (!$user->isProfileViewableBy($request->user())) {
-            abort(403, 'This profile is private.');
-        }
-
-        // Increment profile view count
-        $user->incrementProfileViews($request->user());
-
-        // Load necessary relationships
-        $user->load([
-            'favoriteTeam',
-            'statistics',
-            'profileSettings',
-            'achievements' => function ($query) {
-                $query->wherePivot('is_featured', true)->orderBy('earned_at', 'desc');
-            },
-            'tournaments' => function ($query) {
-                $query->latest()->limit(5);
+        try {
+            // Check if profile is viewable
+            if (!$user->isProfileViewableBy($request->user())) {
+                abort(403, 'This profile is private.');
             }
-        ]);
 
-        // Get user's tournament statistics
-        $recentTournaments = $user->tournaments()
-            ->with(['participants' => function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(function ($tournament) {
-                return [
-                    'id' => $tournament->id,
-                    'name' => $tournament->name,
-                    'status' => $tournament->status,
-                    'points' => $tournament->participants->first()?->total_points ?? 0,
-                    'created_at' => $tournament->created_at,
-                ];
-            });
+            // Increment profile view count
+            $user->incrementProfileViews($request->user());
 
-        return Inertia::render('Profile/Show', [
-            'profileUser' => $user,
-            'recentTournaments' => $recentTournaments,
-            'isOwnProfile' => $request->user()?->id === $user->id,
-            'canEdit' => $request->user()?->id === $user->id,
-        ]);
+            // Load necessary relationships with null checks
+            $user->load([
+                'favoriteTeam',
+                'statistics',
+                'profileSettings',
+                'achievements' => function ($query) {
+                    $query->wherePivot('is_featured', true)->orderBy('earned_at', 'desc');
+                },
+                'tournaments' => function ($query) {
+                    $query->latest()->limit(5);
+                }
+            ]);
+
+            // Get user's tournament statistics safely
+            $recentTournaments = collect();
+            try {
+                $recentTournaments = $user->tournaments()
+                    ->with(['participants' => function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    }])
+                    ->latest()
+                    ->limit(5)
+                    ->get()
+                    ->map(function ($tournament) {
+                        return [
+                            'id' => $tournament->id,
+                            'name' => $tournament->name,
+                            'status' => $tournament->status,
+                            'points' => $tournament->participants->first()?->total_points ?? 0,
+                            'created_at' => $tournament->created_at,
+                        ];
+                    });
+            } catch (\Exception $e) {
+                // If tournaments fail to load, just use empty collection
+                $recentTournaments = collect();
+            }
+
+            return Inertia::render('Profile/Show', [
+                'profileUser' => $user,
+                'recentTournaments' => $recentTournaments,
+                'isOwnProfile' => $request->user()?->id === $user->id,
+                'canEdit' => $request->user()?->id === $user->id,
+            ]);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Profile show error: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'viewer_id' => $request->user()?->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return a basic profile view
+            return Inertia::render('Profile/Show', [
+                'profileUser' => $user,
+                'recentTournaments' => collect(),
+                'isOwnProfile' => $request->user()?->id === $user->id,
+                'canEdit' => $request->user()?->id === $user->id,
+            ]);
+        }
     }
 
     /**
