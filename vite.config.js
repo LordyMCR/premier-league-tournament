@@ -19,33 +19,72 @@ export default defineConfig({
         }),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+            includeAssets: ['favicon.ico', 'robots.txt'],
+            workbox: {
+                globDirectory: 'public',
+                globPatterns: [
+                    '**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff,woff2,ttf,eot}'
+                ],
+                // Skip revision for these files (they have hashes in filename)
+                dontCacheBustURLsMatching: /\.\w{8}\./,
+                maximumFileSizeToCacheInBytes: 5000000,
+                // Cache strategy for API calls
+                runtimeCaching: [
+                    {
+                        urlPattern: /^https:\/\/api\./,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'api-cache',
+                            expiration: {
+                                maxEntries: 100,
+                                maxAgeSeconds: 24 * 60 * 60 // 24 hours
+                            }
+                        }
+                    }
+                ]
+            },
             manifest: {
                 name: 'Premier League Tournament',
                 short_name: 'PL Tournament',
-                description: 'A PWA Laravel + Vue app for managing Premier League tournaments',
+                description: 'Premier League prediction tournaments - pick teams, compete with friends!',
                 theme_color: '#0f172a',
-                background_color: '#ffffff',
+                background_color: '#0f172a',
                 display: 'standalone',
                 start_url: '/',
+                scope: '/',
+                categories: ['sports', 'entertainment', 'games'],
                 icons: [
                     {
                         src: '/pwa-192x192.jpg',
                         sizes: '192x192',
-                        type: 'image/jpg',
+                        type: 'image/jpeg',
                     },
                     {
                         src: '/pwa-512x512.jpg',
                         sizes: '512x512',
-                        type: 'image/jpg',
+                        type: 'image/jpeg',
                     },
                     {
                         src: '/pwa-512x512.jpg',
                         sizes: '512x512',
-                        type: 'image/jpg',
+                        type: 'image/jpeg',
                         purpose: 'any maskable',
                     },
                 ],
+                screenshots: [
+                    {
+                        src: '/screenshot-mobile.jpg',
+                        sizes: '540x720',
+                        type: 'image/jpeg',
+                        form_factor: 'narrow'
+                    },
+                    {
+                        src: '/screenshot-desktop.jpg', 
+                        sizes: '1280x720',
+                        type: 'image/jpeg',
+                        form_factor: 'wide'
+                    }
+                ]
             },
         }),
     ],
