@@ -34,6 +34,12 @@ Artisan::command('test:historical-data', function () {
 // Schedule daily football data updates
 Schedule::command('football:update')->dailyAt('03:00')->withoutOverlapping();
 
+// Schedule squad data fetching (daily to get latest squad info and injury updates)
+Schedule::command('squad:fetch')->dailyAt('04:00')->withoutOverlapping();
+
+// Schedule player statistics updates (after matches and data updates)
+Schedule::command('squad:update-stats')->dailyAt('05:00')->withoutOverlapping();
+
 // Schedule auto-assignment of missing picks
 // Run every hour to catch any recently passed deadlines
 Schedule::command('picks:auto-assign')->hourly()->withoutOverlapping();
