@@ -15,6 +15,22 @@ Artisan::command('import:historical-data', function () {
     $command->handle();
 })->purpose('Import 10 seasons of Premier League historical data');
 
+// Clear historical data cache
+Artisan::command('clear:historical-cache', function () {
+    \Illuminate\Support\Facades\Cache::forget('historical_premier_league_data');
+    $this->info('Historical data cache cleared!');
+})->purpose('Clear the historical data cache');
+
+// Test historical data
+Artisan::command('test:historical-data', function () {
+    $service = new \App\Services\HistoricalDataService();
+    $seasons = $service->getAvailableSeasons();
+    $this->info('Available seasons: ' . count($seasons));
+    foreach ($seasons as $season) {
+        $this->info('- ' . $season['season'] . ' (' . $season['matches_count'] . ' matches)');
+    }
+})->purpose('Test historical data loading');
+
 // Schedule daily football data updates
 Schedule::command('football:update')->dailyAt('03:00')->withoutOverlapping();
 
