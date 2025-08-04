@@ -24,16 +24,33 @@ class HistoricalDataService
         $this->historicalData = Cache::remember('historical_premier_league_data', 3600, function () {
             $files = Storage::disk('local')->files('private/historical_data');
             $allData = [];
+            
+            // Add debug logging
+            \Log::info('HistoricalDataService: Found files', ['files' => $files]);
 
             foreach ($files as $file) {
                 if (str_ends_with($file, '.json')) {
-                    $content = Storage::disk('local')->get($file);
-                    $seasonData = json_decode($content, true);
-                    if ($seasonData) {
-                        $allData[] = $seasonData;
+                    try {
+                        $content = Storage::disk('local')->get($file);
+                        $seasonData = json_decode($content, true);
+                        if ($seasonData) {
+                            \Log::info('HistoricalDataService: Loaded season', [
+                                'file' => $file,
+                                'season' => $seasonData['season'] ?? 'Unknown',
+                                'matches' => count($seasonData['matches'] ?? []),
+                                'teams' => count($seasonData['teams'] ?? [])
+                            ]);
+                            $allData[] = $seasonData;
+                        } else {
+                            \Log::error('HistoricalDataService: Failed to decode JSON', ['file' => $file]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('HistoricalDataService: Error loading file', ['file' => $file, 'error' => $e->getMessage()]);
                     }
                 }
             }
+
+            \Log::info('HistoricalDataService: Total seasons loaded', ['count' => count($allData)]);
 
             // Sort by year (most recent first)
             usort($allData, function ($a, $b) {
