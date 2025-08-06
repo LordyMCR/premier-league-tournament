@@ -104,7 +104,7 @@ const page = usePage();
                             <h3 class="text-2xl font-bold text-gray-900 mb-4">Win the League</h3>
                             <p class="text-gray-600 leading-relaxed">
                                 Compete with friends and climb the leaderboard. 
-                                The highest score after 20 weeks takes the title.
+                                The highest score at the end of the tournament takes the title.
                             </p>
                         </div>
                     </div>
@@ -167,7 +167,7 @@ const page = usePage();
                     <div class="bg-white rounded-2xl p-12 border border-green-200 shadow-xl">
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Ready to Start?</h2>
                         <p class="text-xl text-gray-600 mb-8">
-                            Join thousands of football fans already playing PL Tournament.
+                            Be one of the first to join our exciting new Premier League prediction game.
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
