@@ -135,12 +135,15 @@ const filteredGameweeks = computed(() => {
         </div>
 
         <!-- Gameweeks Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div v-for="gameweek in filteredGameweeks" :key="gameweek.id" 
                  class="bg-white rounded-xl border border-green-200 shadow-lg hover:shadow-xl transition-all duration-300">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold text-gray-900">{{ gameweek.name }}</h3>
+                        <Link :href="route('schedule.gameweek', gameweek.id)" 
+                              class="text-xl font-bold text-gray-900 hover:text-green-600 transition-colors">
+                            {{ gameweek.name }}
+                        </Link>
                         <span class="px-3 py-1 rounded-full text-xs font-medium"
                               :class="gameweek.is_completed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'">
                             {{ gameweek.is_completed ? 'Completed' : 'Upcoming' }}
@@ -149,26 +152,39 @@ const filteredGameweeks = computed(() => {
                     
                     <div class="space-y-3">
                         <div v-for="game in gameweek.games" :key="game.id" 
-                             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div class="flex items-center space-x-3 flex-1">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                     :style="{ backgroundColor: game.home_team.primary_color || '#22C55E' }">
-                                    {{ game.home_team.short_name }}
-                                </div>
-                                <span class="text-gray-900 font-medium">{{ game.home_team.name }}</span>
+                             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                <Link :href="route('schedule.team', game.home_team.id)" 
+                                      class="w-10 h-10 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
+                                    <img :src="game.home_team.logo_url" 
+                                         :alt="game.home_team.name"
+                                         class="w-full h-full object-contain"
+                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=40`">
+                                </Link>
+                                <Link :href="route('schedule.team', game.home_team.id)" 
+                                      class="text-gray-900 font-medium hover:text-green-600 transition-colors truncate">
+                                    {{ game.home_team.name }}
+                                </Link>
                             </div>
                             
-                            <div class="text-center mx-4">
+                            <Link :href="route('schedule.match', game.id)" 
+                                  class="text-center mx-4 hover:bg-white rounded-lg px-3 py-1 transition-colors flex-shrink-0">
                                 <div class="text-gray-900 font-bold">{{ formatScore(game) }}</div>
                                 <div class="text-xs text-gray-500">{{ formatDateTime(game.kickoff_time) }}</div>
-                            </div>
+                            </Link>
                             
-                            <div class="flex items-center space-x-3 flex-1 justify-end">
-                                <span class="text-gray-900 font-medium">{{ game.away_team.name }}</span>
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                     :style="{ backgroundColor: game.away_team.primary_color || '#22C55E' }">
-                                    {{ game.away_team.short_name }}
-                                </div>
+                            <div class="flex items-center space-x-3 flex-1 justify-end min-w-0">
+                                <Link :href="route('schedule.team', game.away_team.id)" 
+                                      class="text-gray-900 font-medium hover:text-green-600 transition-colors truncate text-right">
+                                    {{ game.away_team.name }}
+                                </Link>
+                                <Link :href="route('schedule.team', game.away_team.id)" 
+                                      class="w-10 h-10 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
+                                    <img :src="game.away_team.logo_url" 
+                                         :alt="game.away_team.name"
+                                         class="w-full h-full object-contain"
+                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.away_team.short_name)}&background=${encodeURIComponent(game.away_team.primary_color || '#22C55E')}&color=fff&size=40`">
+                                </Link>
                             </div>
                         </div>
                     </div>

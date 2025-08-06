@@ -393,7 +393,7 @@ class HistoricalDataService
                     if (count($record['recent_record']) < 10) {
                         $record['recent_record'][] = [
                             'result' => $result,
-                            'score' => "{$teamAScore}-{$teamBScore}",
+                            'score' => "{$homeScore}-{$awayScore}",
                             'venue' => $teamAIsHome ? 'H' : 'A',
                             'date' => $match['kick_off_time'],
                             'season' => $season['season']

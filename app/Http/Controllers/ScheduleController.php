@@ -170,8 +170,6 @@ class ScheduleController extends Controller
         $squadService = app(\App\Services\SquadService::class);
         $squadData = [
             'squad_by_position' => $squadService->getSquadByPosition($team),
-            'top_performers' => $squadService->getTopPerformers($team),
-            'recent_transfers' => $squadService->getRecentTransfers($team),
         ];
 
         return Inertia::render('Schedule/Team', [
@@ -547,37 +545,60 @@ class ScheduleController extends Controller
         // Process current season games
         foreach ($h2hGames as $game) {
             $teamAIsHome = $game->home_team_id === $teamA->id;
-            $teamAScore = $teamAIsHome ? ($game->home_score ?? 0) : ($game->away_score ?? 0);
-            $teamBScore = $teamAIsHome ? ($game->away_score ?? 0) : ($game->home_score ?? 0);
+            $homeScore = $game->home_score ?? 0;
+            $awayScore = $game->away_score ?? 0;
+
+            // Always show the actual historical result: home team score vs away team score
+            $displayScore = "{$homeScore}-{$awayScore}";
 
             $record['recent_meetings'][] = [
                 'date' => $game->kick_off_time,
-                'score' => "{$teamAScore}-{$teamBScore}",
+                'score' => $displayScore,
                 'venue' => $teamAIsHome ? 'H' : 'A'
             ];
 
             // Also add to recent_record for consistency with historical data
-            if ($teamAScore > $teamBScore) {
-                $result = 'W';
-            } elseif ($teamAScore < $teamBScore) {
-                $result = 'L';
+            if ($teamAIsHome) {
+                if ($homeScore > $awayScore) {
+                    $result = 'W';
+                } elseif ($homeScore < $awayScore) {
+                    $result = 'L';
+                } else {
+                    $result = 'D';
+                }
             } else {
-                $result = 'D';
+                if ($awayScore > $homeScore) {
+                    $result = 'W';
+                } elseif ($awayScore < $homeScore) {
+                    $result = 'L';
+                } else {
+                    $result = 'D';
+                }
             }
 
             $record['recent_record'][] = [
                 'result' => $result,
-                'score' => "{$teamAScore}-{$teamBScore}",
+                'score' => $displayScore,
                 'venue' => $teamAIsHome ? 'H' : 'A',
                 'date' => $game->kick_off_time
             ];
 
-            if ($teamAScore > $teamBScore) {
-                $record['wins']++;
-            } elseif ($teamAScore < $teamBScore) {
-                $record['losses']++;
+            if ($teamAIsHome) {
+                if ($homeScore > $awayScore) {
+                    $record['wins']++;
+                } elseif ($homeScore < $awayScore) {
+                    $record['losses']++;
+                } else {
+                    $record['draws']++;
+                }
             } else {
-                $record['draws']++;
+                if ($awayScore > $homeScore) {
+                    $record['wins']++;
+                } elseif ($awayScore < $homeScore) {
+                    $record['losses']++;
+                } else {
+                    $record['draws']++;
+                }
             }
         }
 
