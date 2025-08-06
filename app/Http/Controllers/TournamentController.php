@@ -31,7 +31,7 @@ class TournamentController extends Controller
             ->get();
 
         return Inertia::render('Tournaments/Dashboard', [
-            'myTournaments' => $myTournaments,
+            'tournaments' => $myTournaments,
             'createdTournaments' => $createdTournaments,
         ]);
     }
@@ -41,13 +41,27 @@ class TournamentController extends Controller
      */
     public function create()
     {
+        $currentGameWeek = GameWeek::getCurrentGameWeek();
+        $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
         $remainingGameWeeks = Tournament::getRemainingGameWeeksCount();
-        $nextGameWeekNumber = Tournament::getNextGameWeekNumber();
+        
+        // Get all available gameweeks for custom mode (only future/incomplete ones)
+        $availableGameWeeks = GameWeek::where('week_number', '>=', $nextGameWeekNumber)
+            ->where('is_completed', false)
+            ->orderBy('week_number')
+            ->get(['week_number', 'name', 'start_date', 'end_date']);
+        
+        // Calculate dynamic ranges
+        $fullSeasonEnd = min(38, $nextGameWeekNumber + $remainingGameWeeks - 1);
+        $halfSeasonEnd = min($nextGameWeekNumber + 18, 38);
         
         return Inertia::render('Tournaments/Create', [
-            'remainingGameWeeks' => $remainingGameWeeks,
+            'currentGameWeek' => $currentGameWeek,
             'nextGameWeekNumber' => $nextGameWeekNumber,
-            'maxGameWeeks' => min(20, $remainingGameWeeks), // Max 20 (one per team) or remaining gameweeks
+            'remainingGameWeeks' => $remainingGameWeeks,
+            'availableGameWeeks' => $availableGameWeeks,
+            'fullSeasonEnd' => $fullSeasonEnd,
+            'halfSeasonEnd' => $halfSeasonEnd,
         ]);
     }
 
@@ -56,33 +70,60 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
-        $remainingGameWeeks = Tournament::getRemainingGameWeeksCount();
-        $maxGameWeeks = min(20, $remainingGameWeeks);
+        $currentGameWeek = GameWeek::getCurrentGameWeek();
+        $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'start_game_week' => 'required|integer|min:' . Tournament::getNextGameWeekNumber(),
-            'total_game_weeks' => 'required|integer|min:1|max:' . $maxGameWeeks,
             'max_participants' => 'required|integer|min:2|max:100',
             'is_private' => 'boolean',
+            'tournament_mode' => 'required|in:full_season,half_season,custom',
+            'start_game_week' => 'required|integer|min:1',
+            'end_game_week' => 'required|integer|min:1',
         ]);
 
-        // Validate that the tournament doesn't exceed available gameweeks
-        $endGameWeek = $validated['start_game_week'] + $validated['total_game_weeks'] - 1;
-        $maxAvailableGameWeek = GameWeek::max('week_number') ?? 38;
-        
-        if ($endGameWeek > $maxAvailableGameWeek) {
-            return back()->withErrors([
-                'total_game_weeks' => 'Tournament would extend beyond available gameweeks.'
-            ]);
+        // Calculate dynamic ranges
+        $fullSeasonEnd = min(38, $nextGameWeekNumber + 37); // From current to end of season
+        $halfSeasonEnd = min($nextGameWeekNumber + 18, 38); // From current + 18 weeks
+
+        // Validate game week ranges based on mode
+        if ($validated['tournament_mode'] === 'full_season') {
+            if ($validated['start_game_week'] !== $nextGameWeekNumber || $validated['end_game_week'] !== $fullSeasonEnd) {
+                return back()->withErrors(['tournament_mode' => "Full season must be from gameweek {$nextGameWeekNumber} to {$fullSeasonEnd}."]);
+            }
+        } elseif ($validated['tournament_mode'] === 'half_season') {
+            if ($validated['start_game_week'] !== $nextGameWeekNumber || $validated['end_game_week'] !== $halfSeasonEnd) {
+                return back()->withErrors(['tournament_mode' => "Half season must be from gameweek {$nextGameWeekNumber} to {$halfSeasonEnd}."]);
+            }
+        } else { // custom mode
+            if ($validated['start_game_week'] >= $validated['end_game_week']) {
+                return back()->withErrors(['end_game_week' => 'End game week must be after start game week.']);
+            }
+            
+            $totalWeeks = $validated['end_game_week'] - $validated['start_game_week'] + 1;
+            if ($totalWeeks > 20) {
+                return back()->withErrors(['end_game_week' => 'Custom tournaments cannot exceed 20 gameweeks.']);
+            }
+            
+            // Ensure custom tournaments start from current or future gameweeks
+            if ($validated['start_game_week'] < $nextGameWeekNumber) {
+                return back()->withErrors(['start_game_week' => "Tournaments cannot start before gameweek {$nextGameWeekNumber}."]);
+            }
         }
 
+        $totalGameWeeks = $validated['end_game_week'] - $validated['start_game_week'] + 1;
+
         $tournament = Tournament::create([
-            ...$validated,
+            'name' => $validated['name'],
+            'description' => $validated['description'],
             'creator_id' => Auth::id(),
             'status' => 'pending',
+            'start_game_week' => $validated['start_game_week'],
+            'total_game_weeks' => $totalGameWeeks,
             'current_game_week' => $validated['start_game_week'],
+            'max_participants' => $validated['max_participants'],
+            'is_private' => $validated['is_private'],
         ]);
 
         // Automatically add creator as participant

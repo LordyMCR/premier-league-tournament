@@ -1,45 +1,88 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, Link } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
-    remainingGameWeeks: {
-        type: Number,
-        default: 38
-    },
+    currentGameWeek: Object,
     nextGameWeekNumber: {
         type: Number,
         default: 1
     },
-    maxGameWeeks: {
+    remainingGameWeeks: {
         type: Number,
-        default: 20
+        default: 38
     },
+    availableGameWeeks: {
+        type: Array,
+        default: () => []
+    },
+    fullSeasonEnd: {
+        type: Number,
+        default: 38
+    },
+    halfSeasonEnd: {
+        type: Number,
+        default: 19
+    }
 });
 
 const form = useForm({
     name: '',
     description: '',
-    max_participants: 20,
+    max_participants: '',
     is_private: true,
-    start_date: '',
-    end_date: '',
+    tournament_mode: 'full_season', // 'full_season', 'half_season', 'custom'
+    start_game_week: null,
+    end_game_week: null,
 });
 
 const submit = () => {
     form.post(route('tournaments.store'));
 };
 
-// Calculate end gameweek
-const endGameWeek = computed(() => {
-    return parseInt(form.start_game_week) + parseInt(form.total_game_weeks) - 1;
+// Calculate total game weeks based on mode
+const totalGameWeeks = computed(() => {
+    switch (form.tournament_mode) {
+        case 'full_season':
+            return props.fullSeasonEnd - props.nextGameWeekNumber + 1;
+        case 'half_season':
+            return props.halfSeasonEnd - props.nextGameWeekNumber + 1;
+        case 'custom':
+            if (form.start_game_week && form.end_game_week) {
+                return form.end_game_week - form.start_game_week + 1;
+            }
+            return 0;
+        default:
+            return 0;
+    }
 });
+
+// Get available game weeks for custom mode
+const customGameWeeks = computed(() => {
+    return props.availableGameWeeks;
+});
+
+// Update start game week when mode changes
+const updateStartGameWeek = () => {
+    if (form.tournament_mode === 'full_season') {
+        form.start_game_week = props.nextGameWeekNumber;
+        form.end_game_week = props.fullSeasonEnd;
+    } else if (form.tournament_mode === 'half_season') {
+        form.start_game_week = props.nextGameWeekNumber;
+        form.end_game_week = props.halfSeasonEnd;
+    } else {
+        // For custom mode, default to the next available gameweek
+        const nextAvailableGameweek = props.availableGameWeeks.length > 0 ? props.availableGameWeeks[0].week_number : props.nextGameWeekNumber;
+        form.start_game_week = nextAvailableGameweek;
+        form.end_game_week = null;
+    }
+};
 </script>
 
 <template>
@@ -68,10 +111,12 @@ const endGameWeek = computed(() => {
             <form @submit.prevent="submit" class="space-y-8">
                 <!-- Tournament Details -->
                 <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Tournament Details</h3>
-                    <p class="text-gray-600 text-sm mb-6">Basic information about your tournament</p>
+                    <div class="px-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Tournament Details</h3>
+                        <p class="text-gray-600 text-sm mb-6">Basic information about your tournament</p>
+                    </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-6">
                         <div>
                             <InputLabel for="name" value="Tournament Name" />
                             <TextInput
@@ -81,13 +126,13 @@ const endGameWeek = computed(() => {
                                 v-model="form.name"
                                 required
                                 autofocus
-                                placeholder="Enter tournament name"
+                                placeholder="e.g., Premier League Full Season Predictions"
                             />
                             <InputError class="mt-2" :message="form.errors.name" />
                         </div>
                         
                         <div>
-                            <InputLabel for="max_participants" value="Max Participants" />
+                            <InputLabel for="max_participants" value="Maximum Participants" />
                             <TextInput
                                 id="max_participants"
                                 type="number"
@@ -95,107 +140,173 @@ const endGameWeek = computed(() => {
                                 v-model="form.max_participants"
                                 required
                                 min="2"
-                                max="100"
+                                max="20"
+                                placeholder="2-20 participants"
                             />
                             <InputError class="mt-2" :message="form.errors.max_participants" />
                         </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <InputLabel for="description" value="Description" />
-                        <textarea
-                            id="description"
-                            v-model="form.description"
-                            class="mt-1 block w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                            rows="4"
-                            placeholder="Describe your tournament..."
-                        ></textarea>
-                        <InputError class="mt-2" :message="form.errors.description" />
+                        
+                        <div>
+                            <InputLabel for="description" value="Tournament Description" />
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                class="mt-1 block w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 placeholder-gray-600"
+                                rows="4"
+                                placeholder="e.g., Weekly Premier League predictions with prizes for the top 3 finishers..."
+                            ></textarea>
+                            <InputError class="mt-2" :message="form.errors.description" />
+                        </div>
                     </div>
                 </div>
 
                 <!-- Tournament Settings -->
                 <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Tournament Settings</h3>
-                    <p class="text-gray-600 text-sm mb-6">Configure the competition parameters</p>
+                    <div class="px-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Tournament Settings</h3>
+                        <p class="text-gray-600 text-sm mb-6">Choose how long your tournament will run</p>
+                    </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <!-- Tournament Mode Selection -->
                         <div>
-                            <InputLabel for="start_date" value="Start Date" />
-                            <TextInput
-                                id="start_date"
-                                type="date"
-                                class="mt-1 block w-full"
-                                v-model="form.start_date"
-                                required
-                            />
-                            <p class="mt-1 text-sm text-gray-500">
-                                When the tournament will begin
-                            </p>
-                            <InputError class="mt-2" :message="form.errors.start_date" />
+                            <InputLabel value="Tournament Duration" />
+                            <div class="mt-3 space-y-3">
+                                <label class="flex items-start">
+                                    <input
+                                        type="radio"
+                                        v-model="form.tournament_mode"
+                                        value="full_season"
+                                        @change="updateStartGameWeek"
+                                        class="mt-1 h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                    />
+                                    <div class="ml-3">
+                                        <span class="text-gray-900 font-medium">Full Season</span>
+                                        <p class="text-gray-600 text-sm">From Game Week {{ nextGameWeekNumber }} to {{ fullSeasonEnd }} ({{ fullSeasonEnd - nextGameWeekNumber + 1 }} gameweeks)</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start">
+                                    <input
+                                        type="radio"
+                                        v-model="form.tournament_mode"
+                                        value="half_season"
+                                        @change="updateStartGameWeek"
+                                        class="mt-1 h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                    />
+                                    <div class="ml-3">
+                                        <span class="text-gray-900 font-medium">Half Season</span>
+                                        <p class="text-gray-600 text-sm">From Game Week {{ nextGameWeekNumber }} to {{ halfSeasonEnd }} ({{ halfSeasonEnd - nextGameWeekNumber + 1 }} gameweeks)</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start">
+                                    <input
+                                        type="radio"
+                                        v-model="form.tournament_mode"
+                                        value="custom"
+                                        @change="updateStartGameWeek"
+                                        class="mt-1 h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                    />
+                                    <div class="ml-3">
+                                        <span class="text-gray-900 font-medium">Custom Range</span>
+                                        <p class="text-gray-600 text-sm">Choose specific gameweeks to include</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Game Week Selection -->
+                        <div v-if="form.tournament_mode === 'custom'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <InputLabel for="start_game_week" value="Start Game Week" />
+                                <select
+                                    id="start_game_week"
+                                    v-model="form.start_game_week"
+                                    class="mt-1 block w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                                    required
+                                >
+                                    <option value="">Select start game week</option>
+                                    <option v-for="gameweek in customGameWeeks" :key="gameweek.week_number" :value="gameweek.week_number">
+                                        Game Week {{ gameweek.week_number }} ({{ new Date(gameweek.start_date).toLocaleDateString() }})
+                                    </option>
+                                </select>
+                                <InputError class="mt-2" :message="form.errors.start_game_week" />
+                            </div>
+                            
+                            <div>
+                                <InputLabel for="end_game_week" value="End Game Week" />
+                                <select
+                                    id="end_game_week"
+                                    v-model="form.end_game_week"
+                                    class="mt-1 block w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                                    required
+                                >
+                                    <option value="">Select end game week</option>
+                                    <option v-for="gameweek in customGameWeeks.filter(gw => gw.week_number >= form.start_game_week)" :key="gameweek.week_number" :value="gameweek.week_number">
+                                        Game Week {{ gameweek.week_number }} ({{ new Date(gameweek.end_date).toLocaleDateString() }})
+                                    </option>
+                                </select>
+                                <InputError class="mt-2" :message="form.errors.end_game_week" />
+                            </div>
+                        </div>
+                        
+                        <!-- Tournament Summary -->
+                        <div v-if="totalGameWeeks > 0" class="bg-green-50 rounded-lg p-4 border border-green-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-info-circle text-green-600 mr-3"></i>
+                                <div>
+                                    <span class="text-green-800 font-medium">Tournament Summary:</span>
+                                    <span class="text-green-700 ml-2">{{ totalGameWeeks }} gameweeks</span>
+                                    <span v-if="form.tournament_mode === 'custom' && form.start_game_week && form.end_game_week" class="text-green-600 ml-2">
+                                        (Game Week {{ form.start_game_week }} to {{ form.end_game_week }})
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div>
-                            <InputLabel for="end_date" value="End Date" />
-                            <TextInput
-                                id="end_date"
-                                type="date"
-                                class="mt-1 block w-full"
-                                v-model="form.end_date"
-                                required
-                            />
-                            <p class="mt-1 text-sm text-gray-500">
-                                When the tournament will end
-                            </p>
-                            <InputError class="mt-2" :message="form.errors.end_date" />
+                            <label class="flex items-start">
+                                <Checkbox v-model:checked="form.is_private" />
+                                <div class="ml-3">
+                                    <span class="text-gray-700 font-medium">Private Tournament</span>
+                                    <p class="text-gray-600 text-sm mt-1">Only people with the join code can participate</p>
+                                </div>
+                            </label>
                         </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <label class="flex items-center">
-                            <input
-                                type="checkbox"
-                                v-model="form.is_private"
-                                class="rounded border-gray-300 bg-white text-green-600 shadow-sm focus:border-green-500 focus:ring-green-500"
-                            />
-                            <span class="ml-2 text-gray-700">Private Tournament</span>
-                        </label>
-                        <p class="text-gray-600 text-sm mt-1">Only people with the join code can participate</p>
                     </div>
                 </div>
 
                 <!-- Tournament Rules -->
                 <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <h3 class="font-semibold text-gray-900 mb-2">Tournament Rules</h3>
-                    <div class="text-sm text-gray-600 space-y-2">
+                    <div class="px-4">
+                        <h3 class="font-semibold text-gray-900 mb-4">How It Works</h3>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-3">
                         <div class="flex items-start">
-                            <i class="fas fa-check text-green-600 mt-1 mr-2"></i>
+                            <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
                             <span>Each participant picks one Premier League team per gameweek</span>
                         </div>
                         <div class="flex items-start">
-                            <i class="fas fa-check text-green-600 mt-1 mr-2"></i>
+                            <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
                             <span>Win = 3 points, Draw = 1 point, Loss = 0 points</span>
                         </div>
                         <div class="flex items-start">
-                            <i class="fas fa-check text-green-600 mt-1 mr-2"></i>
-                            <span>Once a team is picked, it cannot be used again</span>
+                            <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Once a team is picked, it cannot be used again in the same tournament</span>
                         </div>
                         <div class="flex items-start">
-                            <i class="fas fa-check text-green-600 mt-1 mr-2"></i>
-                            <span>Tournament runs for 20 Premier League gameweeks</span>
-                        </div>
-                        <div class="flex items-start">
-                            <i class="fas fa-check text-green-600 mt-1 mr-2"></i>
+                            <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
                             <span>Highest total score at the end wins the tournament</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex gap-4">
+                <div class="flex flex-col sm:flex-row gap-4">
                     <Link
                         :href="route('tournaments.index')"
-                        class="bg-white border border-green-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all hover:bg-green-50"
+                        class="bg-white border border-green-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center"
                     >
                         Cancel
                     </Link>
@@ -204,6 +315,7 @@ const endGameWeek = computed(() => {
                         :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
                     >
+                        <i class="fas fa-plus mr-2"></i>
                         Create Tournament
                     </PrimaryButton>
                 </div>

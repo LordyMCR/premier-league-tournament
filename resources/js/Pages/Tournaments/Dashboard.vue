@@ -13,7 +13,7 @@ defineProps({
 
     <TournamentLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="space-y-4">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">
                         My Tournaments
@@ -22,17 +22,17 @@ defineProps({
                         Manage your tournaments and track your progress
                     </p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex flex-col sm:flex-row gap-3">
                     <Link
                         :href="route('tournaments.join-form')"
-                        class="bg-white border border-green-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-all hover:bg-green-50"
+                        class="bg-white border border-green-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center"
                     >
                         <i class="fas fa-sign-in-alt mr-2"></i>
                         Join Tournament
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg text-center"
                     >
                         <i class="fas fa-plus mr-2"></i>
                         Create Tournament
@@ -41,34 +41,34 @@ defineProps({
             </div>
         </template>
 
-        <div class="space-y-8">
+        <div class="space-y-6">
             <!-- Tournaments I'm In -->
             <div class="bg-white rounded-xl border border-green-200 shadow-lg">
-                <div class="p-6 border-b border-green-200">
+                <div class="p-4 sm:p-6 border-b border-green-200">
                     <h3 class="text-xl font-semibold text-gray-900 mb-2">Tournaments I'm In</h3>
                     <p class="text-gray-600 text-sm">Tournaments you're participating in</p>
                 </div>
                 
-                <div class="p-6">
-                    <div v-if="tournaments.length === 0" class="text-center py-12">
+                <div class="p-4 sm:p-6">
+                    <div v-if="tournaments.length === 0" class="text-center py-8 sm:py-12">
                         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-trophy text-gray-400 text-2xl"></i>
                         </div>
                         <h4 class="text-lg font-semibold text-gray-900 mb-2">No tournaments yet!</h4>
-                        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto px-4">
                             Join a tournament to start competing with other football fans.
                         </p>
-                        <div class="flex gap-3 justify-center">
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center px-4">
                             <Link
                                 :href="route('tournaments.join-form')"
-                                class="bg-white border border-green-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-all hover:bg-green-50"
+                                class="bg-white border border-green-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center"
                             >
                                 <i class="fas fa-sign-in-alt mr-2"></i>
                                 Join Tournament
                             </Link>
                             <Link
                                 :href="route('tournaments.create')"
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg text-center"
                             >
                                 <i class="fas fa-plus mr-2"></i>
                                 Create Tournament
@@ -76,12 +76,12 @@ defineProps({
                         </div>
                     </div>
                     
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         <div v-for="tournament in tournaments" :key="tournament.id" 
                              class="bg-gray-50 rounded-lg p-4 border border-green-200 hover:shadow-md transition-all">
                             <div class="flex items-start justify-between mb-3">
-                                <h4 class="text-lg font-semibold text-gray-900">{{ tournament.name }}</h4>
-                                <span class="px-2 py-1 rounded text-xs font-medium"
+                                <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2">{{ tournament.name }}</h4>
+                                <span class="px-2 py-1 rounded text-xs font-medium flex-shrink-0"
                                       :class="tournament.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
                                     {{ tournament.status }}
                                 </span>
@@ -105,7 +105,7 @@ defineProps({
                             </div>
                             
                             <Link :href="route('tournaments.show', tournament.id)"
-                                  class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-all font-medium text-center block">
+                                  class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-all font-medium text-center block">
                                 View Tournament
                             </Link>
                         </div>
@@ -115,35 +115,35 @@ defineProps({
 
             <!-- Tournaments I Created -->
             <div class="bg-white rounded-xl border border-green-200 shadow-lg">
-                <div class="p-6 border-b border-green-200">
+                <div class="p-4 sm:p-6 border-b border-green-200">
                     <h3 class="text-xl font-semibold text-gray-900 mb-2">Tournaments I Created</h3>
                     <p class="text-gray-600 text-sm">Tournaments you've created and manage</p>
                 </div>
                 
-                <div class="p-6">
-                    <div v-if="createdTournaments.length === 0" class="text-center py-12">
+                <div class="p-4 sm:p-6">
+                    <div v-if="createdTournaments.length === 0" class="text-center py-8 sm:py-12">
                         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-crown text-gray-400 text-2xl"></i>
                         </div>
                         <h4 class="text-lg font-semibold text-gray-900 mb-2">No tournaments created yet!</h4>
-                        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto px-4">
                             Create your first tournament and invite friends to compete.
                         </p>
                         <Link
                             :href="route('tournaments.create')"
-                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
+                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg inline-block"
                         >
                             <i class="fas fa-plus mr-2"></i>
                             Create Tournament
                         </Link>
                     </div>
                     
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         <div v-for="tournament in createdTournaments" :key="tournament.id" 
                              class="bg-gray-50 rounded-lg p-4 border border-green-200 hover:shadow-md transition-all">
                             <div class="flex items-start justify-between mb-3">
-                                <h4 class="text-lg font-semibold text-gray-900">{{ tournament.name }}</h4>
-                                <span class="px-2 py-1 rounded text-xs font-medium"
+                                <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2">{{ tournament.name }}</h4>
+                                <span class="px-2 py-1 rounded text-xs font-medium flex-shrink-0"
                                       :class="tournament.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
                                     {{ tournament.status }}
                                 </span>
@@ -162,12 +162,12 @@ defineProps({
                                 </div>
                             </div>
                             
-                            <div class="flex gap-2">
+                            <div class="flex flex-col sm:flex-row gap-2">
                                 <Link :href="route('tournaments.show', tournament.id)"
-                                      class="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg hover:bg-green-700 transition-all text-sm font-medium text-center">
+                                      class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-all text-sm font-medium text-center">
                                     View
                                 </Link>
-                                <button class="flex-1 bg-white border border-green-200 text-gray-700 py-2 px-3 rounded-lg hover:bg-green-50 transition-all text-sm font-medium">
+                                <button class="flex-1 bg-white border border-green-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-green-50 transition-all text-sm font-medium">
                                     Manage
                                 </button>
                             </div>
