@@ -31,16 +31,28 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Log in" />
+        <Head title="Sign In" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-300">
-            {{ status }}
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-sign-in-alt text-white text-2xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+            <p class="text-gray-600">Sign in to your PL Tournament account</p>
         </div>
 
-        <form @submit.prevent="submit">
+        <div v-if="status" class="mb-6 p-4 bg-green-100 border border-green-300 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                <span class="text-green-800">{{ status }}</span>
+            </div>
+        </div>
+
+        <form @submit.prevent="submit" class="space-y-6">
             <div>
                 <InputLabel for="email" value="Email" />
-
                 <TextInput
                     id="email"
                     type="email"
@@ -49,14 +61,13 @@ const submit = () => {
                     required
                     autofocus
                     autocomplete="username"
+                    placeholder="Enter your email"
                 />
-
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
+            <div>
                 <InputLabel for="password" value="Password" />
-
                 <TextInput
                     id="password"
                     type="password"
@@ -64,36 +75,41 @@ const submit = () => {
                     v-model="form.password"
                     required
                     autocomplete="current-password"
+                    placeholder="Enter your password"
                 />
-
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 block">
+            <div class="flex items-center justify-between">
                 <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-white/80"
-                        >Remember me</span
-                    >
+                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
                 </label>
-            </div>
 
-            <div class="mt-4 flex items-center justify-end">
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="rounded-md text-sm text-white/70 underline hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                    class="text-sm text-green-600 hover:text-green-700 transition-colors"
                 >
-                    Forgot your password?
+                    Forgot password?
                 </Link>
+            </div>
 
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Log in
-                </PrimaryButton>
+            <PrimaryButton
+                class="w-full"
+                :class="{ 'opacity-25': form.processing }"
+                :disabled="form.processing"
+            >
+                Sign In
+            </PrimaryButton>
+
+            <div class="text-center">
+                <p class="text-gray-600 text-sm">
+                    Don't have an account? 
+                    <Link :href="route('register')" class="text-green-600 hover:text-green-700 font-medium">
+                        Sign up here
+                    </Link>
+                </p>
             </div>
         </form>
     </GuestLayout>

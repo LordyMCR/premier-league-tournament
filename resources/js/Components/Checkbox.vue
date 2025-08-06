@@ -27,8 +27,8 @@ const proxyChecked = computed({
 <template>
     <input
         type="checkbox"
-        :value="value"
-        v-model="proxyChecked"
-        class="rounded border-white/30 bg-white/20 text-emerald-500 shadow-sm focus:ring-emerald-500 focus:ring-offset-0"
+        class="rounded border-gray-300 bg-white text-green-600 shadow-sm focus:border-green-500 focus:ring-green-500"
+        :checked="checked"
+        @change="$emit('update:checked', $event.target.checked)"
     />
 </template>

@@ -25,23 +25,29 @@ const submit = () => {
     <GuestLayout>
         <Head title="Forgot Password" />
 
-        <div class="mb-4 text-sm text-white/80">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-key text-white text-2xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
+            <p class="text-gray-600">Enter your email address and we'll send you a password reset link.</p>
         </div>
 
         <div
             v-if="status"
-            class="mb-4 text-sm font-medium text-green-300"
+            class="mb-6 p-4 bg-green-100 border border-green-300 rounded-lg"
         >
-            {{ status }}
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                <span class="text-green-800">{{ status }}</span>
+            </div>
         </div>
 
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" class="space-y-6">
             <div>
-                <InputLabel for="email" value="Email" />
-
+                <InputLabel for="email" value="Email Address" />
                 <TextInput
                     id="email"
                     type="email"
@@ -50,19 +56,18 @@ const submit = () => {
                     required
                     autofocus
                     autocomplete="username"
+                    placeholder="Enter your email address"
                 />
-
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Email Password Reset Link
-                </PrimaryButton>
-            </div>
+            <PrimaryButton
+                class="w-full"
+                :class="{ 'opacity-25': form.processing }"
+                :disabled="form.processing"
+            >
+                Email Password Reset Link
+            </PrimaryButton>
         </form>
     </GuestLayout>
 </template>

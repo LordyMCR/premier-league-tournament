@@ -1,173 +1,140 @@
 <template>
-    <Head :title="`Select Team - ${gameWeek.name}`" />
-    
-    <TournamentLayout :tournament="tournament">
-        <div class="space-y-6">
-            <!-- Header -->
-            <div class="text-center">
-                <h2 class="text-2xl font-bold text-white mb-2">
-                    Select Your Team for {{ gameWeek.name }}
-                </h2>
-                <p class="text-gray-300">
-                    Choose a team you haven't picked before in this tournament
-                </p>
-            </div>
+    <Head :title="`Select Team - ${tournament.name}`" />
 
-            <!-- Games for this gameweek -->
-            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-white mb-4">
-                    This Gameweek's Matches
-                </h3>
-                <div class="grid gap-3">
-                    <div v-for="game in gameWeekGames" :key="game.id" 
-                         class="flex items-center justify-between bg-white/5 rounded-lg p-4">
-                        <div class="flex items-center space-x-4">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-6 h-6 rounded-full border-2 border-white/20 flex items-center justify-center">
+    <TournamentLayout>
+        <template #header>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                        Select Your Team
+                    </h2>
+                    <p class="text-gray-600">
+                        Gameweek {{ gameweek.week_number }} - {{ gameweek.name }}
+                    </p>
+                </div>
+                <div class="text-right">
+                    <div class="bg-green-50 rounded-lg px-4 py-2 border border-green-200 shadow-md">
+                        <i class="fas fa-futbol text-green-600 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <div class="max-w-4xl mx-auto space-y-6">
+            <!-- Current Game Info -->
+            <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Game</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div v-for="game in gameweek.games" :key="game.id" 
+                         class="bg-gray-50 rounded-lg p-4 border border-green-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                     :style="{ backgroundColor: game.home_team.primary_color || '#22C55E' }">
                                     <span class="text-xs font-bold text-white">H</span>
                                 </div>
-                                <span class="text-white font-medium">{{ game.home_team.name }}</span>
+                                <span class="text-gray-900 font-medium">{{ game.home_team.name }}</span>
                             </div>
-                            <span class="text-gray-300 text-sm">vs</span>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-white font-medium">{{ game.away_team.name }}</span>
-                                <div class="w-6 h-6 rounded-full border-2 border-white/20 flex items-center justify-center">
+                            <div class="text-center">
+                                <span class="text-gray-500 text-sm">vs</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-gray-900 font-medium">{{ game.away_team.name }}</span>
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                     :style="{ backgroundColor: game.away_team.primary_color || '#22C55E' }">
                                     <span class="text-xs font-bold text-white">A</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-sm text-gray-300">
-                                {{ formatDateTime(game.kick_off_time) }}
-                            </div>
-                            <div class="text-xs text-gray-400">
-                                {{ game.status }}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Team Selection Form -->
-            <form @submit.prevent="submitPick" class="space-y-6">
-                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">
-                        Select Your Team
-                    </h3>
-                    
-                    <!-- Available Teams Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div v-for="team in availableTeams" :key="team.id"
-                             @click="selectTeam(team.id)"
-                             class="team-card"
-                             :class="{ 'selected': form.team_id === team.id }">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center"
-                                     :style="{ backgroundColor: team.primary_color }">
-                                    <span class="font-bold text-white text-sm">
-                                        {{ team.short_name }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <div class="font-medium text-white">{{ team.name }}</div>
-                                    <div class="text-xs text-gray-300">
-                                        Available to pick
+            <!-- Team Selection -->
+            <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Your Team</h3>
+                <p class="text-gray-600 mb-6">Choose one Premier League team for this gameweek. Once selected, you cannot use this team again.</p>
+                
+                <form @submit.prevent="submit" class="space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div v-for="team in availableTeams" :key="team.id" 
+                             class="relative">
+                            <input
+                                type="radio"
+                                :id="`team-${team.id}`"
+                                name="team_id"
+                                :value="team.id"
+                                v-model="form.team_id"
+                                class="sr-only"
+                            />
+                            <label :for="`team-${team.id}`" 
+                                   class="block cursor-pointer">
+                                <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
+                                     :class="{ 'bg-green-100 border-green-400': form.team_id == team.id }">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
+                                         :style="{ backgroundColor: team.primary_color || '#22C55E' }">
+                                        <span class="font-bold text-white text-sm">{{ team.short_name }}</span>
                                     </div>
+                                    <div class="font-medium text-gray-900 text-sm">{{ team.name }}</div>
                                 </div>
-                            </div>
-                            
-                            <!-- Selection indicator -->
-                            <div v-if="form.team_id === team.id" 
-                                 class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Used Teams Display -->
-                    <div v-if="usedTeams.length > 0" class="mt-6 pt-6 border-t border-white/10">
-                        <h4 class="text-md font-medium text-white mb-3">Teams Already Used</h4>
-                        <div class="flex flex-wrap gap-2">
-                            <div v-for="team in usedTeams" :key="team.id"
-                                 class="flex items-center space-x-2 bg-red-500/20 border border-red-500/30 rounded-lg px-3 py-1">
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center"
-                                     :style="{ backgroundColor: team.primary_color }">
-                                    <span class="font-bold text-white text-xs">
-                                        {{ team.short_name }}
-                                    </span>
-                                </div>
-                                <span class="text-sm text-white">{{ team.name }}</span>
-                            </div>
+                    <div v-if="form.team_id" class="text-center">
+                        <p class="text-gray-600 mb-4">
+                            Selected: <span class="font-semibold text-green-600">{{ availableTeams.find(t => t.id == form.team_id)?.name }}</span>
+                        </p>
+                        <PrimaryButton
+                            class="w-full md:w-auto"
+                            :class="{ 'opacity-25': form.processing }"
+                            :disabled="form.processing"
+                        >
+                            Confirm Selection
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Teams Already Used -->
+            <div v-if="usedTeams.length > 0" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+                <h4 class="text-md font-medium text-gray-900 mb-3">Teams Already Used</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div v-for="team in usedTeams" :key="team.id" 
+                         class="bg-gray-100 rounded-lg p-3 text-center opacity-60">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1"
+                             :style="{ backgroundColor: team.primary_color || '#22C55E' }">
+                            <span class="font-bold text-white text-xs">{{ team.short_name }}</span>
                         </div>
-                    </div>
-
-                    <!-- Error Display -->
-                    <div v-if="$page.props.errors.team_id" class="mt-4">
-                        <p class="text-red-400 text-sm">{{ $page.props.errors.team_id }}</p>
+                        <div class="text-gray-600 text-xs">{{ team.name }}</div>
                     </div>
                 </div>
-
-                <!-- Action Buttons -->
-                <div class="flex justify-between">
-                    <Link :href="route('tournaments.show', tournament.id)"
-                          class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                        Cancel
-                    </Link>
-                    
-                    <button type="submit" 
-                            :disabled="!form.team_id || form.processing"
-                            class="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
-                        <span v-if="form.processing">Confirming...</span>
-                        <span v-else>Confirm Pick</span>
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </TournamentLayout>
 </template>
 
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
-import TournamentLayout from '@/Layouts/TournamentLayout.vue'
-import { computed } from 'vue'
+import { Head, useForm } from '@inertiajs/vue3';
+import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     tournament: Object,
-    gameWeek: Object,
+    gameweek: Object,
     availableTeams: Array,
-    gameWeekGames: {
-        type: Array,
-        default: () => []
-    },
-    usedTeams: {
-        type: Array,
-        default: () => []
-    }
-})
+    usedTeams: Array,
+});
 
 const form = useForm({
-    team_id: null
-})
+    team_id: '',
+});
 
-const selectTeam = (teamId) => {
-    form.team_id = teamId
-}
-
-const submitPick = () => {
-    form.post(route('tournaments.gameweeks.picks.store', [props.tournament.id, props.gameWeek.id]))
-}
-
-const formatDateTime = (datetime) => {
-    return new Date(datetime).toLocaleString('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
+const submit = () => {
+    form.post(route('tournaments.picks.store', { tournament: props.tournament.id, gameweek: props.gameweek.id }));
+};
 </script>
 
 <style scoped>

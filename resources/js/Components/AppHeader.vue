@@ -22,18 +22,19 @@ const logout = () => {
 </script>
 
 <template>
-    <header class="bg-white/10 backdrop-blur-md border-b border-white/20 relative z-[9999]">
+    <header class="bg-white/90 backdrop-blur-md border-b border-green-200 relative z-[9999] shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-6">
+            <div class="flex justify-between items-center py-4">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <Link :href="route('welcome')" class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                    <Link :href="route('welcome')" class="flex items-center space-x-3 group">
+                        <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
+                            <i class="fas fa-futbol text-white text-lg"></i>
                         </div>
-                        <h1 class="text-2xl font-bold text-white">PL Tournament</h1>
+                        <div class="flex flex-col">
+                            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
+                            <span class="text-xs text-green-600 font-medium">Premier League</span>
+                        </div>
                     </Link>
                 </div>
 
@@ -42,20 +43,23 @@ const logout = () => {
                     <!-- Quick Actions -->
                     <Link
                         :href="route('tournaments.index')"
-                        class="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                        class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
+                        <i class="fas fa-trophy mr-2"></i>
                         My Tournaments
                     </Link>
                     <Link
                         :href="route('schedule.index')"
-                        class="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                        class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
+                        <i class="fas fa-calendar mr-2"></i>
                         Schedule
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
-                        class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 px-3 py-2 rounded-md text-sm font-medium transition-all"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                     >
+                        <i class="fas fa-plus mr-2"></i>
                         Create Tournament
                     </Link>
                     
@@ -63,18 +67,18 @@ const logout = () => {
                     <div class="relative">
                         <button 
                             @click="toggleDropdown"
-                            class="flex items-center space-x-2 text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                            class="flex items-center space-x-3 text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                         >
-                            <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                            <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200">
                                 <img 
                                     :src="page.props.auth.user.avatar_url" 
                                     :alt="page.props.auth.user.name"
                                     class="w-full h-full object-cover"
-                                    @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(page.props.auth.user.name)}&background=10B981&color=fff&size=32`"
+                                    @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(page.props.auth.user.name)}&background=22C55E&color=fff&size=32`"
                                 />
                             </div>
                             <span>{{ page.props.auth.user.name }}</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': showDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
@@ -82,137 +86,127 @@ const logout = () => {
                         <!-- Dropdown Menu -->
                         <div 
                             v-show="showDropdown"
-                            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[10000] border"
+                            class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 z-[10000] border border-green-200 backdrop-blur-md"
                             @click="closeDropdown"
                         >
-                            <div class="px-4 py-3 border-b border-gray-200">
+                            <div class="px-4 py-3 border-b border-green-200">
                                 <p class="text-sm text-gray-900 font-medium">{{ page.props.auth.user.name }}</p>
-                                <p class="text-sm text-gray-500">{{ page.props.auth.user.email }}</p>
+                                <p class="text-sm text-green-600">{{ page.props.auth.user.email }}</p>
                             </div>
                             
                             <Link 
                                 :href="route('profile.show', { user: page.props.auth.user.id })"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:text-green-600 hover:bg-green-50 cursor-pointer transition-colors duration-200"
                             >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
+                                <i class="fas fa-user mr-3 text-green-500"></i>
                                 Profile
                             </Link>
                             
                             <Link 
-                                :href="route('tournaments.index')"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                :href="route('profile.edit')"
+                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:text-green-600 hover:bg-green-50 cursor-pointer transition-colors duration-200"
                             >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                </svg>
-                                My Tournaments
+                                <i class="fas fa-cog mr-3 text-green-500"></i>
+                                Settings
                             </Link>
                             
-                            <div class="border-t border-gray-200"></div>
+                            <div class="border-t border-green-200 my-2"></div>
                             
-                            <Link 
-                                :href="route('logout')" 
-                                method="post" 
-                                as="button"
-                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer text-left"
+                            <button 
+                                @click="logout"
+                                class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer transition-colors duration-200"
                             >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                </svg>
-                                Log Out
-                            </Link>
+                                <i class="fas fa-sign-out-alt mr-3"></i>
+                                Logout
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Auth Links for Guests -->
-                <nav v-else class="flex items-center space-x-4">
+                <!-- Guest Navigation -->
+                <div class="hidden md:flex items-center space-x-4" v-else>
                     <Link
                         :href="route('login')"
-                        class="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
                         Login
                     </Link>
                     <Link
                         :href="route('register')"
-                        class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-all"
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                     >
                         Join Now
                     </Link>
-                </nav>
+                </div>
 
                 <!-- Mobile menu button -->
-                <div class="md:hidden" v-if="page.props.auth.user">
-                    <button
+                <div class="md:hidden">
+                    <button 
                         @click="showMobileMenu = !showMobileMenu"
-                        class="inline-flex items-center justify-center p-2 rounded-md text-white/90 hover:text-white hover:bg-white/10 transition-all"
+                        class="text-gray-700 hover:text-green-600 p-2 rounded-lg transition-colors duration-200"
                     >
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path
-                                :class="{'hidden': showMobileMenu, 'inline-flex': !showMobileMenu }"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                            <path
-                                :class="{'hidden': !showMobileMenu, 'inline-flex': showMobileMenu }"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path v-if="!showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            <!-- Mobile Navigation Menu -->
-            <div v-if="page.props.auth.user" :class="{'block': showMobileMenu, 'hidden': !showMobileMenu}" class="md:hidden">
-                <div class="pt-2 pb-3 space-y-1 border-t border-white/20">
+            <!-- Mobile Navigation -->
+            <div v-show="showMobileMenu" class="md:hidden py-4 border-t border-green-200">
+                <div class="space-y-2" v-if="page.props.auth.user">
                     <Link
                         :href="route('tournaments.index')"
-                        class="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
+                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
+                        <i class="fas fa-trophy mr-2"></i>
                         My Tournaments
                     </Link>
                     <Link
                         :href="route('schedule.index')"
-                        class="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
+                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
+                        <i class="fas fa-calendar mr-2"></i>
                         Schedule
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
-                        class="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
+                        class="block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >
+                        <i class="fas fa-plus mr-2"></i>
                         Create Tournament
                     </Link>
                     <Link
                         :href="route('profile.show', { user: page.props.auth.user.id })"
-                        class="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
+                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
+                        <i class="fas fa-user mr-2"></i>
                         Profile
                     </Link>
-                    <Link
-                        :href="route('logout')"
-                        method="post"
-                        as="button"
-                        class="block w-full text-left px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md text-sm font-medium transition-all"
+                    <button 
+                        @click="logout"
+                        class="block w-full text-left text-red-600 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-red-50"
                     >
-                        Log Out
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </button>
+                </div>
+                <div class="space-y-2" v-else>
+                    <Link
+                        :href="route('login')"
+                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                    >
+                        Login
+                    </Link>
+                    <Link
+                        :href="route('register')"
+                        class="block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                        Join Now
                     </Link>
                 </div>
             </div>
         </div>
-
-        <!-- Click outside to close dropdown -->
-        <div 
-            v-show="showDropdown" 
-            @click="closeDropdown"
-            class="fixed inset-0 z-[9999]"
-        ></div>
     </header>
 </template> 

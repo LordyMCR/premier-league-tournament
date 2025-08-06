@@ -22,12 +22,21 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Register" />
+        <Head title="Create Account" />
 
-        <form @submit.prevent="submit">
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-user-plus text-white text-2xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Join PL Tournament</h1>
+            <p class="text-gray-600">Create your account and start playing</p>
+        </div>
+
+        <form @submit.prevent="submit" class="space-y-6">
             <div>
-                <InputLabel for="name" value="Name" />
-
+                <InputLabel for="name" value="Full Name" />
                 <TextInput
                     id="name"
                     type="text"
@@ -36,14 +45,13 @@ const submit = () => {
                     required
                     autofocus
                     autocomplete="name"
+                    placeholder="Enter your full name"
                 />
-
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <div class="mt-4">
+            <div>
                 <InputLabel for="email" value="Email" />
-
                 <TextInput
                     id="email"
                     type="email"
@@ -51,14 +59,13 @@ const submit = () => {
                     v-model="form.email"
                     required
                     autocomplete="username"
+                    placeholder="Enter your email address"
                 />
-
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
+            <div>
                 <InputLabel for="password" value="Password" />
-
                 <TextInput
                     id="password"
                     type="password"
@@ -66,17 +73,13 @@ const submit = () => {
                     v-model="form.password"
                     required
                     autocomplete="new-password"
+                    placeholder="Create a strong password"
                 />
-
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
-
+            <div>
+                <InputLabel for="password_confirmation" value="Confirm Password" />
                 <TextInput
                     id="password_confirmation"
                     type="password"
@@ -84,29 +87,26 @@ const submit = () => {
                     v-model="form.password_confirmation"
                     required
                     autocomplete="new-password"
+                    placeholder="Confirm your password"
                 />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
+                <InputError class="mt-2" :message="form.errors.password_confirmation" />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    :href="route('login')"
-                    class="rounded-md text-sm text-white/70 underline hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                >
-                    Already registered?
-                </Link>
+            <PrimaryButton
+                class="w-full"
+                :class="{ 'opacity-25': form.processing }"
+                :disabled="form.processing"
+            >
+                Create Account
+            </PrimaryButton>
 
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Register
-                </PrimaryButton>
+            <div class="text-center">
+                <p class="text-gray-600 text-sm">
+                    Already have an account? 
+                    <Link :href="route('login')" class="text-green-600 hover:text-green-700 font-medium">
+                        Sign in here
+                    </Link>
+                </p>
             </div>
         </form>
     </GuestLayout>

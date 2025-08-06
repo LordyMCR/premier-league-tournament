@@ -356,7 +356,7 @@ const handleImageLoad = (event) => {
                                         v-model="extendedForm.bio"
                                         rows="4"
                                         placeholder="Tell others about yourself..."
-                                        class="mt-1 block w-full bg-gray-900/50 border border-gray-600/50 text-white rounded-lg px-3 py-2 placeholder-gray-400 text-sm sm:text-base"
+                                        class="mt-1 block w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-3 py-2 placeholder-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                                     ></textarea>
                                     <InputError :message="extendedForm.errors.bio" class="mt-2" />
                                 </div>
