@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
@@ -76,7 +77,7 @@ class ProfileController extends Controller
             ]);
         } catch (\Exception $e) {
             // Log the error for debugging
-            \Log::error('Profile show error: ' . $e->getMessage(), [
+            Log::error('Profile show error: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'viewer_id' => $request->user()?->id,
                 'trace' => $e->getTraceAsString()

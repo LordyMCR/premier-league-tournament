@@ -10,6 +10,8 @@ use App\Services\TeamNewsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+
 
 class ScheduleController extends Controller
 {
@@ -620,7 +622,7 @@ class ScheduleController extends Controller
                     $record['historical_note'] = "Historical data available ({$apiH2H['total_matches']} matches)";
                 }
             } catch (\Exception $e) {
-                \Log::error('Error fetching head-to-head data', [
+                Log::error('Error fetching head-to-head data', [
                     'teamA' => $teamA->id,
                     'teamB' => $teamB->id,
                     'error' => $e->getMessage()
