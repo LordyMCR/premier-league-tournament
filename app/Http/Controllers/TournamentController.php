@@ -162,6 +162,7 @@ class TournamentController extends Controller
         $userPicks = null;
         $currentPick = null;
         $availableTeams = [];
+        $allParticipantPicks = [];
         
         if ($isParticipant) {
             $userPicks = Pick::getUserPicksInTournament($user->id, $tournament->id);
@@ -183,6 +184,42 @@ class TournamentController extends Controller
                 }
             }
         }
+        
+        // Get all participants' picks for display (grouped by gameweek)
+        $allParticipantPicks = Pick::where('tournament_id', $tournament->id)
+            ->with(['user', 'team', 'gameWeek'])
+            ->orderBy('game_week_id')
+            ->orderBy('picked_at')
+            ->get()
+            ->groupBy('game_week_id')
+            ->map(function ($picks) {
+                return $picks->map(function ($pick) {
+                    return [
+                        'id' => $pick->id,
+                        'user' => [
+                            'id' => $pick->user->id,
+                            'name' => $pick->user->name,
+                            'avatar_url' => $pick->user->avatar_url,
+                        ],
+                        'team' => [
+                            'id' => $pick->team->id,
+                            'name' => $pick->team->name,
+                            'short_name' => $pick->team->short_name,
+                            'primary_color' => $pick->team->primary_color,
+                            'logo_url' => $pick->team->logo_url,
+                        ],
+                        'gameweek' => [
+                            'id' => $pick->gameWeek->id,
+                            'week_number' => $pick->gameWeek->week_number,
+                            'name' => $pick->gameWeek->name,
+                        ],
+                        'result' => $pick->result,
+                        'points' => $pick->points,
+                        'home_away' => $pick->home_away,
+                        'picked_at' => $pick->picked_at,
+                    ];
+                });
+            });
 
         return Inertia::render('Tournaments/Show', [
             'tournament' => $tournament,
@@ -195,6 +232,7 @@ class TournamentController extends Controller
             'currentPick' => $currentPick,
             'availableTeams' => $availableTeams,
             'allTeams' => Team::all(),
+            'allParticipantPicks' => $allParticipantPicks,
         ]);
     }
 

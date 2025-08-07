@@ -12,6 +12,7 @@ const props = defineProps({
     nextSelectionGameweek: Object,
     userPicks: Array,
     currentPick: Object,
+    allParticipantPicks: Object,
 });
 
 const formatDate = (dateString) => {
@@ -229,6 +230,77 @@ const timeUntilNextSelection = computed(() => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- All Participants' Picks -->
+            <div v-if="Object.keys(allParticipantPicks).length > 0" class="bg-white rounded-xl border border-green-200 shadow-lg">
+                <div class="p-6 border-b border-green-200">
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-users text-blue-500"></i>
+                        All Participants' Picks
+                    </h3>
+                    <p class="text-gray-600 text-sm mt-1">See what teams everyone has selected</p>
+                </div>
+                
+                <div class="max-h-96 overflow-y-auto">
+                    <div v-for="(picks, gameweekId) in allParticipantPicks" :key="gameweekId" class="border-b border-gray-100 last:border-b-0">
+                        <div class="p-4 bg-gray-50 border-b border-gray-200">
+                            <h4 class="font-semibold text-gray-900">
+                                {{ picks[0]?.gameweek?.name || `Gameweek ${picks[0]?.gameweek?.week_number}` }}
+                            </h4>
+                        </div>
+                        <div class="p-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div v-for="pick in picks" :key="pick.id" 
+                                     class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- User Avatar -->
+                                        <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200">
+                                            <img 
+                                                :src="pick.user.avatar_url" 
+                                                :alt="pick.user.name"
+                                                class="w-full h-full object-cover"
+                                                @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(pick.user.name)}&background=22C55E&color=fff&size=32`"
+                                            />
+                                        </div>
+                                        
+                                        <!-- User Name -->
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-sm font-medium text-gray-900 truncate">{{ pick.user.name }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Team Badge -->
+                                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                             :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }"
+                                             :title="pick.team.name">
+                                            {{ pick.team.short_name }}
+                                        </div>
+                                        
+                                        <!-- Home/Away indicator if applicable -->
+                                        <span v-if="pick.home_away" 
+                                              class="text-xs px-1.5 py-0.5 rounded text-gray-600 bg-gray-200"
+                                              :title="pick.home_away === 'home' ? 'Home fixture' : 'Away fixture'">
+                                            {{ pick.home_away === 'home' ? 'H' : 'A' }}
+                                        </span>
+                                        
+                                        <!-- Result indicator -->
+                                        <div class="flex items-center space-x-1">
+                                            <span v-if="pick.result === 'win'" class="w-2 h-2 bg-green-500 rounded-full" title="Win"></span>
+                                            <span v-else-if="pick.result === 'draw'" class="w-2 h-2 bg-yellow-500 rounded-full" title="Draw"></span>
+                                            <span v-else-if="pick.result === 'loss'" class="w-2 h-2 bg-red-500 rounded-full" title="Loss"></span>
+                                            <span v-else class="w-2 h-2 bg-gray-300 rounded-full" title="Pending"></span>
+                                            
+                                            <!-- Points -->
+                                            <span class="text-xs font-medium text-gray-600">{{ pick.points || 0 }}pts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
