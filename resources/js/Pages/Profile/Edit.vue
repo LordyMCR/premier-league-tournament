@@ -49,6 +49,7 @@ const privacyForm = useForm({
     show_email: props.profileSettings?.show_email ?? false,
     show_location: props.profileSettings?.show_location ?? true,
     show_age: props.profileSettings?.show_age ?? false,
+    show_bio: props.profileSettings?.show_bio ?? true,
     show_favorite_team: props.profileSettings?.show_favorite_team ?? true,
     show_supporter_since: props.profileSettings?.show_supporter_since ?? true,
     show_social_links: props.profileSettings?.show_social_links ?? true,
@@ -60,9 +61,6 @@ const privacyForm = useForm({
     show_team_preferences: props.profileSettings?.show_team_preferences ?? true,
     show_last_active: props.profileSettings?.show_last_active ?? true,
     show_join_date: props.profileSettings?.show_join_date ?? true,
-    allow_profile_views: props.profileSettings?.allow_profile_views ?? true,
-    count_profile_views: props.profileSettings?.count_profile_views ?? true,
-    show_profile_view_count: props.profileSettings?.show_profile_view_count ?? false,
     searchable_by_email: props.profileSettings?.searchable_by_email ?? false,
     searchable_by_name: props.profileSettings?.searchable_by_name ?? true,
     allow_tournament_invites: props.profileSettings?.allow_tournament_invites ?? true,
@@ -314,16 +312,16 @@ const handleImageLoad = (event) => {
                                     <!-- Twitter Handle -->
                                     <div>
                                         <InputLabel for="twitter_handle" value="Twitter Handle" />
-                                        <div class="mt-1 flex rounded-lg shadow-sm">
-                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-100 border border-r-0 border-gray-300 text-gray-900 text-sm rounded-l-lg">
+                                        <div class="mt-1 flex rounded-lg shadow-sm border border-gray-300 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-100 text-gray-900 text-sm rounded-l-lg border-r border-gray-300">
                                                 @
                                             </span>
-                                            <TextInput
+                                            <input
                                                 id="twitter_handle"
                                                 v-model="extendedForm.twitter_handle"
                                                 type="text"
                                                 placeholder="username"
-                                                class="flex-1 rounded-none rounded-r-lg"
+                                                class="flex-1 bg-white text-gray-900 placeholder-gray-600 text-sm rounded-r-lg border-0 focus:ring-0 focus:outline-none px-3 py-2"
                                             />
                                         </div>
                                         <InputError :message="extendedForm.errors.twitter_handle" class="mt-2" />
@@ -332,16 +330,16 @@ const handleImageLoad = (event) => {
                                     <!-- Instagram Handle -->
                                     <div>
                                         <InputLabel for="instagram_handle" value="Instagram Handle" />
-                                        <div class="mt-1 flex rounded-lg shadow-sm">
-                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-100 border border-r-0 border-gray-300 text-gray-900 text-sm rounded-l-lg">
+                                        <div class="mt-1 flex rounded-lg shadow-sm border border-gray-300 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-100 text-gray-900 text-sm rounded-l-lg border-r border-gray-300">
                                                 @
                                             </span>
-                                            <TextInput
+                                            <input
                                                 id="instagram_handle"
                                                 v-model="extendedForm.instagram_handle"
                                                 type="text"
                                                 placeholder="username"
-                                                class="flex-1 rounded-none rounded-r-lg"
+                                                class="flex-1 bg-white text-gray-900 placeholder-gray-600 text-sm rounded-r-lg border-0 focus:ring-0 focus:outline-none px-3 py-2"
                                             />
                                         </div>
                                         <InputError :message="extendedForm.errors.instagram_handle" class="mt-2" />
@@ -480,18 +478,6 @@ const handleImageLoad = (event) => {
                                         <Checkbox v-model:checked="privacyForm.profile_visible" />
                                         <span class="text-gray-700">Profile visible to other users</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.allow_profile_views" />
-                                        <span class="text-gray-700">Allow profile views</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.count_profile_views" />
-                                        <span class="text-gray-700">Count profile views</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_profile_view_count" />
-                                        <span class="text-gray-700">Show view count on profile</span>
-                                    </label>
                                 </div>
                             </div>
 
@@ -514,6 +500,10 @@ const handleImageLoad = (event) => {
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_age" />
                                         <span class="text-gray-700">Show age</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
+                                        <Checkbox v-model:checked="privacyForm.show_bio" />
+                                        <span class="text-gray-700">Show bio/about section</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_favorite_team" />

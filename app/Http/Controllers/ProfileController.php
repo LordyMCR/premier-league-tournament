@@ -29,9 +29,6 @@ class ProfileController extends Controller
                 abort(403, 'This profile is private.');
             }
 
-            // Increment profile view count
-            $user->incrementProfileViews($request->user());
-
             // Load necessary relationships with null checks
             $user->load([
                 'favoriteTeam',
@@ -44,6 +41,46 @@ class ProfileController extends Controller
                     $query->latest()->limit(5);
                 }
             ]);
+
+            // Get current active tournaments for the user
+            $currentTournaments = collect();
+            try {
+                $currentTournaments = $user->tournaments()
+                    ->where('status', 'active')
+                    ->with(['participants' => function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    }])
+                    ->get()
+                    ->map(function ($tournament) {
+                        return [
+                            'id' => $tournament->id,
+                            'name' => $tournament->name,
+                            'status' => $tournament->status,
+                            'current_points' => $tournament->participants->first()?->total_points ?? 0,
+                            'current_gameweek' => $tournament->current_gameweek ?? 1,
+                            'created_at' => $tournament->created_at,
+                        ];
+                    });
+            } catch (\Exception $e) {
+                $currentTournaments = collect();
+            }
+
+            // Get team preferences (could be from picks or favorites)
+            $teamPreferences = collect();
+            try {
+                // Get most picked teams by the user
+                $teamPreferences = Team::whereHas('picks', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->withCount(['picks' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }])
+                ->orderBy('picks_count', 'desc')
+                ->limit(6)
+                ->get();
+            } catch (\Exception $e) {
+                $teamPreferences = collect();
+            }
 
             // Get user's tournament statistics safely
             $recentTournaments = collect();
@@ -68,6 +105,10 @@ class ProfileController extends Controller
                 // If tournaments fail to load, just use empty collection
                 $recentTournaments = collect();
             }
+
+            // Attach additional data to user object
+            $user->current_tournaments = $currentTournaments;
+            $user->team_preferences = $teamPreferences;
 
             return Inertia::render('Profile/Show', [
                 'profileUser' => $user,
@@ -172,6 +213,7 @@ class ProfileController extends Controller
             'show_email' => ['boolean'],
             'show_location' => ['boolean'],
             'show_age' => ['boolean'],
+            'show_bio' => ['boolean'],
             'show_favorite_team' => ['boolean'],
             'show_supporter_since' => ['boolean'],
             'show_social_links' => ['boolean'],
