@@ -32,19 +32,15 @@ Artisan::command('test:historical-data', function () {
 })->purpose('Test historical data loading');
 
 // Schedule daily football data updates
-Schedule::command('football:update')->dailyAt('03:00')->withoutOverlapping();
-
-// Schedule squad data fetching (daily to get latest squad info and injury updates)
-Schedule::command('squad:fetch')->dailyAt('04:00')->withoutOverlapping();
+Schedule::command('football:update')->dailyAt('01:00')->withoutOverlapping();
 
 // Schedule player statistics updates (after matches and data updates)
-Schedule::command('squad:update-stats')->dailyAt('05:00')->withoutOverlapping();
+Schedule::command('squad:update-stats')->dailyAt('02:00')->withoutOverlapping();
+
+// Schedule squad data fetching (daily to get latest squad info and injury updates)
+Schedule::command('squad:fetch')->dailyAt('03:00')->withoutOverlapping();
 
 // Schedule auto-assignment of missing picks
 // Run every hour to catch any recently passed deadlines
 Schedule::command('picks:auto-assign')->hourly()->withoutOverlapping();
 
-// Alternative: Run at specific times when deadlines typically occur
-// Schedule::command('picks:auto-assign')->dailyAt('11:30')->withoutOverlapping(); // Before most Saturday games
-// Schedule::command('picks:auto-assign')->dailyAt('16:30')->withoutOverlapping(); // Before evening games
-// Schedule::command('picks:auto-assign')->weeklyOn(1, '19:30')->withoutOverlapping(); // Monday evening games
