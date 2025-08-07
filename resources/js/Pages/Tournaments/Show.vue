@@ -147,8 +147,23 @@ const timeUntilNextSelection = computed(() => {
                 </Link>
             </div>
 
+            <!-- Selection Window Open -->
+            <div v-if="isParticipant && selectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Selection Window Open</h3>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600">Gameweek {{ selectionGameweek.week_number }}</p>
+                        <p class="text-sm text-gray-500">Closes {{ formatDate(selectionGameweek.selection_deadline) }}</p>
+                    </div>
+                    <Link :href="route('tournaments.gameweeks.picks.create', { tournament: tournament.id, gameWeek: selectionGameweek.id })"
+                          class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
+                        Make Your Pick
+                    </Link>
+                </div>
+            </div>
+
             <!-- Next Selection Window -->
-            <div v-if="nextSelectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+            <div v-else-if="nextSelectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Next Selection Window</h3>
                 <div class="flex items-center justify-between">
                     <div>
@@ -424,15 +439,18 @@ export default {
         },
         // Method to check if selection is open for a gameweek
         isSelectionOpen(gameweek) {
-            if (!gameweek || !gameweek.selection_opens || !gameweek.selection_deadline) {
-                return false;
-            }
-            
+            if (!gameweek) return false;
             const now = new Date();
-            const opensAt = new Date(gameweek.selection_opens);
-            const deadline = new Date(gameweek.selection_deadline);
-            
-            return now >= opensAt && now <= deadline;
+            if (gameweek.selection_opens && gameweek.selection_deadline) {
+                return now >= new Date(gameweek.selection_opens) && now <= new Date(gameweek.selection_deadline);
+            }
+            if (gameweek.selection_deadline) {
+                return now <= new Date(gameweek.selection_deadline);
+            }
+            if (gameweek.gameweek_start_time) {
+                return now < new Date(gameweek.gameweek_start_time);
+            }
+            return true;
         },
         // Format date and time for display
         formatDateTime(dateString) {
