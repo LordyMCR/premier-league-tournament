@@ -43,6 +43,16 @@ const formatDateTime = (dateString) => {
     });
 };
 
+// Shorter day + time for tight mobile layouts
+const formatDayTimeShort = (dateString) => {
+    if (!dateString) return 'TBD';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'TBD';
+    const weekday = date.toLocaleDateString('en-GB', { weekday: 'short' });
+    const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return `${weekday}, ${time}`;
+};
+
 const formatScore = (game) => {
     if (game.status === 'FINISHED') {
         return `${game.home_score} - ${game.away_score}`;
@@ -55,7 +65,7 @@ const getGameStatusBadge = (game) => {
         case 'FINISHED':
             return { class: 'bg-green-100 text-green-700', text: 'FT' };
         case 'SCHEDULED':
-            return { class: 'bg-blue-100 text-blue-700', text: 'Scheduled' };
+            return { class: 'bg-blue-100 text-blue-700', text: 'KO' };
         case 'LIVE':
             return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
         default:
@@ -158,10 +168,11 @@ const filteredGameweeks = computed(() => {
                     
                     <div class="space-y-3">
                         <div v-for="game in gameweek.games" :key="game.id" 
-                             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                             class="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <!-- Home team -->
                             <div class="flex items-center space-x-3 flex-1 min-w-0">
                                 <Link :href="route('schedule.team', game.home_team.id)" 
-                                      class="w-10 h-10 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
+                                      class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
                                     <img :src="game.home_team.logo_url" 
                                          :alt="game.home_team.name"
                                          class="w-full h-full object-contain"
@@ -169,23 +180,36 @@ const filteredGameweeks = computed(() => {
                                 </Link>
                                 <Link :href="route('schedule.team', game.home_team.id)" 
                                       class="text-gray-900 font-medium hover:text-green-600 transition-colors truncate">
-                                    {{ game.home_team.name }}
+                                    <span class="sm:hidden tracking-widest">{{ game.home_team.short_name }}</span>
+                                    <span class="hidden sm:inline">{{ game.home_team.name }}</span>
                                 </Link>
                             </div>
-                            
+
+                            <!-- Score / Kickoff -->
                             <Link :href="route('schedule.match', game.id)" 
-                                  class="text-center mx-4 hover:bg-white rounded-lg px-3 py-1 transition-colors flex-shrink-0">
-                                <div class="text-gray-900 font-bold">{{ formatScore(game) }}</div>
-                                <div class="text-xs text-gray-500">{{ formatDateTime(game.kick_off_time) }}</div>
+                                  class="text-center mx-2 sm:mx-4 hover:bg-white rounded-lg px-2 sm:px-3 py-1 transition-colors flex-shrink-0 min-w-[84px]">
+                                <div class="text-gray-900 font-bold leading-tight">{{ formatScore(game) }}</div>
+                                <!-- Desktop/tablet: inline date + status -->
+                                <div class="hidden sm:flex text-xs text-gray-500 items-center gap-2 justify-center">
+                                    <span>{{ formatDateTime(game.kick_off_time) }}</span>
+                                    <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-medium" :class="getGameStatusBadge(game).class">{{ getGameStatusBadge(game).text }}</span>
+                                </div>
+                                <!-- Mobile: stacked date then status -->
+                                <div class="sm:hidden mt-0.5 text-[11px] text-gray-500">{{ formatDateTime(game.kick_off_time) }}</div>
+                                <div class="sm:hidden mt-1">
+                                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium" :class="getGameStatusBadge(game).class">{{ getGameStatusBadge(game).text }}</span>
+                                </div>
                             </Link>
-                            
+
+                            <!-- Away team -->
                             <div class="flex items-center space-x-3 flex-1 justify-end min-w-0">
                                 <Link :href="route('schedule.team', game.away_team.id)" 
                                       class="text-gray-900 font-medium hover:text-green-600 transition-colors truncate text-right">
-                                    {{ game.away_team.name }}
+                                    <span class="sm:hidden tracking-widest">{{ game.away_team.short_name }}</span>
+                                    <span class="hidden sm:inline">{{ game.away_team.name }}</span>
                                 </Link>
                                 <Link :href="route('schedule.team', game.away_team.id)" 
-                                      class="w-10 h-10 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
+                                      class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0">
                                     <img :src="game.away_team.logo_url" 
                                          :alt="game.away_team.name"
                                          class="w-full h-full object-contain"

@@ -166,9 +166,13 @@ const timeUntilNextSelection = computed(() => {
             <div v-if="currentPick" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Pick</h3>
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                    <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200"
                          :style="{ backgroundColor: currentPick.team.primary_color || '#22C55E' }">
-                        {{ currentPick.team.short_name }}
+                        <img v-if="currentPick.team.logo_url"
+                             :src="currentPick.team.logo_url"
+                             :alt="currentPick.team.name"
+                             class="w-full h-full object-contain bg-white" />
+                        <span v-else class="text-white text-sm font-bold">{{ currentPick.team.short_name }}</span>
                     </div>
                     <div>
                         <p class="text-gray-900 font-medium">{{ currentPick.team.name }}</p>
@@ -185,8 +189,25 @@ const timeUntilNextSelection = computed(() => {
                         Leaderboard
                     </h3>
                 </div>
-                <div class="overflow-hidden">
-                    <table class="w-full">
+                <!-- Mobile card list -->
+                <div class="sm:hidden p-4 space-y-2">
+                    <div v-for="(participant, index) in leaderboard" :key="participant.id" class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                        <div class="flex items-center min-w-0 space-x-3">
+                            <span v-if="index === 0" class="text-xl">🥇</span>
+                            <span v-else-if="index === 1" class="text-xl">🥈</span>
+                            <span v-else-if="index === 2" class="text-xl">🥉</span>
+                            <span v-else class="w-5 text-center text-gray-500 text-sm font-medium">{{ index + 1 }}</span>
+                            <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200 flex-shrink-0">
+                                <img :src="participant.user.avatar_url" :alt="participant.user.name" class="w-full h-full object-cover" @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(participant.user.name)}&background=22C55E&color=fff&size=32`" />
+                            </div>
+                            <span class="text-sm text-gray-900 font-medium truncate max-w-[10rem]">{{ participant.user.name }}</span>
+                        </div>
+                        <span class="text-green-600 font-bold flex-shrink-0">{{ participant.points }}</span>
+                    </div>
+                </div>
+                <!-- Desktop/Table view -->
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="w-full min-w-[36rem]">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
@@ -243,7 +264,7 @@ const timeUntilNextSelection = computed(() => {
                     <p class="text-gray-600 text-sm mt-1">See what teams everyone has selected</p>
                 </div>
                 
-                <div class="max-h-96 overflow-y-auto">
+                <div class="max-h-[34rem] overflow-y-auto">
                     <div v-for="(picks, gameweekId) in allParticipantPicks" :key="gameweekId" class="border-b border-gray-100 last:border-b-0">
                         <div class="p-4 bg-gray-50 border-b border-gray-200">
                             <h4 class="font-semibold text-gray-900">
@@ -253,8 +274,8 @@ const timeUntilNextSelection = computed(() => {
                         <div class="p-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <div v-for="pick in picks" :key="pick.id" 
-                                     class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <div class="flex items-center space-x-3">
+                                     class="flex flex-col gap-2 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                     <div class="flex items-center space-x-3">
                                         <!-- User Avatar -->
                                         <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200">
                                             <img 
@@ -271,23 +292,28 @@ const timeUntilNextSelection = computed(() => {
                                         </div>
                                     </div>
                                     
-                                    <div class="flex items-center space-x-2">
-                                        <!-- Team Badge -->
-                                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                             :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }"
-                                             :title="pick.team.name">
-                                            {{ pick.team.short_name }}
+                                     <div class="flex items-center flex-wrap gap-x-3 gap-y-1 w-full justify-start md:justify-end">
+                                        <!-- Team Badge + Name -->
+                                        <div class="flex items-center space-x-2 min-w-0">
+                                            <div class="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center border border-green-200"
+                                                 :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }"
+                                                 :title="pick.team.name">
+                                                <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
+                                                <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
+                                            </div>
+                                            <span class="text-sm text-gray-900 font-medium truncate leading-tight max-w-[7rem] sm:max-w-[12rem]" :title="pick.team.name">
+                                                <span class="sm:hidden">{{ pick.team.short_name }}</span>
+                                                <span class="hidden sm:inline">{{ pick.team.name }}</span>
+                                            </span>
                                         </div>
                                         
                                         <!-- Home/Away indicator if applicable -->
-                                        <span v-if="pick.home_away" 
-                                              class="text-xs px-1.5 py-0.5 rounded text-gray-600 bg-gray-200"
-                                              :title="pick.home_away === 'home' ? 'Home fixture' : 'Away fixture'">
-                                            {{ pick.home_away === 'home' ? 'H' : 'A' }}
-                                        </span>
+                                         <span v-if="pick.home_away" 
+                                              class="text-xs px-1.5 py-0.5 rounded text-gray-600 bg-gray-200 flex-shrink-0"
+                                               :title="pick.home_away === 'home' ? 'Home fixture' : 'Away fixture'">{{ pick.home_away === 'home' ? 'H' : 'A' }}</span>
                                         
                                         <!-- Result indicator -->
-                                        <div class="flex items-center space-x-1">
+                                         <div class="flex items-center space-x-1 flex-shrink-0">
                                             <span v-if="pick.result === 'win'" class="w-2 h-2 bg-green-500 rounded-full" title="Win"></span>
                                             <span v-else-if="pick.result === 'draw'" class="w-2 h-2 bg-yellow-500 rounded-full" title="Draw"></span>
                                             <span v-else-if="pick.result === 'loss'" class="w-2 h-2 bg-red-500 rounded-full" title="Loss"></span>
@@ -312,8 +338,33 @@ const timeUntilNextSelection = computed(() => {
                         Your Picks History
                     </h3>
                 </div>
-                <div class="overflow-hidden">
-                    <table class="w-full">
+                <!-- Mobile card list -->
+                <div class="sm:hidden p-4 space-y-2">
+                    <div v-for="pick in userPicks" :key="pick.id" class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                        <div class="flex items-center min-w-0 space-x-3">
+                            <span class="text-xs text-gray-500 font-medium flex-shrink-0">GW {{ pick.gameweek.week_number }}</span>
+                            <div class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center border border-green-200 flex-shrink-0"
+                                 :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }">
+                                <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
+                                <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
+                            </div>
+                            <span class="text-sm text-gray-900 font-medium truncate" :title="pick.team.name">{{ pick.team.short_name }}</span>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div>
+                                <span v-if="pick.result === 'win'" class="text-green-600 text-sm font-medium">Win</span>
+                                <span v-else-if="pick.result === 'draw'" class="text-yellow-600 text-sm font-medium">Draw</span>
+                                <span v-else-if="pick.result === 'loss'" class="text-red-600 text-sm font-medium">Loss</span>
+                                <span v-else class="text-gray-500 text-sm">Pending</span>
+                            </div>
+                            <div class="text-xs text-gray-600">{{ pick.points }} pts</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop/Table view -->
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="w-full min-w-[40rem]">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gameweek</th>
@@ -327,13 +378,17 @@ const timeUntilNextSelection = computed(() => {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ pick.gameweek.week_number }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center min-w-0">
+                                        <div class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center border border-green-200"
                                              :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }">
-                                            {{ pick.team.short_name }}
+                                            <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
+                                            <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
                                         </div>
-                                        <span class="ml-2 text-sm text-gray-900">{{ pick.team.name }}</span>
+                                        <span class="ml-2 text-sm text-gray-900 truncate" :title="pick.team.name">
+                                            <span class="sm:hidden">{{ pick.team.short_name }}</span>
+                                            <span class="hidden sm:inline">{{ pick.team.name }}</span>
+                                        </span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
