@@ -155,10 +155,34 @@ class TournamentController extends Controller
         $isParticipant = $tournament->hasParticipant($user->id);
         $leaderboard = $tournament->getLeaderboard();
         
-        // Get current game week and selection gameweek
-        $currentGameweek = GameWeek::getCurrentGameWeek();
-        $selectionGameweek = GameWeek::getCurrentSelectionGameWeek();
-        $nextSelectionGameweek = GameWeek::getNextSelectionGameWeek();
+        // Compute tournament gameweek bounds
+        $tournamentStart = $tournament->start_game_week;
+        $tournamentEnd = $tournament->end_game_week; // accessor on model
+
+        // Get current gameweek within this tournament's range
+        $currentGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+            ->where('is_completed', false)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->orderBy('week_number')
+            ->first();
+
+        // Get the selection gameweek that is currently open within the tournament range
+        $selectionGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+            ->where('is_completed', false)
+            ->whereNotNull('selection_opens')
+            ->whereNotNull('selection_deadline')
+            ->where('selection_opens', '<=', now())
+            ->where('selection_deadline', '>=', now())
+            ->orderBy('week_number')
+            ->first();
+
+        // Fallback to the next selection gameweek within range when none are open
+        $nextSelectionGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+            ->where('is_completed', false)
+            ->where('selection_opens', '>', now())
+            ->orderBy('selection_opens')
+            ->first();
         
         // Get user's picks if participant
         $userPicks = null;

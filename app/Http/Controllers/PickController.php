@@ -24,8 +24,10 @@ class PickController extends Controller
             abort(403, 'You must be a participant in this tournament to make picks.');
         }
 
-        // Check if selection window is open for this gameweek
-        if (!$gameWeek->isSelectionWindowOpen()) {
+        // Check if selection window is open for this gameweek (and the gameweek is inside tournament bounds)
+        if (!$gameWeek->isSelectionWindowOpen() ||
+            $gameWeek->week_number < $tournament->start_game_week ||
+            $gameWeek->week_number > $tournament->end_game_week) {
             $message = 'Selection window is not currently open for this gameweek.';
             
             if ($gameWeek->selection_deadline && now() > $gameWeek->selection_deadline) {
@@ -107,8 +109,10 @@ class PickController extends Controller
             abort(403, 'You must be a participant in this tournament to make picks.');
         }
 
-        // Check if selection window is open for this gameweek
-        if (!$gameWeek->isSelectionWindowOpen()) {
+        // Check if selection window is open for this gameweek (and the gameweek is inside tournament bounds)
+        if (!$gameWeek->isSelectionWindowOpen() ||
+            $gameWeek->week_number < $tournament->start_game_week ||
+            $gameWeek->week_number > $tournament->end_game_week) {
             $message = 'Selection window is not currently open for this gameweek.';
             
             if ($gameWeek->selection_deadline && now() > $gameWeek->selection_deadline) {
