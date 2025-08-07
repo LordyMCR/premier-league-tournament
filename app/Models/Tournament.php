@@ -167,8 +167,11 @@ class Tournament extends Model
      */
     public function isActiveForCurrentGameWeek()
     {
-        $currentGameWeekNumber = GameWeek::where('is_completed', false)->min('week_number') ?? 1;
-        return $currentGameWeekNumber >= $this->start_game_week && 
+        $currentGameWeekNumber = GameWeek::where('is_completed', false)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->min('week_number') ?? 1;
+        return $currentGameWeekNumber >= $this->start_game_week &&
                $currentGameWeekNumber <= $this->end_game_week;
     }
 

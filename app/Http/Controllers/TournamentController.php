@@ -120,7 +120,8 @@ class TournamentController extends Controller
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'creator_id' => Auth::id(),
-            'status' => 'pending',
+            // Tournaments become playable immediately after creation
+            'status' => 'active',
             'start_game_week' => $validated['start_game_week'],
             'total_game_weeks' => $totalGameWeeks,
             'current_game_week' => $validated['start_game_week'],
