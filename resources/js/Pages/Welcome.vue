@@ -38,8 +38,9 @@ const page = usePage();
                         
                         <!-- Hero Subtitle -->
                         <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-                            The Premier League prediction game where every pick matters. 
-                            Choose your teams wisely - you only get one shot with each.
+                            A simple, weekly Premier League picks game. Join or create a private tournament, 
+                            make one team pick each gameweek before the deadline, and climb the leaderboard as 
+                            results roll in. Once you use a team, you can’t pick them again.
                         </p>
                         
                         <!-- Hero Buttons -->
@@ -77,10 +78,10 @@ const page = usePage();
                             <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <span class="text-2xl font-bold text-white">1</span>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Pick Your Team</h3>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Join or Create</h3>
                             <p class="text-gray-600 leading-relaxed">
-                                Each gameweek, choose one Premier League team. 
-                                Once you pick them, they're gone for the season.
+                                Start a private tournament for friends or join one with a code. 
+                                Your dashboard shows active and upcoming gameweeks.
                             </p>
                         </div>
                         
@@ -89,10 +90,10 @@ const page = usePage();
                             <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <span class="text-2xl font-bold text-white">2</span>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Score Points</h3>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Make Your Pick</h3>
                             <p class="text-gray-600 leading-relaxed">
-                                Win = 3 points, Draw = 1 point, Loss = 0 points. 
-                                Every result counts towards your total.
+                                Select one club per gameweek before the selection deadline. 
+                                Picks lock at the deadline and you can’t reuse a club later.
                             </p>
                         </div>
                         
@@ -101,10 +102,10 @@ const page = usePage();
                             <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <span class="text-2xl font-bold text-white">3</span>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Win the League</h3>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Score & Win</h3>
                             <p class="text-gray-600 leading-relaxed">
-                                Compete with friends and climb the leaderboard. 
-                                The highest score at the end of the tournament takes the title.
+                                Scoring follows match results: win 3, draw 1, loss 0. 
+                                Points are added after games finish; highest total wins the tournament.
                             </p>
                         </div>
                     </div>
@@ -117,7 +118,7 @@ const page = usePage();
                     <div class="text-center mb-16">
                         <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why PL Tournament?</h2>
                         <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Built for football fans, by football fans.
+                            Lightweight, private, and designed for weekly picks.
                         </p>
                     </div>
                     
@@ -127,8 +128,8 @@ const page = usePage();
                             <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-trophy text-white text-lg"></i>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Real Premier League</h3>
-                            <p class="text-gray-600 text-sm">Live fixtures and results from the actual Premier League</p>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Premier League Fixtures</h3>
+                            <p class="text-gray-600 text-sm">Schedules and results power gameweeks and scoring</p>
                         </div>
                         
                         <!-- Feature 2 -->
@@ -136,8 +137,8 @@ const page = usePage();
                             <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-users text-white text-lg"></i>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Private Leagues</h3>
-                            <p class="text-gray-600 text-sm">Create tournaments with friends, family, or colleagues</p>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Private Tournaments</h3>
+                            <p class="text-gray-600 text-sm">Create a tournament and invite others with a join code</p>
                         </div>
                         
                         <!-- Feature 3 -->
@@ -145,8 +146,8 @@ const page = usePage();
                             <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-chart-line text-white text-lg"></i>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Live Updates</h3>
-                            <p class="text-gray-600 text-sm">Real-time scores and leaderboard updates</p>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Automatic Scoring</h3>
+                            <p class="text-gray-600 text-sm">Points update after matches finish; view picks history and standings</p>
                         </div>
                         
                         <!-- Feature 4 -->
@@ -155,7 +156,7 @@ const page = usePage();
                                 <i class="fas fa-mobile-alt text-white text-lg"></i>
                             </div>
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">Mobile Friendly</h3>
-                            <p class="text-gray-600 text-sm">Make picks on the go, anywhere, anytime</p>
+                            <p class="text-gray-600 text-sm">Optimised layouts for phones and tablets with a clean UI</p>
                         </div>
                     </div>
                 </div>
