@@ -155,7 +155,7 @@ const timeUntilNextSelection = computed(() => {
                         <p class="text-gray-600">Gameweek {{ selectionGameweek.week_number }}</p>
                         <p class="text-sm text-gray-500">Closes {{ formatDate(selectionGameweek.selection_deadline) }}</p>
                     </div>
-                    <Link :href="route('tournaments.gameweeks.picks.create', { tournament: tournament.id, gameweek: selectionGameweek.id })"
+                    <Link :href="route('tournaments.gameweeks.picks.create', { tournament: tournament.id, gameWeek: selectionGameweek.id })"
                           class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
                         Make Your Pick
                     </Link>
