@@ -9,7 +9,7 @@
                         Select Your Team
                     </h2>
                     <p class="text-gray-600">
-                        Gameweek {{ gameweek.week_number }} - {{ gameweek.name }}
+                        Gameweek {{ gameWeek.week_number }} - {{ gameWeek.name }}
                     </p>
                 </div>
                 <div class="text-right">
@@ -25,7 +25,7 @@
             <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Game</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div v-for="game in gameweek.games" :key="game.id" 
+                    <div v-for="game in gameWeek.games" :key="game.id" 
                          class="bg-gray-50 rounded-lg p-4 border border-green-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
@@ -123,7 +123,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     tournament: Object,
-    gameweek: Object,
+    gameWeek: Object,
     availableTeams: Array,
     usedTeams: Array,
 });
@@ -133,7 +133,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('tournaments.picks.store', { tournament: props.tournament.id, gameweek: props.gameweek.id }));
+    form.post(route('tournaments.gameweeks.picks.store', { tournament: props.tournament.id, gameWeek: props.gameWeek.id }));
 };
 </script>
 
