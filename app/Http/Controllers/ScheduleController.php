@@ -449,22 +449,22 @@ class ScheduleController extends Controller
                 $finalRating = $weightedSum / $totalWeight;
             }
 
-            // Determine difficulty label and class based on final rating
+                                    // Determine difficulty label and class based on final rating
             if ($finalRating >= 75) {
                 $difficulty = 'Very Hard';
-                $difficultyClass = 'bg-red-600';
+                $difficultyClass = 'bg-red-800 text-white font-bold shadow-lg';
             } elseif ($finalRating >= 60) {
                 $difficulty = 'Hard';
-                $difficultyClass = 'bg-red-500';
+                $difficultyClass = 'bg-red-600 text-white font-bold shadow-md';
             } elseif ($finalRating >= 45) {
                 $difficulty = 'Medium';
-                $difficultyClass = 'bg-yellow-500';
+                $difficultyClass = 'bg-yellow-500 text-black font-bold shadow-md';
             } elseif ($finalRating >= 30) {
                 $difficulty = 'Easy';
-                $difficultyClass = 'bg-green-500';
+                $difficultyClass = 'bg-green-500 text-white font-bold shadow-md';
             } else {
                 $difficulty = 'Very Easy';
-                $difficultyClass = 'bg-green-600';
+                $difficultyClass = 'bg-green-700 text-white font-bold shadow-lg';
             }
 
             // Get head-to-head record using historical data - already retrieved above

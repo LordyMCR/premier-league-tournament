@@ -351,8 +351,8 @@ const getScoreDisplay = (game, team) => {
                                 </div>
                                 <div class="flex items-center space-x-3">
                                     <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-1 sm:space-y-0">
-                                        <span :class="fixture.difficulty_class" 
-                                              class="px-2 py-1 rounded-full text-white text-xs font-medium text-center">
+                                        <span :class="fixture.difficulty_class"
+                                              class="px-2 py-1 rounded-full text-xs font-medium text-center">
                                             {{ fixture.difficulty }}
                                         </span>
                                         <span v-if="fixture.difficulty_rating" class="text-gray-600 text-xs">

@@ -9,6 +9,14 @@ module.exports = {
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
     ],
+    // Safelist critical dynamic classes for difficulty badges
+    safelist: [
+        { pattern: /bg-red-(600|800)/ },
+        'text-white',
+        'font-bold',
+        { pattern: /shadow-(lg|md)/ },
+        { pattern: /bg-green-(500|700)/ },
+    ],
 
     theme: {
         extend: {
