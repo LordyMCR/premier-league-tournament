@@ -118,14 +118,14 @@ class TournamentController extends Controller
 
         $tournament = Tournament::create([
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'creator_id' => Auth::id(),
             'status' => 'pending',
             'start_game_week' => $validated['start_game_week'],
             'total_game_weeks' => $totalGameWeeks,
             'current_game_week' => $validated['start_game_week'],
             'max_participants' => $validated['max_participants'],
-            'is_private' => $validated['is_private'],
+            'is_private' => (bool)($validated['is_private'] ?? false),
             'tournament_mode' => $validated['tournament_mode'],
         ]);
 
