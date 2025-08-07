@@ -14,7 +14,7 @@ const props = defineProps({
 });
 
 const selectedFilter = ref('all');
-const selectedTeam = ref(null);
+const selectedTeam = ref('');
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -28,6 +28,12 @@ const formatDateTime = (dateString) => {
     if (!dateString) return 'TBD';
     
     const date = new Date(dateString);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+        return 'TBD';
+    }
+    
     return date.toLocaleDateString('en-GB', {
         weekday: 'short',
         day: 'numeric',
@@ -68,7 +74,7 @@ const filteredGameweeks = computed(() => {
     }
     
     // Filter by team if selected
-    if (selectedTeam.value) {
+    if (selectedTeam.value && selectedTeam.value !== '') {
         gameweeks = gameweeks.map(gameweek => ({
             ...gameweek,
             games: gameweek.games.filter(game => 
@@ -170,7 +176,7 @@ const filteredGameweeks = computed(() => {
                             <Link :href="route('schedule.match', game.id)" 
                                   class="text-center mx-4 hover:bg-white rounded-lg px-3 py-1 transition-colors flex-shrink-0">
                                 <div class="text-gray-900 font-bold">{{ formatScore(game) }}</div>
-                                <div class="text-xs text-gray-500">{{ formatDateTime(game.kickoff_time) }}</div>
+                                <div class="text-xs text-gray-500">{{ formatDateTime(game.kick_off_time) }}</div>
                             </Link>
                             
                             <div class="flex items-center space-x-3 flex-1 justify-end min-w-0">

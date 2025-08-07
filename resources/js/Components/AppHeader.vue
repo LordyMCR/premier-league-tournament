@@ -33,7 +33,7 @@ const logout = () => {
                         </div>
                         <div class="flex flex-col">
                             <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
-                            <span class="text-xs text-green-600 font-medium">Premier League</span>
+                            <span class="text-xs text-green-600 font-medium">Premier League Predictions</span>
                         </div>
                     </Link>
                 </div>
