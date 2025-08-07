@@ -166,11 +166,11 @@ const handleImageLoad = (event) => {
         <div class="min-h-screen py-4 sm:py-8">
             <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
                 <!-- Header with Quick Actions -->
-                <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6 mb-6 sm:mb-8">
+                <div class="bg-white rounded-xl p-6 border border-green-200 shadow-md mb-6 sm:mb-8">
                     <div class="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
                         <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold text-white">Profile Settings</h1>
-                            <p class="text-white/70 mt-2 text-sm sm:text-base">
+                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Profile Settings</h1>
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base">
                                 Manage your account, privacy settings, and tournament preferences
                             </p>
                         </div>
@@ -187,36 +187,36 @@ const handleImageLoad = (event) => {
                 </div>
 
                 <!-- Tab Navigation -->
-                <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-2 mb-6 sm:mb-8">
+                <div class="bg-white rounded-xl p-2 border border-green-200 shadow-md mb-6 sm:mb-8">
                     <nav class="flex overflow-x-auto no-scrollbar">
-                        <button @click="activeTab = 'profile'" 
-                                :class="activeTab === 'profile' ? 'bg-emerald-600 text-white' : 'text-white/70 hover:bg-white/10'"
+                        <button @click="activeTab = 'profile'"
+                                :class="activeTab === 'profile' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-green-50'"
                                 class="flex-shrink-0 px-3 py-2 sm:px-4 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap">
                             <i class="fas fa-user mr-1 sm:mr-2"></i>
                             <span class="hidden xs:inline">Profile</span>
                             <span class="xs:hidden">Info</span>
                         </button>
                         <button @click="activeTab = 'avatar'" 
-                                :class="activeTab === 'avatar' ? 'bg-emerald-600 text-white' : 'text-white/70 hover:bg-white/10'"
+                                :class="activeTab === 'avatar' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-green-50'"
                                 class="flex-shrink-0 px-3 py-2 sm:px-4 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap ml-1 sm:ml-2">
                             <i class="fas fa-image mr-1 sm:mr-2"></i>
                             Avatar
                         </button>
                         <button @click="activeTab = 'privacy'" 
-                                :class="activeTab === 'privacy' ? 'bg-emerald-600 text-white' : 'text-white/70 hover:bg-white/10'"
+                                :class="activeTab === 'privacy' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-green-50'"
                                 class="flex-shrink-0 px-3 py-2 sm:px-4 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap ml-1 sm:ml-2">
                             <i class="fas fa-shield-alt mr-1 sm:mr-2"></i>
                             Privacy
                         </button>
                         <button @click="activeTab = 'statistics'" 
-                                :class="activeTab === 'statistics' ? 'bg-emerald-600 text-white' : 'text-white/70 hover:bg-white/10'"
+                                :class="activeTab === 'statistics' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-green-50'"
                                 class="flex-shrink-0 px-3 py-2 sm:px-4 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap ml-1 sm:ml-2">
                             <i class="fas fa-chart-bar mr-1 sm:mr-2"></i>
                             <span class="hidden xs:inline">Statistics</span>
                             <span class="xs:hidden">Stats</span>
                         </button>
                         <button @click="activeTab = 'account'" 
-                                :class="activeTab === 'account' ? 'bg-emerald-600 text-white' : 'text-white/70 hover:bg-white/10'"
+                                :class="activeTab === 'account' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-green-50'"
                                 class="flex-shrink-0 px-3 py-2 sm:px-4 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap ml-1 sm:ml-2">
                             <i class="fas fa-cog mr-1 sm:mr-2"></i>
                             Account
@@ -229,8 +229,8 @@ const handleImageLoad = (event) => {
                     <!-- Profile Info Tab -->
                     <div v-show="activeTab === 'profile'" class="space-y-4 sm:space-y-6">
                         <!-- Basic Information (existing component) -->
-                        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
-                            <h2 class="text-lg sm:text-xl font-bold text-white mb-4">Basic Information</h2>
+                        <div class="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
                             <UpdateProfileInformationForm
                                 :must-verify-email="mustVerifyEmail"
                                 :status="status"
@@ -238,8 +238,8 @@ const handleImageLoad = (event) => {
                         </div>
 
                         <!-- Extended Profile Information -->
-                        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
-                            <h2 class="text-lg sm:text-xl font-bold text-white mb-4">Extended Profile</h2>
+                        <div class="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4">Extended Profile</h2>
                             <form @submit.prevent="submitExtendedProfile" class="space-y-4">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     <!-- Display Name -->
@@ -286,7 +286,7 @@ const handleImageLoad = (event) => {
                                         <select
                                             id="favorite_team_id"
                                             v-model="extendedForm.favorite_team_id"
-                                            class="mt-1 block w-full bg-gray-900/50 border border-gray-600/50 text-white rounded-lg px-3 py-2 text-sm sm:text-base"
+                                            class="mt-1 block w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                         >
                                             <option value="">Select your favorite team</option>
                                             <option v-for="team in teams" :key="team.id" :value="team.id">
@@ -315,7 +315,7 @@ const handleImageLoad = (event) => {
                                     <div>
                                         <InputLabel for="twitter_handle" value="Twitter Handle" />
                                         <div class="mt-1 flex rounded-lg shadow-sm">
-                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-900/50 border border-r-0 border-gray-600/50 text-white text-sm rounded-l-lg">
+                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-100 border border-r-0 border-gray-300 text-gray-900 text-sm rounded-l-lg">
                                                 @
                                             </span>
                                             <TextInput
@@ -333,7 +333,7 @@ const handleImageLoad = (event) => {
                                     <div>
                                         <InputLabel for="instagram_handle" value="Instagram Handle" />
                                         <div class="mt-1 flex rounded-lg shadow-sm">
-                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-900/50 border border-r-0 border-gray-600/50 text-white text-sm rounded-l-lg">
+                                            <span class="inline-flex items-center px-2 sm:px-3 bg-gray-100 border border-r-0 border-gray-300 text-gray-900 text-sm rounded-l-lg">
                                                 @
                                             </span>
                                             <TextInput
@@ -362,28 +362,28 @@ const handleImageLoad = (event) => {
                                 </div>
 
                                 <!-- Quick Privacy Controls -->
-                                <div class="space-y-3 pt-4 border-t border-white/10">
-                                    <h3 class="text-base sm:text-lg font-medium text-white">Quick Privacy Controls</h3>
+                                <div class="space-y-3 pt-4 border-t border-gray-200">
+                                    <h3 class="text-base sm:text-lg font-medium text-gray-900">Quick Privacy Controls</h3>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         <label class="flex items-center space-x-2 text-sm sm:text-base">
                                             <Checkbox v-model:checked="extendedForm.show_real_name" />
-                                            <span class="text-white">Show real name on profile</span>
+                                            <span class="text-gray-700">Show real name on profile</span>
                                         </label>
                                         <label class="flex items-center space-x-2 text-sm sm:text-base">
                                             <Checkbox v-model:checked="extendedForm.show_email" />
-                                            <span class="text-white">Show email address</span>
+                                            <span class="text-gray-700">Show email address</span>
                                         </label>
                                         <label class="flex items-center space-x-2 text-sm sm:text-base">
                                             <Checkbox v-model:checked="extendedForm.show_location" />
-                                            <span class="text-white">Show location</span>
+                                            <span class="text-gray-700">Show location</span>
                                         </label>
                                         <label class="flex items-center space-x-2 text-sm sm:text-base">
                                             <Checkbox v-model:checked="extendedForm.show_age" />
-                                            <span class="text-white">Show age</span>
+                                            <span class="text-gray-700">Show age</span>
                                         </label>
                                         <label class="flex items-center space-x-2 text-sm sm:text-base">
                                             <Checkbox v-model:checked="extendedForm.profile_public" />
-                                            <span class="text-white">Make profile public</span>
+                                            <span class="text-gray-700">Make profile public</span>
                                         </label>
                                     </div>
                                 </div>
@@ -399,8 +399,8 @@ const handleImageLoad = (event) => {
                     </div>
 
                     <!-- Avatar Tab -->
-                    <div v-show="activeTab === 'avatar'" class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
-                        <h2 class="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Profile Avatar</h2>
+                    <div v-show="activeTab === 'avatar'" class="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Profile Avatar</h2>
                         
                         <div class="flex flex-col space-y-6 sm:space-y-8 lg:flex-row lg:space-y-0 lg:space-x-8">
                             <!-- Current Avatar -->
@@ -414,9 +414,11 @@ const handleImageLoad = (event) => {
                                         @load="handleImageLoad"
                                     >
                                     <div v-if="user.favorite_team" 
-                                         class="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-xs font-bold"
-                                         :style="{ backgroundColor: user.favorite_team.primary_color || '#10B981', color: '#fff' }">
-                                        {{ user.favorite_team.short_name }}
+                                         class="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-white shadow-lg overflow-hidden"
+                                         :style="{ backgroundColor: user.favorite_team.primary_color || '#10B981' }">
+                                        <img :src="user.favorite_team.logo_url"
+                                             :alt="user.favorite_team.name"
+                                             class="w-full h-full object-cover" />
                                     </div>
                                 </div>
                             </div>
@@ -466,126 +468,126 @@ const handleImageLoad = (event) => {
                     </div>
 
                     <!-- Privacy Tab -->
-                    <div v-show="activeTab === 'privacy'" class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
-                        <h2 class="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Privacy Settings</h2>
+                    <div v-show="activeTab === 'privacy'" class="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Privacy Settings</h2>
                         
                         <form @submit.prevent="submitPrivacySettings" class="space-y-6">
                             <!-- Profile Visibility -->
                             <div class="space-y-3">
-                                <h3 class="text-base sm:text-lg font-medium text-white">Profile Visibility</h3>
+                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Profile Visibility</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.profile_visible" />
-                                        <span class="text-white">Profile visible to other users</span>
+                                        <span class="text-gray-700">Profile visible to other users</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.allow_profile_views" />
-                                        <span class="text-white">Allow profile views</span>
+                                        <span class="text-gray-700">Allow profile views</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.count_profile_views" />
-                                        <span class="text-white">Count profile views</span>
+                                        <span class="text-gray-700">Count profile views</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_profile_view_count" />
-                                        <span class="text-white">Show view count on profile</span>
+                                        <span class="text-gray-700">Show view count on profile</span>
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Personal Information -->
                             <div class="space-y-3">
-                                <h3 class="text-base sm:text-lg font-medium text-white">Personal Information</h3>
+                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Personal Information</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_real_name" />
-                                        <span class="text-white">Show real name</span>
+                                        <span class="text-gray-700">Show real name</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_email" />
-                                        <span class="text-white">Show email address</span>
+                                        <span class="text-gray-700">Show email address</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_location" />
-                                        <span class="text-white">Show location</span>
+                                        <span class="text-gray-700">Show location</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_age" />
-                                        <span class="text-white">Show age</span>
+                                        <span class="text-gray-700">Show age</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_favorite_team" />
-                                        <span class="text-white">Show favorite team</span>
+                                        <span class="text-gray-700">Show favorite team</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_supporter_since" />
-                                        <span class="text-white">Show supporter since year</span>
+                                        <span class="text-gray-700">Show supporter since year</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_social_links" />
-                                        <span class="text-white">Show social media links</span>
+                                        <span class="text-gray-700">Show social media links</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_last_active" />
-                                        <span class="text-white">Show last active time</span>
+                                        <span class="text-gray-700">Show last active time</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_join_date" />
-                                        <span class="text-white">Show join date</span>
+                                        <span class="text-gray-700">Show join date</span>
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Tournament Data -->
                             <div class="space-y-3">
-                                <h3 class="text-base sm:text-lg font-medium text-white">Tournament Data</h3>
+                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Tournament Data</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_tournament_history" />
-                                        <span class="text-white">Show tournament history</span>
+                                        <span class="text-gray-700">Show tournament history</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_statistics" />
-                                        <span class="text-white">Show statistics</span>
+                                        <span class="text-gray-700">Show statistics</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_achievements" />
-                                        <span class="text-white">Show achievements</span>
+                                        <span class="text-gray-700">Show achievements</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_current_tournaments" />
-                                        <span class="text-white">Show current tournaments</span>
+                                        <span class="text-gray-700">Show current tournaments</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_pick_history" />
-                                        <span class="text-white">Show pick history</span>
+                                        <span class="text-gray-700">Show pick history</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.show_team_preferences" />
-                                        <span class="text-white">Show team preferences</span>
+                                        <span class="text-gray-700">Show team preferences</span>
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Search and Social -->
                             <div class="space-y-3">
-                                <h3 class="text-base sm:text-lg font-medium text-white">Search & Social</h3>
+                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Search & Social</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.searchable_by_name" />
-                                        <span class="text-white">Searchable by name</span>
+                                        <span class="text-gray-700">Searchable by name</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.searchable_by_email" />
-                                        <span class="text-white">Searchable by email</span>
+                                        <span class="text-gray-700">Searchable by email</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.allow_tournament_invites" />
-                                        <span class="text-white">Allow tournament invites</span>
+                                        <span class="text-gray-700">Allow tournament invites</span>
                                     </label>
                                     <label class="flex items-center space-x-2 text-sm sm:text-base">
                                         <Checkbox v-model:checked="privacyForm.public_leaderboard_participation" />
-                                        <span class="text-white">Participate in public leaderboards</span>
+                                        <span class="text-gray-700">Participate in public leaderboards</span>
                                     </label>
                                 </div>
                             </div>
@@ -600,75 +602,75 @@ const handleImageLoad = (event) => {
                     </div>
 
                     <!-- Statistics Tab -->
-                    <div v-show="activeTab === 'statistics'" class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
-                        <h2 class="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Your Tournament Statistics</h2>
+                    <div v-show="activeTab === 'statistics'" class="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Your Tournament Statistics</h2>
                         
                         <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                             <!-- Tournament Stats -->
-                            <div class="bg-white/5 rounded-xl p-3 sm:p-4 text-center">
-                                <div class="text-xl sm:text-3xl font-bold text-emerald-400">{{ statistics?.total_tournaments || 0 }}</div>
-                                <div class="text-gray-400 text-xs sm:text-sm">Tournaments Played</div>
+                            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 text-center border border-gray-200">
+                                <div class="text-xl sm:text-3xl font-bold text-green-600">{{ statistics?.total_tournaments || 0 }}</div>
+                                <div class="text-gray-600 text-xs sm:text-sm">Tournaments Played</div>
                             </div>
                             
-                            <div class="bg-white/5 rounded-xl p-3 sm:p-4 text-center">
-                                <div class="text-xl sm:text-3xl font-bold text-yellow-400">{{ statistics?.tournaments_won || 0 }}</div>
-                                <div class="text-gray-400 text-xs sm:text-sm">Tournaments Won</div>
+                            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 text-center border border-gray-200">
+                                <div class="text-xl sm:text-3xl font-bold text-yellow-600">{{ statistics?.tournaments_won || 0 }}</div>
+                                <div class="text-gray-600 text-xs sm:text-sm">Tournaments Won</div>
                             </div>
                             
-                            <div class="bg-white/5 rounded-xl p-3 sm:p-4 text-center">
-                                <div class="text-xl sm:text-3xl font-bold text-blue-400">{{ statistics?.total_points || 0 }}</div>
-                                <div class="text-gray-400 text-xs sm:text-sm">Total Points</div>
+                            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 text-center border border-gray-200">
+                                <div class="text-xl sm:text-3xl font-bold text-blue-600">{{ statistics?.total_points || 0 }}</div>
+                                <div class="text-gray-600 text-xs sm:text-sm">Total Points</div>
                             </div>
                             
-                            <div class="bg-white/5 rounded-xl p-3 sm:p-4 text-center">
-                                <div class="text-xl sm:text-3xl font-bold text-purple-400">{{ winRate }}%</div>
-                                <div class="text-gray-400 text-xs sm:text-sm">Win Rate</div>
+                            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 text-center border border-gray-200">
+                                <div class="text-xl sm:text-3xl font-bold text-purple-600">{{ winRate }}%</div>
+                                <div class="text-gray-600 text-xs sm:text-sm">Win Rate</div>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
                             <!-- Pick Statistics -->
-                            <div class="bg-white/5 rounded-xl p-4 sm:p-6">
-                                <h3 class="text-base sm:text-lg font-semibold text-white mb-4">Pick Statistics</h3>
+                            <div class="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+                                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Pick Statistics</h3>
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Total Picks</span>
-                                        <span class="text-white font-semibold text-sm sm:text-base">{{ statistics?.total_picks || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Total Picks</span>
+                                        <span class="text-gray-900 font-semibold text-sm sm:text-base">{{ statistics?.total_picks || 0 }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Winning Picks</span>
-                                        <span class="text-emerald-400 font-semibold text-sm sm:text-base">{{ statistics?.winning_picks || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Winning Picks</span>
+                                        <span class="text-green-600 font-semibold text-sm sm:text-base">{{ statistics?.winning_picks || 0 }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Drawing Picks</span>
-                                        <span class="text-yellow-400 font-semibold text-sm sm:text-base">{{ statistics?.drawing_picks || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Drawing Picks</span>
+                                        <span class="text-yellow-600 font-semibold text-sm sm:text-base">{{ statistics?.drawing_picks || 0 }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Losing Picks</span>
-                                        <span class="text-red-400 font-semibold text-sm sm:text-base">{{ statistics?.losing_picks || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Losing Picks</span>
+                                        <span class="text-red-600 font-semibold text-sm sm:text-base">{{ statistics?.losing_picks || 0 }}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Streak Information -->
-                            <div class="bg-white/5 rounded-xl p-4 sm:p-6">
-                                <h3 class="text-base sm:text-lg font-semibold text-white mb-4">Streaks & Records</h3>
+                            <div class="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+                                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Streaks & Records</h3>
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Current Win Streak</span>
-                                        <span class="text-emerald-400 font-semibold text-sm sm:text-base">{{ statistics?.current_win_streak || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Current Win Streak</span>
+                                        <span class="text-green-600 font-semibold text-sm sm:text-base">{{ statistics?.current_win_streak || 0 }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Longest Win Streak</span>
-                                        <span class="text-purple-400 font-semibold text-sm sm:text-base">{{ statistics?.longest_win_streak || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Longest Win Streak</span>
+                                        <span class="text-purple-600 font-semibold text-sm sm:text-base">{{ statistics?.longest_win_streak || 0 }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Best Tournament Score</span>
-                                        <span class="text-yellow-400 font-semibold text-sm sm:text-base">{{ statistics?.highest_tournament_score || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Best Tournament Score</span>
+                                        <span class="text-yellow-600 font-semibold text-sm sm:text-base">{{ statistics?.highest_tournament_score || 0 }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 text-sm sm:text-base">Average Points</span>
-                                        <span class="text-blue-400 font-semibold text-sm sm:text-base">{{ statistics?.average_points_per_tournament || 0 }}</span>
+                                        <span class="text-gray-700 text-sm sm:text-base">Average Points</span>
+                                        <span class="text-blue-600 font-semibold text-sm sm:text-base">{{ statistics?.average_points_per_tournament || 0 }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -677,11 +679,11 @@ const handleImageLoad = (event) => {
 
                     <!-- Account Tab -->
                     <div v-show="activeTab === 'account'" class="space-y-4 sm:space-y-6">
-                        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
+                        <div class="bg-white rounded-xl border border-green-200 shadow-md p-4 sm:p-6">
                             <UpdatePasswordForm />
                         </div>
 
-                        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 sm:p-6">
+                        <div class="bg-white rounded-xl border border-green-200 shadow-md p-4 sm:p-6">
                             <DeleteUserForm />
                         </div>
                     </div>

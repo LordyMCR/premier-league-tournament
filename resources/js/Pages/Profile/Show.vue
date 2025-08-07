@@ -15,10 +15,12 @@
                                     @error="handleImageError"
                                     @load="handleImageLoad"
                                 >
-                                <div v-if="profileUser.favorite_team" 
-                                     class="absolute -bottom-2 -right-2 w-12 h-12 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-xs font-bold"
-                                     :style="{ backgroundColor: profileUser.favorite_team.primary_color || '#22C55E', color: '#fff' }">
-                                    {{ profileUser.favorite_team.short_name }}
+                                <div v-if="profileUser.profile_settings.show_favorite_team && profileUser.favorite_team" 
+                                     class="absolute -bottom-2 -right-2 w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden"
+                                     :style="{ backgroundColor: profileUser.favorite_team.primary_color || '#22C55E' }">
+                                    <img :src="profileUser.favorite_team.logo_url"
+                                         :alt="profileUser.favorite_team.name"
+                                         class="w-full h-full object-cover" />
                                 </div>
                             </div>
                             
@@ -26,25 +28,25 @@
                                 {{ profileUser.display_name || profileUser.name }}
                             </h1>
                             
-                            <p v-if="profileUser.show_real_name && profileUser.display_name && profileUser.display_name !== profileUser.name" 
+                            <p v-if="profileUser.profile_settings.show_real_name && profileUser.display_name && profileUser.display_name !== profileUser.name" 
                                class="text-gray-500 text-sm">
                                 {{ profileUser.name }}
                             </p>
                             
                             <div class="flex flex-wrap gap-2 mt-3">
-                                <span v-if="profileUser.show_location && profileUser.location" 
+                                <span v-if="profileUser.profile_settings.show_location && profileUser.location" 
                                       class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-map-marker-alt"></i>
                                     {{ profileUser.location }}
                                 </span>
                                 
-                                <span v-if="profileUser.show_join_date" 
+                                <span v-if="profileUser.profile_settings.show_join_date" 
                                       class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-calendar"></i>
                                     Member since {{ new Date(profileUser.created_at).getFullYear() }}
                                 </span>
                                 
-                                <span v-if="profileUser.show_last_active && profileUser.last_active_at" 
+                                <span v-if="profileUser.profile_settings.show_last_active && profileUser.last_active_at" 
                                       class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-clock"></i>
                                     Last active {{ formatDate(profileUser.last_active_at) }}
@@ -61,15 +63,17 @@
                             </div>
                             
                             <!-- Favorite Team Info -->
-                            <div v-if="profileUser.show_favorite_team && profileUser.favorite_team" class="space-y-2">
+                            <div v-if="profileUser.profile_settings.show_favorite_team && profileUser.favorite_team" class="space-y-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Favorite Team</h3>
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                                         :style="{ backgroundColor: profileUser.favorite_team.primary_color || '#22C55E', color: '#fff' }">
-                                        {{ profileUser.favorite_team.short_name }}
+                                    <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-lg"
+                                         :style="{ backgroundColor: profileUser.favorite_team.primary_color || '#22C55E' }">
+                                        <img :src="profileUser.favorite_team.logo_url"
+                                             :alt="profileUser.favorite_team.name"
+                                             class="w-full h-full object-cover" />
                                     </div>
                                     <span class="text-gray-700">{{ profileUser.favorite_team.name }}</span>
-                                    <span v-if="profileUser.show_supporter_since && profileUser.supporter_since" 
+                                <span v-if="profileUser.profile_settings.show_supporter_since && profileUser.supporter_since" 
                                           class="text-sm text-gray-500">
                                         (Supporting since {{ profileUser.supporter_since }})
                                     </span>
@@ -77,7 +81,7 @@
                             </div>
                             
                             <!-- Social Links -->
-                            <div v-if="profileUser.show_social_links && (profileUser.twitter_handle || profileUser.instagram_handle)" 
+                            <div v-if="profileUser.profile_settings.show_social_links && (profileUser.twitter_handle || profileUser.instagram_handle)" 
                                  class="space-y-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Social Media</h3>
                                 <div class="flex gap-4">
@@ -100,7 +104,7 @@
                         </div>
                         
                         <!-- Quick Stats -->
-                        <div v-if="profileUser.show_statistics && profileUser.statistics" 
+                        <div v-if="profileUser.profile_settings.show_statistics && profileUser.statistics" 
                              class="bg-gray-50 rounded-xl p-4 min-w-64 border border-green-200">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
                             <div class="space-y-3">
@@ -137,7 +141,7 @@
                 <!-- Content Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Featured Achievements -->
-                    <div v-if="profileUser.show_achievements && profileUser.achievements?.length" 
+                    <div v-if="profileUser.profile_settings.show_achievements && profileUser.achievements?.length" 
                          class="bg-white rounded-2xl border border-green-200 p-6 shadow-lg">
                         <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-trophy text-yellow-500"></i>
@@ -164,7 +168,7 @@
                     </div>
                     
                     <!-- Recent Tournaments -->
-                    <div v-if="profileUser.show_tournament_history && recentTournaments?.length" 
+                    <div v-if="profileUser.profile_settings.show_tournament_history && recentTournaments?.length" 
                          class="bg-white rounded-2xl border border-green-200 p-6 shadow-lg">
                         <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-futbol text-green-600"></i>
@@ -198,7 +202,7 @@
                     </div>
                     
                     <!-- Detailed Statistics -->
-                    <div v-if="profileUser.show_statistics && profileUser.statistics" 
+                    <div v-if="profileUser.profile_settings.show_statistics && profileUser.statistics" 
                          class="bg-white rounded-2xl border border-green-200 p-6 shadow-lg">
                         <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-chart-bar text-blue-600"></i>
