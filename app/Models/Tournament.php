@@ -21,6 +21,7 @@ class Tournament extends Model
         'max_participants',
         'join_code',
         'is_private',
+        'tournament_mode',
     ];
 
     protected $casts = [
@@ -186,5 +187,36 @@ class Tournament extends Model
     {
         $currentGameWeek = GameWeek::where('is_completed', false)->orderBy('week_number')->first();
         return $currentGameWeek ? $currentGameWeek->week_number : 1;
+    }
+
+    /**
+     * Check if this tournament allows teams to be picked twice (home and away)
+     */
+    public function allowsHomeAwayPicks()
+    {
+        return in_array($this->tournament_mode, ['full_season']) || 
+               ($this->tournament_mode === 'custom' && $this->total_game_weeks > 20);
+    }
+
+    /**
+     * Get the maximum times a team can be picked in this tournament
+     */
+    public function getMaxTeamSelections()
+    {
+        return $this->allowsHomeAwayPicks() ? 2 : 1;
+    }
+
+    /**
+     * Get selection strategy for this tournament
+     */
+    public function getSelectionStrategy()
+    {
+        if ($this->tournament_mode === 'full_season') {
+            return 'home_away_required';
+        } elseif ($this->tournament_mode === 'half_season') {
+            return 'once_only';
+        } else { // custom
+            return $this->total_game_weeks > 20 ? 'home_away_allowed' : 'once_only';
+        }
     }
 }

@@ -102,8 +102,10 @@ class TournamentController extends Controller
             }
             
             $totalWeeks = $validated['end_game_week'] - $validated['start_game_week'] + 1;
-            if ($totalWeeks > 20) {
-                return back()->withErrors(['end_game_week' => 'Custom tournaments cannot exceed 20 gameweeks.']);
+            
+            // Custom tournaments can now exceed 20 gameweeks (home/away picks will be used)
+            if ($totalWeeks > 38) {
+                return back()->withErrors(['end_game_week' => 'Custom tournaments cannot exceed the entire season (38 gameweeks).']);
             }
             
             // Ensure custom tournaments start from current or future gameweeks
@@ -124,6 +126,7 @@ class TournamentController extends Controller
             'current_game_week' => $validated['start_game_week'],
             'max_participants' => $validated['max_participants'],
             'is_private' => $validated['is_private'],
+            'tournament_mode' => $validated['tournament_mode'],
         ]);
 
         // Automatically add creator as participant
@@ -158,6 +161,7 @@ class TournamentController extends Controller
         // Get user's picks if participant
         $userPicks = null;
         $currentPick = null;
+        $availableTeams = [];
         
         if ($isParticipant) {
             $userPicks = Pick::getUserPicksInTournament($user->id, $tournament->id);
@@ -168,6 +172,15 @@ class TournamentController extends Controller
                     ->where('game_week_id', $selectionGameweek->id)
                     ->with('team')
                     ->first();
+                
+                // Get available teams for the current selection gameweek
+                if (!$currentPick) {
+                    if ($tournament->allowsHomeAwayPicks()) {
+                        $availableTeams = Pick::getAvailableTeamsForGameWeek($user->id, $tournament->id, $selectionGameweek->id);
+                    } else {
+                        $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id, $selectionGameweek->id);
+                    }
+                }
             }
         }
 
@@ -180,6 +193,7 @@ class TournamentController extends Controller
             'nextSelectionGameweek' => $nextSelectionGameweek,
             'userPicks' => $userPicks,
             'currentPick' => $currentPick,
+            'availableTeams' => $availableTeams,
             'allTeams' => Team::all(),
         ]);
     }

@@ -55,14 +55,25 @@ class PickController extends Controller
                 ->with('info', 'You have already made your pick for this game week.');
         }
 
-        // Get available teams (not yet picked by this user in this tournament)
-        $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id);
+        // Get available teams (considering home/away logic if applicable)
+        if ($tournament->allowsHomeAwayPicks()) {
+            $availableTeams = Pick::getAvailableTeamsForGameWeek($user->id, $tournament->id, $gameWeek->id);
+        } else {
+            $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id, $gameWeek->id);
+        }
         
         // Get teams already used by this user in this tournament
-        $usedTeamIds = Pick::where('tournament_id', $tournament->id)
+        $userPicks = Pick::where('tournament_id', $tournament->id)
             ->where('user_id', $user->id)
-            ->pluck('team_id');
-        $usedTeams = Team::whereIn('id', $usedTeamIds)->get();
+            ->with(['team', 'gameWeek'])
+            ->get();
+            
+        $usedTeams = $userPicks->map(function ($pick) {
+            $team = $pick->team;
+            $team->home_away = $pick->home_away;
+            $team->game_week = $pick->gameWeek->name;
+            return $team;
+        });
         
         // Get games for this gameweek
         $gameWeekGames = $gameWeek->games()->with(['homeTeam', 'awayTeam'])->get();
@@ -73,6 +84,8 @@ class PickController extends Controller
             'availableTeams' => $availableTeams,
             'usedTeams' => $usedTeams,
             'gameWeekGames' => $gameWeekGames,
+            'allowsHomeAwayPicks' => $tournament->allowsHomeAwayPicks(),
+            'selectionStrategy' => $tournament->getSelectionStrategy(),
         ]);
     }
 
@@ -86,6 +99,7 @@ class PickController extends Controller
         // Validate request
         $validated = $request->validate([
             'team_id' => 'required|exists:teams,id',
+            'home_away' => 'nullable|in:home,away',
         ]);
 
         // Check if user is participant
@@ -121,9 +135,22 @@ class PickController extends Controller
             return back()->withErrors(['error' => 'You have already made your pick for this game week.']);
         }
 
-        // Check if user can pick this team (hasn't picked it before in this tournament)
-        if (!Pick::canUserPickTeam($user->id, $tournament->id, $validated['team_id'])) {
-            return back()->withErrors(['team_id' => 'You have already picked this team in this tournament.']);
+        // Check if user can pick this team considering home/away logic
+        if ($tournament->allowsHomeAwayPicks()) {
+            $homeAway = $validated['home_away'] ?? null;
+            
+            if (!$homeAway) {
+                return back()->withErrors(['home_away' => 'You must specify if the team is playing home or away.']);
+            }
+            
+            if (!Pick::canUserPickTeamHomeAway($user->id, $tournament->id, $validated['team_id'], $homeAway)) {
+                $homeAwayText = $homeAway === 'home' ? 'at home' : 'away';
+                return back()->withErrors(['team_id' => "You have already picked this team playing {$homeAwayText} in this tournament."]);
+            }
+        } else {
+            if (!Pick::canUserPickTeam($user->id, $tournament->id, $validated['team_id'])) {
+                return back()->withErrors(['team_id' => 'You have already picked this team in this tournament.']);
+            }
         }
 
         // Create the pick
@@ -132,13 +159,18 @@ class PickController extends Controller
             'user_id' => $user->id,
             'game_week_id' => $gameWeek->id,
             'team_id' => $validated['team_id'],
+            'home_away' => $validated['home_away'] ?? null,
             'picked_at' => now(),
         ]);
 
         $team = Team::find($validated['team_id']);
+        $homeAwayText = '';
+        if ($validated['home_away']) {
+            $homeAwayText = ' (' . ($validated['home_away'] === 'home' ? 'Home' : 'Away') . ')';
+        }
 
         return redirect()->route('tournaments.show', $tournament)
-            ->with('success', "You have picked {$team->name} for {$gameWeek->name}!");
+            ->with('success', "You have picked {$team->name}{$homeAwayText} for {$gameWeek->name}!");
     }
 
     /**
@@ -153,12 +185,19 @@ class PickController extends Controller
         }
 
         $userPicks = Pick::getUserPicksInTournament($user->id, $tournament->id);
-        $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id);
+        
+        if ($tournament->allowsHomeAwayPicks()) {
+            $availableTeams = []; // For home/away tournaments, available teams depend on gameweek
+        } else {
+            $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id);
+        }
 
         return Inertia::render('Tournaments/MyPicks', [
             'tournament' => $tournament,
             'userPicks' => $userPicks,
             'availableTeams' => $availableTeams,
+            'allowsHomeAwayPicks' => $tournament->allowsHomeAwayPicks(),
+            'selectionStrategy' => $tournament->getSelectionStrategy(),
         ]);
     }
 

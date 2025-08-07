@@ -63,6 +63,34 @@ const totalGameWeeks = computed(() => {
     }
 });
 
+// Calculate what selection strategy will be used
+const selectionStrategy = computed(() => {
+    switch (form.tournament_mode) {
+        case 'full_season':
+            return 'home_away_required';
+        case 'half_season':
+            return 'once_only';
+        case 'custom':
+            const weeks = totalGameWeeks.value;
+            return weeks > 20 ? 'home_away_allowed' : 'once_only';
+        default:
+            return 'once_only';
+    }
+});
+
+// Get strategy description
+const strategyDescription = computed(() => {
+    switch (selectionStrategy.value) {
+        case 'home_away_required':
+            return 'Each team can be picked twice (once home, once away)';
+        case 'home_away_allowed':
+            return 'Each team can be picked up to twice (home and/or away)';
+        case 'once_only':
+        default:
+            return 'Each team can only be picked once';
+    }
+});
+
 // Get available game weeks for custom mode
 const customGameWeeks = computed(() => {
     return props.availableGameWeeks;
@@ -183,6 +211,7 @@ const updateStartGameWeek = () => {
                                     <div class="ml-3">
                                         <span class="text-gray-900 font-medium">Full Season</span>
                                         <p class="text-gray-600 text-sm">From Game Week {{ nextGameWeekNumber }} to {{ fullSeasonEnd }} ({{ fullSeasonEnd - nextGameWeekNumber + 1 }} gameweeks)</p>
+                                        <p class="text-blue-600 text-xs mt-1">Teams can be picked twice: once home, once away</p>
                                     </div>
                                 </label>
                                 
@@ -197,6 +226,7 @@ const updateStartGameWeek = () => {
                                     <div class="ml-3">
                                         <span class="text-gray-900 font-medium">Half Season</span>
                                         <p class="text-gray-600 text-sm">From Game Week {{ nextGameWeekNumber }} to {{ halfSeasonEnd }} ({{ halfSeasonEnd - nextGameWeekNumber + 1 }} gameweeks)</p>
+                                        <p class="text-orange-600 text-xs mt-1">Each team can only be picked once</p>
                                     </div>
                                 </label>
                                 
@@ -211,6 +241,7 @@ const updateStartGameWeek = () => {
                                     <div class="ml-3">
                                         <span class="text-gray-900 font-medium">Custom Range</span>
                                         <p class="text-gray-600 text-sm">Choose specific gameweeks to include</p>
+                                        <p class="text-purple-600 text-xs mt-1">≤20 weeks: teams once only, >20 weeks: teams twice (home/away)</p>
                                     </div>
                                 </label>
                             </div>
@@ -253,14 +284,23 @@ const updateStartGameWeek = () => {
                         
                         <!-- Tournament Summary -->
                         <div v-if="totalGameWeeks > 0" class="bg-green-50 rounded-lg p-4 border border-green-200">
-                            <div class="flex items-center">
-                                <i class="fas fa-info-circle text-green-600 mr-3"></i>
-                                <div>
-                                    <span class="text-green-800 font-medium">Tournament Summary:</span>
-                                    <span class="text-green-700 ml-2">{{ totalGameWeeks }} gameweeks</span>
-                                    <span v-if="form.tournament_mode === 'custom' && form.start_game_week && form.end_game_week" class="text-green-600 ml-2">
-                                        (Game Week {{ form.start_game_week }} to {{ form.end_game_week }})
-                                    </span>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-info-circle text-green-600 mr-3"></i>
+                                    <div>
+                                        <span class="text-green-800 font-medium">Tournament Summary:</span>
+                                        <span class="text-green-700 ml-2">{{ totalGameWeeks }} gameweeks</span>
+                                        <span v-if="form.tournament_mode === 'custom' && form.start_game_week && form.end_game_week" class="text-green-600 ml-2">
+                                            (Game Week {{ form.start_game_week }} to {{ form.end_game_week }})
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-users text-green-600 mr-3"></i>
+                                    <div>
+                                        <span class="text-green-800 font-medium">Team Selection:</span>
+                                        <span class="text-green-700 ml-2">{{ strategyDescription }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -292,12 +332,18 @@ const updateStartGameWeek = () => {
                             <span>Win = 3 points, Draw = 1 point, Loss = 0 points</span>
                         </div>
                         <div class="flex items-start">
-                            <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
-                            <span>Once a team is picked, it cannot be used again in the same tournament</span>
+                            <i class="fas fa-trophy text-green-600 mt-1 mr-3 flex-shrink-0"></i>
+                            <span>{{ strategyDescription }}</span>
                         </div>
                         <div class="flex items-start">
                             <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
                             <span>Highest total score at the end wins the tournament</span>
+                        </div>
+                        <div v-if="selectionStrategy !== 'once_only'" class="flex items-start">
+                            <i class="fas fa-info text-blue-600 mt-1 mr-3 flex-shrink-0"></i>
+                            <span class="text-blue-700">
+                                Strategic tip: Choose wisely between home and away games - teams often perform differently!
+                            </span>
                         </div>
                     </div>
                 </div>
