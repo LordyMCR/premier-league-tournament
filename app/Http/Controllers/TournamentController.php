@@ -149,6 +149,8 @@ class TournamentController extends Controller
             'participants',
             'participantRecords.user'
         ]);
+        // Include participant count for frontend display
+        $tournament->loadCount('participants');
 
         $isParticipant = $tournament->hasParticipant($user->id);
         $leaderboard = $tournament->getLeaderboard();
