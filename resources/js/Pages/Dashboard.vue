@@ -1,12 +1,21 @@
 <script setup>
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
   stats: Object,
   upcomingFixtures: Array,
   favoriteFixtures: Array,
 });
+
+// Provide robust defaults so layout never looks odd for new accounts
+const statsSafe = computed(() => ({
+  tournaments: props.stats?.tournaments ?? 0,
+  wins: props.stats?.wins ?? 0,
+  total_points: props.stats?.total_points ?? 0,
+  win_rate: props.stats?.win_rate ?? '0%',
+}));
 </script>
 
 <template>
@@ -109,21 +118,21 @@ const props = defineProps({
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <!-- dynamic stats -->
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">{{ props.stats.tournaments }}</div>
-                        <div class="text-gray-500 text-sm">Tournaments</div>
+                    <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                        <div class="text-2xl font-bold text-green-600">{{ statsSafe.tournaments }}</div>
+                        <div class="text-gray-600 text-sm">Tournaments</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-600">{{ props.stats.wins }}</div>
-                        <div class="text-gray-500 text-sm">Wins</div>
+                    <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                        <div class="text-2xl font-bold text-blue-600">{{ statsSafe.wins }}</div>
+                        <div class="text-gray-600 text-sm">Wins</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-600">{{ props.stats.total_points }}</div>
-                        <div class="text-gray-500 text-sm">Total Points</div>
+                    <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                        <div class="text-2xl font-bold text-yellow-600">{{ statsSafe.total_points }}</div>
+                        <div class="text-gray-600 text-sm">Total Points</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">{{ props.stats.win_rate }}</div>
-                        <div class="text-gray-500 text-sm">Win Rate</div>
+                    <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                        <div class="text-2xl font-bold text-purple-600">{{ statsSafe.win_rate }}</div>
+                        <div class="text-gray-600 text-sm">Win Rate</div>
                     </div>
                 </div>
             </div>

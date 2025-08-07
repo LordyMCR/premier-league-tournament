@@ -215,10 +215,17 @@ class User extends Authenticatable
      */
     public function isProfileViewableBy(?User $viewer = null)
     {
-        if (!$this->profile_public) {
+        // Prefer per-user profile settings. Default to visible if not set.
+        $profileVisible = $this->profileSettings?->profile_visible;
+
+        if ($profileVisible === null) {
+            return true;
+        }
+
+        if ($profileVisible === false) {
             return $viewer && $viewer->id === $this->id;
         }
-        
+
         return true;
     }
 

@@ -24,8 +24,12 @@ class ProfileController extends Controller
     public function show(Request $request, User $user): Response
     {
         try {
-            // Check if profile is viewable
-            if (!$user->isProfileViewableBy($request->user())) {
+            // Support explicit public preview (treat viewer as public when previewing)
+            $previewPublic = (bool) $request->boolean('preview_public');
+            $viewerForGate = $previewPublic ? null : $request->user();
+
+            // If not previewing and the viewer cannot see the profile, block
+            if (!$previewPublic && !$user->isProfileViewableBy($viewerForGate)) {
                 abort(403, 'This profile is private.');
             }
 
@@ -41,6 +45,9 @@ class ProfileController extends Controller
                     $query->latest()->limit(5);
                 }
             ]);
+
+            // Ensure profile settings instance exists for frontend consumption
+            $user->setRelation('profileSettings', $user->getOrCreateProfileSettings());
 
             // Get current active tournaments for the user
             $currentTournaments = collect();
@@ -115,6 +122,7 @@ class ProfileController extends Controller
                 'recentTournaments' => $recentTournaments,
                 'isOwnProfile' => $request->user()?->id === $user->id,
                 'canEdit' => $request->user()?->id === $user->id,
+                'previewPublic' => $previewPublic,
             ]);
         } catch (\Exception $e) {
             // Log the error for debugging
@@ -130,6 +138,7 @@ class ProfileController extends Controller
                 'recentTournaments' => collect(),
                 'isOwnProfile' => $request->user()?->id === $user->id,
                 'canEdit' => $request->user()?->id === $user->id,
+                'previewPublic' => false,
             ]);
         }
     }
@@ -194,6 +203,21 @@ class ProfileController extends Controller
         ]);
 
         $user->update($validated);
+        
+        // Keep UserProfileSetting in sync for overlapping privacy flags
+        $settings = $user->getOrCreateProfileSettings();
+        $settingsPayload = [];
+        foreach (['show_real_name','show_email','show_location','show_age'] as $flag) {
+            if (array_key_exists($flag, $validated)) {
+                $settingsPayload[$flag] = (bool) $validated[$flag];
+            }
+        }
+        if (array_key_exists('profile_public', $validated)) {
+            $settingsPayload['profile_visible'] = (bool) $validated['profile_public'];
+        }
+        if (!empty($settingsPayload)) {
+            $settings->update($settingsPayload);
+        }
         $user->updateLastActive();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');

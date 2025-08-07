@@ -35,11 +35,12 @@ const extendedForm = useForm({
     twitter_handle: props.user.twitter_handle || '',
     instagram_handle: props.user.instagram_handle || '',
     display_name: props.user.display_name || '',
-    show_real_name: props.user.show_real_name ?? true,
-    show_email: props.user.show_email ?? false,
-    show_location: props.user.show_location ?? true,
-    show_age: props.user.show_age ?? false,
-    profile_public: props.user.profile_public ?? true,
+    // Initialize visibility booleans from profileSettings when available to avoid drift
+    show_real_name: props.profileSettings?.show_real_name ?? (props.user.show_real_name ?? true),
+    show_email: props.profileSettings?.show_email ?? (props.user.show_email ?? false),
+    show_location: props.profileSettings?.show_location ?? (props.user.show_location ?? true),
+    show_age: props.profileSettings?.show_age ?? (props.user.show_age ?? false),
+    profile_public: props.profileSettings?.profile_visible ?? (props.user.profile_public ?? true),
 })
 
 // Privacy settings form
@@ -91,6 +92,8 @@ const submitPrivacySettings = () => {
     privacyForm.patch(route('profile.update.privacy'))
 }
 
+// removed quick privacy controls (now centralized under Privacy tab only)
+
 const handleAvatarChange = (event) => {
     const file = event.target.files[0]
     
@@ -116,8 +119,20 @@ const handleCropComplete = (croppedBlob) => {
     }
     reader.readAsDataURL(croppedFile)
     
-    // Close cropper
-    showCropper.value = false
+    // Immediately upload the cropped avatar
+    avatarForm.post(route('profile.avatar.upload'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Reset state and close cropper after successful upload
+            avatarForm.reset()
+            showCropper.value = false
+            selectedImageFile.value = null
+        },
+        onError: () => {
+            // Keep cropper closed but retain preview so user can retry
+            showCropper.value = false
+        }
+    })
 }
 
 const handleCropCancel = () => {
@@ -155,6 +170,22 @@ const handleImageError = (event) => {
 const handleImageLoad = (event) => {
     // Image loaded successfully, no need to do anything
 }
+
+// Status banner mapping from server-provided status prop
+const statusMessage = computed(() => {
+    switch (props.status) {
+        case 'profile-updated':
+            return 'Your profile has been saved.'
+        case 'privacy-updated':
+            return 'Your privacy settings have been saved.'
+        case 'avatar-updated':
+            return 'Your avatar has been updated.'
+        case 'avatar-removed':
+            return 'Your avatar has been removed.'
+        default:
+            return ''
+    }
+})
 </script>
 
 <template>
@@ -173,7 +204,7 @@ const handleImageLoad = (event) => {
                             </p>
                         </div>
                         <div class="flex gap-3">
-                            <Link :href="route('profile.show', { user: user.id })" 
+                            <Link :href="route('profile.show', { user: user.id, preview_public: 1 })" 
                                   class="px-3 py-2 sm:px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base">
                                 <i class="fas fa-eye mr-1 sm:mr-2"></i>
                                 <span class="hidden sm:inline">View Public</span>
@@ -186,6 +217,13 @@ const handleImageLoad = (event) => {
 
                 <!-- Tab Navigation -->
                 <div class="bg-white rounded-xl p-2 border border-green-200 shadow-md mb-6 sm:mb-8">
+                    <!-- Success Banner -->
+                    <div v-if="statusMessage" class="mb-2">
+                        <div class="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-green-800 text-sm">
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ statusMessage }}</span>
+                        </div>
+                    </div>
                     <nav class="flex overflow-x-auto no-scrollbar">
                         <button @click="activeTab = 'profile'"
                                 :class="activeTab === 'profile' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-green-50'"
@@ -359,32 +397,7 @@ const handleImageLoad = (event) => {
                                     <InputError :message="extendedForm.errors.bio" class="mt-2" />
                                 </div>
 
-                                <!-- Quick Privacy Controls -->
-                                <div class="space-y-3 pt-4 border-t border-gray-200">
-                                    <h3 class="text-base sm:text-lg font-medium text-gray-900">Quick Privacy Controls</h3>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                        <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                            <Checkbox v-model:checked="extendedForm.show_real_name" />
-                                            <span class="text-gray-700">Show real name on profile</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                            <Checkbox v-model:checked="extendedForm.show_email" />
-                                            <span class="text-gray-700">Show email address</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                            <Checkbox v-model:checked="extendedForm.show_location" />
-                                            <span class="text-gray-700">Show location</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                            <Checkbox v-model:checked="extendedForm.show_age" />
-                                            <span class="text-gray-700">Show age</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                            <Checkbox v-model:checked="extendedForm.profile_public" />
-                                            <span class="text-gray-700">Make profile public</span>
-                                        </label>
-                                    </div>
-                                </div>
+                                
 
                                 <div class="flex justify-end pt-4">
                                     <PrimaryButton :class="{ 'opacity-25': extendedForm.processing }" :disabled="extendedForm.processing">
@@ -440,16 +453,6 @@ const handleImageLoad = (event) => {
                                     </div>
 
                                     <div class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
-                                        <PrimaryButton 
-                                            v-if="avatarForm.avatar"
-                                            :class="{ 'opacity-25': avatarForm.processing }" 
-                                            :disabled="avatarForm.processing || !avatarForm.avatar"
-                                            class="text-sm"
-                                        >
-                                            <i class="fas fa-upload mr-2"></i>
-                                            Upload Avatar
-                                        </PrimaryButton>
-
                                         <SecondaryButton 
                                             v-if="user.avatar"
                                             @click="removeAvatar"
@@ -470,6 +473,15 @@ const handleImageLoad = (event) => {
                         <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Privacy Settings</h2>
                         
                         <form @submit.prevent="submitPrivacySettings" class="space-y-6">
+                            <!-- Privacy Mode Note -->
+                            <div class="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-gray-700 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>
+                                        When profile visibility is disabled, your profile is hidden from others. You can still adjust granular settings below; they take effect once you make your profile visible again.
+                                    </span>
+                                </div>
+                            </div>
                             <!-- Profile Visibility -->
                             <div class="space-y-3">
                                 <h3 class="text-base sm:text-lg font-medium text-gray-900">Profile Visibility</h3>
@@ -485,44 +497,44 @@ const handleImageLoad = (event) => {
                             <div class="space-y-3">
                                 <h3 class="text-base sm:text-lg font-medium text-gray-900">Personal Information</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_real_name" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base opacity-100" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_real_name" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show real name</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_email" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_email" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show email address</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_location" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_location" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show location</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_age" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_age" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show age</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_bio" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_bio" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show bio/about section</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_favorite_team" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_favorite_team" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show favorite team</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_supporter_since" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_supporter_since" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show supporter since year</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_social_links" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_social_links" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show social media links</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_last_active" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_last_active" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show last active time</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_join_date" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_join_date" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show join date</span>
                                     </label>
                                 </div>
@@ -532,28 +544,28 @@ const handleImageLoad = (event) => {
                             <div class="space-y-3">
                                 <h3 class="text-base sm:text-lg font-medium text-gray-900">Tournament Data</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_tournament_history" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_tournament_history" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show tournament history</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_statistics" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_statistics" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show statistics</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_achievements" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_achievements" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show achievements</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_current_tournaments" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_current_tournaments" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show current tournaments</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_pick_history" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_pick_history" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show pick history</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.show_team_preferences" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.show_team_preferences" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Show team preferences</span>
                                     </label>
                                 </div>
@@ -563,20 +575,20 @@ const handleImageLoad = (event) => {
                             <div class="space-y-3">
                                 <h3 class="text-base sm:text-lg font-medium text-gray-900">Search & Social</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.searchable_by_name" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.searchable_by_name" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Searchable by name</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.searchable_by_email" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.searchable_by_email" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Searchable by email</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.allow_tournament_invites" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.allow_tournament_invites" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Allow tournament invites</span>
                                     </label>
-                                    <label class="flex items-center space-x-2 text-sm sm:text-base">
-                                        <Checkbox v-model:checked="privacyForm.public_leaderboard_participation" />
+                                    <label class="flex items-center space-x-2 text-sm sm:text-base" :class="{ 'opacity-50 pointer-events-none': !privacyForm.profile_visible }">
+                                        <Checkbox v-model:checked="privacyForm.public_leaderboard_participation" :disabled="!privacyForm.profile_visible" />
                                         <span class="text-gray-700">Participate in public leaderboards</span>
                                     </label>
                                 </div>

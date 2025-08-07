@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage, router } from '@inertiajs/vue3'
 
 const showDropdown = ref(false)
 const showMobileMenu = ref(false)
@@ -16,7 +16,7 @@ const toggleDropdown = () => {
 
 const logout = () => {
     if (confirm('Are you sure you want to log out?')) {
-        window.location.href = '/logout'
+        router.post(route('logout'), {}, { preserveScroll: true })
     }
 }
 </script>

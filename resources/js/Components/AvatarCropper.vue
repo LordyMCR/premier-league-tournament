@@ -399,11 +399,11 @@ const cancel = () => {
 </script>
 
 <template>
-    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-3 sm:p-6 max-w-4xl w-full mx-2 sm:mx-4 max-h-screen overflow-y-auto">
+    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="bg-white rounded-2xl border border-green-200 p-4 sm:p-6 max-w-4xl w-full mx-2 sm:mx-4 shadow-2xl max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-4 sm:mb-6">
-                <h2 class="text-lg sm:text-xl font-bold text-white">Crop Profile Picture</h2>
-                <button @click="cancel" class="text-white/70 hover:text-white p-2">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-900">Crop Profile Picture</h2>
+                <button @click="cancel" class="text-gray-500 hover:text-gray-700 p-2">
                     <i class="fas fa-times text-lg sm:text-xl"></i>
                 </button>
             </div>
@@ -411,14 +411,14 @@ const cancel = () => {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <!-- Main Cropping Area -->
                 <div class="lg:col-span-2">
-                    <h3 class="text-base sm:text-lg font-medium text-white mb-2 sm:mb-3">Adjust Your Photo</h3>
-                    <p class="text-white/70 text-xs sm:text-sm mb-3 sm:mb-4">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">Adjust Your Photo</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
                         <span v-if="isMobile">Tap and drag to move • Drag corners to resize</span>
                         <span v-else>Drag to move • Drag corner handles to resize</span>
                         • Only the area inside the circle will be saved
                     </p>
                     
-                    <div class="bg-gray-900/50 rounded-lg p-2 sm:p-4 overflow-auto">
+                    <div class="bg-gray-50 rounded-lg p-2 sm:p-4 overflow-auto border border-gray-200">
                         <canvas 
                             ref="canvas"
                             @mousedown="onMouseDown"
@@ -428,15 +428,15 @@ const cancel = () => {
                             @touchstart="onTouchStart"
                             @touchmove="onTouchMove"
                             @touchend="onTouchEnd"
-                            class="border border-gray-600/50 rounded cursor-default max-w-full"
+                            class="border border-gray-300 rounded cursor-default max-w-full bg-white"
                         ></canvas>
                     </div>
                 </div>
                 
                 <!-- Preview Area -->
                 <div class="lg:col-span-1">
-                    <h3 class="text-base sm:text-lg font-medium text-white mb-2 sm:mb-3">Preview</h3>
-                    <p class="text-white/70 text-xs sm:text-sm mb-3 sm:mb-4">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">Preview</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
                         This is how your profile picture will appear
                     </p>
                     
@@ -445,18 +445,18 @@ const cancel = () => {
                         <div class="relative">
                             <canvas 
                                 ref="cropCanvas"
-                                class="rounded-full border-4 border-emerald-400/50 shadow-2xl"
+                                class="rounded-full border-4 border-emerald-400/50 shadow-xl bg-white"
                             ></canvas>
                         </div>
                         
                         <!-- Small Preview -->
                         <div class="text-center">
-                            <p class="text-white/70 text-xs mb-2">Small size preview:</p>
+                            <p class="text-gray-600 text-xs mb-2">Small size preview:</p>
                             <canvas 
                                 ref="smallPreview"
                                 width="64" 
                                 height="64"
-                                class="rounded-full border-2 border-white/20"
+                                class="rounded-full border-2 border-gray-200 bg-white"
                             ></canvas>
                         </div>
                     </div>
@@ -477,12 +477,12 @@ const cancel = () => {
             </div>
             
             <!-- Instructions -->
-            <div class="mt-4 sm:mt-6 p-3 sm:p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg">
-                <h4 class="text-blue-300 font-medium mb-2 text-sm sm:text-base">
+            <div class="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 class="text-green-700 font-medium mb-2 text-sm sm:text-base">
                     <i class="fas fa-info-circle mr-2"></i>
                     How to use:
                 </h4>
-                <ul class="text-blue-200/90 text-xs sm:text-sm space-y-1">
+                <ul class="text-gray-700 text-xs sm:text-sm space-y-1">
                     <li v-if="isMobile">• Tap and drag inside the circle to move the crop area</li>
                     <li v-else>• Click and drag inside the circle to move the crop area</li>
                     <li>• Drag the corner handles to resize the crop area</li>
