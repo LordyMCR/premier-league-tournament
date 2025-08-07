@@ -126,7 +126,10 @@ const getFormClass = (form) => {
                                      class="w-16 h-16 lg:w-20 lg:h-20 object-contain"
                                      @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=80`">
                                 <div class="text-center">
-                                    <h3 class="text-lg lg:text-xl font-bold text-gray-900">{{ game.home_team.name }}</h3>
+                                    <h3 class="text-lg lg:text-xl font-bold text-gray-900">
+                                        <span class="sm:hidden tracking-widest">{{ game.home_team.short_name }}</span>
+                                        <span class="hidden sm:inline">{{ game.home_team.name }}</span>
+                                    </h3>
                                     <p class="text-gray-600 text-sm">Home</p>
                                 </div>
                             </Link>
@@ -137,11 +140,13 @@ const getFormClass = (form) => {
                             <div v-if="game.status === 'FINISHED'" class="text-4xl lg:text-6xl font-bold text-gray-900">
                                 {{ game.home_score }} - {{ game.away_score }}
                             </div>
-                            <div v-else class="text-3xl lg:text-4xl font-bold text-gray-700">
-                                VS
+                            <div v-else class="text-center">
+                                <div class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-700">
+                                    VS
+                                </div>
                             </div>
                             <div :class="getMatchStatus().class" 
-                                 class="px-3 py-2 lg:px-4 lg:py-2 rounded-full text-white text-sm font-medium inline-block">
+                                 class="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white text-xs sm:text-sm font-medium inline-block text-center">
                                 {{ getMatchStatus().text }}
                             </div>
                         </div>
@@ -155,7 +160,10 @@ const getFormClass = (form) => {
                                      class="w-16 h-16 lg:w-20 lg:h-20 object-contain"
                                      @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.away_team.short_name)}&background=${encodeURIComponent(game.away_team.primary_color || '#22C55E')}&color=fff&size=80`">
                                 <div class="text-center">
-                                    <h3 class="text-lg lg:text-xl font-bold text-gray-900">{{ game.away_team.name }}</h3>
+                                    <h3 class="text-lg lg:text-xl font-bold text-gray-900">
+                                        <span class="sm:hidden tracking-widest">{{ game.away_team.short_name }}</span>
+                                        <span class="hidden sm:inline">{{ game.away_team.name }}</span>
+                                    </h3>
                                     <p class="text-gray-600 text-sm">Away</p>
                                 </div>
                             </Link>
@@ -301,7 +309,7 @@ const getFormClass = (form) => {
                 <div class="p-4 lg:p-6">
                     <!-- Overall Record -->
                     <div v-if="headToHead.total_games > 0" class="mb-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center sm:space-x-12 space-y-6 sm:space-y-0">
+                        <div class="grid grid-cols-3 gap-6 justify-items-center sm:flex sm:flex-row sm:items-center sm:justify-center sm:space-x-12 sm:space-y-0 space-y-0">
                             <div class="text-center">
                                 <p class="text-3xl lg:text-4xl font-bold text-green-600 mb-1">{{ headToHead.wins || 0 }}</p>
                                 <p class="text-gray-800 text-sm lg:text-base font-medium">{{ game.home_team.short_name }}</p>
@@ -335,10 +343,10 @@ const getFormClass = (form) => {
                             <div v-for="meeting in headToHead.recent_meetings" :key="meeting.date"
                                  class="grid grid-cols-3 items-center gap-4 p-3 bg-gray-50 rounded-lg">
                                 <span class="text-gray-600 text-sm">{{ formatDate(meeting.date) }}</span>
-                                <div class="flex items-center justify-center space-x-2">
-                                    <span class="text-gray-900 font-medium text-sm w-8 text-right">{{ meeting.venue === 'H' ? game.home_team.short_name : game.away_team.short_name }}</span>
-                                    <span class="text-gray-900 font-bold text-lg w-12 text-center">{{ meeting.score }}</span>
-                                    <span class="text-gray-900 font-medium text-sm w-8 text-left">{{ meeting.venue === 'H' ? game.away_team.short_name : game.home_team.short_name }}</span>
+                                <div class="flex items-center justify-center space-x-2 flex-nowrap">
+                                    <span class="text-gray-900 font-medium text-sm text-right whitespace-nowrap">{{ meeting.venue === 'H' ? game.home_team.short_name : game.away_team.short_name }}</span>
+                                    <span class="text-gray-900 font-bold text-lg text-center whitespace-nowrap">{{ meeting.score }}</span>
+                                    <span class="text-gray-900 font-medium text-sm text-left whitespace-nowrap">{{ meeting.venue === 'H' ? game.away_team.short_name : game.home_team.short_name }}</span>
                                 </div>
                                 <div></div>
                             </div>
@@ -352,10 +360,10 @@ const getFormClass = (form) => {
                             <div v-for="record in headToHead.recent_record" :key="record.date"
                                  class="grid grid-cols-3 items-center gap-4 p-3 bg-gray-50 rounded-lg">
                                 <span class="text-gray-600 text-sm">{{ formatDate(record.date) }}</span>
-                                <div class="flex items-center justify-center space-x-2">
-                                    <span class="text-gray-900 font-medium text-sm w-8 text-right">{{ record.venue === 'H' ? game.home_team.short_name : game.away_team.short_name }}</span>
-                                    <span class="text-gray-900 font-bold text-lg w-12 text-center">{{ record.score }}</span>
-                                    <span class="text-gray-900 font-medium text-sm w-8 text-left">{{ record.venue === 'H' ? game.away_team.short_name : game.home_team.short_name }}</span>
+                                <div class="flex items-center justify-center space-x-2 flex-nowrap">
+                                    <span class="text-gray-900 font-medium text-sm text-right whitespace-nowrap">{{ record.venue === 'H' ? game.home_team.short_name : game.away_team.short_name }}</span>
+                                    <span class="text-gray-900 font-bold text-lg text-center whitespace-nowrap">{{ record.score }}</span>
+                                    <span class="text-gray-900 font-medium text-sm text-left whitespace-nowrap">{{ record.venue === 'H' ? game.away_team.short_name : game.home_team.short_name }}</span>
                                 </div>
                                 <div></div>
                             </div>
