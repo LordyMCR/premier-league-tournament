@@ -7,11 +7,18 @@ use App\Http\Controllers\ScheduleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use App\Models\UserStatistic;
+use App\Models\Game;
+use Carbon\Carbon;
 
 // Include debug routes
 require __DIR__.'/debug.php';
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -21,7 +28,45 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $user = Auth::user();
+    $stat = UserStatistic::firstOrNew(['user_id' => $user->id]);
+    $upcomingFixtures = Game::with(['homeTeam','awayTeam'])
+        ->where('status', 'SCHEDULED')
+        ->orderBy('kick_off_time')
+        ->limit(3)
+        ->get()
+        ->map(fn($game) => [
+            'home' => $game->homeTeam->name,
+            'away' => $game->awayTeam->name,
+            'when' => Carbon::parse($game->kick_off_time)->diffForHumans(),
+        ]);
+    // Also fetch fixtures for the user's favorite team
+    $favoriteFixtures = Game::with(['homeTeam','awayTeam'])
+        ->where('status', 'SCHEDULED')
+        ->where(function($q) use ($user) {
+            $q->where('home_team_id', $user->favorite_team_id)
+              ->orWhere('away_team_id', $user->favorite_team_id);
+        })
+        ->orderBy('kick_off_time')
+        ->limit(3)
+        ->get()
+        ->map(fn($game) => [
+            'home' => $game->homeTeam->name,
+            'away' => $game->awayTeam->name,
+            'when' => Carbon::parse($game->kick_off_time)->diffForHumans(),
+        ]);
+
+    return Inertia::render('Dashboard', [
+        'stats'            => [
+            'tournaments'   => $stat->total_tournaments,
+            'wins'          => $stat->tournaments_won,
+            'total_points'  => $stat->total_points,
+            'win_rate'      => round($stat->win_percentage) . '%',
+        ],
+        'upcomingFixtures' => $upcomingFixtures,
+        'favoriteFixtures' => $favoriteFixtures,
+        'favoriteTeam'     => $user->favoriteTeam?->name,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Public profile routes (accessible to all authenticated users)

@@ -29,7 +29,7 @@ const logout = () => {
                 <div class="flex items-center">
                     <Link :href="route('welcome')" class="flex items-center space-x-3 group">
                         <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-                            <i class="fas fa-futbol text-white text-lg"></i>
+                            <img src="/favicon.ico" alt="Football" class="w-6 h-6" />
                         </div>
                         <div class="flex flex-col">
                             <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
