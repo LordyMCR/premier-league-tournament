@@ -77,15 +77,29 @@ const gamesByDate = getGamesByDate();
     <TournamentLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <div>
+                <div class="flex-1">
                     <h2 class="text-3xl font-bold text-gray-900">
                         {{ gameweek.name }}
                     </h2>
                     <p class="text-gray-600 mt-2">
                         {{ formatDate(gameweek.start_date) }} - {{ formatDate(gameweek.end_date) }}
                     </p>
+                    <!-- Mobile controls under title -->
+                    <div class="mt-3 flex items-center gap-2 sm:hidden">
+                        <Link :href="route('schedule.index')" 
+                              class="bg-white border border-green-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-green-50">
+                            ← Back
+                        </Link>
+                        <div v-if="gameweek.is_completed" class="bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                            Completed
+                        </div>
+                        <div v-else class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                            Upcoming
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-4">
+                <!-- Desktop/tablet controls on the right -->
+                <div class="hidden sm:flex items-center space-x-4">
                     <div v-if="gameweek.is_completed" class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
                         Completed
                     </div>
@@ -198,7 +212,10 @@ const gamesByDate = getGamesByDate();
                                              class="w-12 h-12 object-contain"
                                              @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=48`">
                                         <div>
-                                            <h4 class="text-gray-900 font-semibold">{{ game.home_team.name }}</h4>
+                                            <h4 class="text-gray-900 font-semibold">
+                                                <span class="sm:hidden tracking-widest">{{ game.home_team.short_name }}</span>
+                                                <span class="hidden sm:inline">{{ game.home_team.name }}</span>
+                                            </h4>
                                             <p class="text-gray-600 text-sm">{{ game.home_team.venue || 'Home' }}</p>
                                         </div>
                                     </div>
@@ -216,7 +233,10 @@ const gamesByDate = getGamesByDate();
                                     <!-- Away Team -->
                                     <div class="flex items-center space-x-4 flex-1 justify-end">
                                         <div class="text-right">
-                                            <h4 class="text-gray-900 font-semibold">{{ game.away_team.name }}</h4>
+                                            <h4 class="text-gray-900 font-semibold">
+                                                <span class="sm:hidden tracking-widest">{{ game.away_team.short_name }}</span>
+                                                <span class="hidden sm:inline">{{ game.away_team.name }}</span>
+                                            </h4>
                                             <p class="text-gray-600 text-sm">Away</p>
                                         </div>
                                         <img :src="game.away_team.logo_url" 
