@@ -65,11 +65,22 @@ class GameWeek extends Model
     {
         $now = now();
         
-        return $this->selection_opens 
-            && $this->selection_deadline 
-            && $now >= $this->selection_opens 
-            && $now <= $this->selection_deadline
-            && !$this->is_completed;
+        // Primary: explicit opens/deadline window
+        if ($this->selection_opens && $this->selection_deadline) {
+            return $now >= $this->selection_opens
+                && $now <= $this->selection_deadline
+                && !$this->is_completed;
+        }
+        // Fallback A: only deadline provided → allow until deadline
+        if ($this->selection_deadline) {
+            return $now <= $this->selection_deadline && !$this->is_completed;
+        }
+        // Fallback B: allow until kickoff when selection window times are missing
+        if ($this->gameweek_start_time) {
+            return $now < $this->gameweek_start_time && !$this->is_completed;
+        }
+        // Fallback C: allow until end of start_date day if no precise times are available
+        return $now->toDateString() <= $this->start_date && !$this->is_completed;
     }
 
     /**
