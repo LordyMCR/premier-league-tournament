@@ -169,8 +169,9 @@ class PickController extends Controller
 
         $team = Team::find($validated['team_id']);
         $homeAwayText = '';
-        if ($validated['home_away']) {
-            $homeAwayText = ' (' . ($validated['home_away'] === 'home' ? 'Home' : 'Away') . ')';
+        $homeAwayValue = $validated['home_away'] ?? null;
+        if ($homeAwayValue) {
+            $homeAwayText = ' (' . ($homeAwayValue === 'home' ? 'Home' : 'Away') . ')';
         }
 
         return redirect()->route('tournaments.show', $tournament)

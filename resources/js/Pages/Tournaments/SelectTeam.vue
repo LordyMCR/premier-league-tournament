@@ -20,29 +20,35 @@
             </div>
         </template>
 
-        <div class="max-w-4xl mx-auto space-y-6">
-            <!-- Current Game Info -->
+        <div class="max-w-6xl mx-auto space-y-6">
+            <!-- Fixtures for this gameweek -->
             <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Game</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">This Week's Fixtures</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div v-for="game in gameWeek.games" :key="game.id" 
+                    <div v-for="game in gameWeekGames" :key="game.id" 
                          class="bg-gray-50 rounded-lg p-4 border border-green-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                     :style="{ backgroundColor: game.home_team.primary_color || '#22C55E' }">
-                                    <span class="text-xs font-bold text-white">H</span>
+                                <div class="w-8 h-8 flex items-center justify-center">
+                                    <img :src="game.home_team.logo_url" :alt="game.home_team.name" class="w-full h-full object-contain"
+                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=32`" />
                                 </div>
-                                <span class="text-gray-900 font-medium">{{ game.home_team.name }}</span>
+                                <span class="text-gray-900 font-medium">
+                                    <span class="sm:hidden">{{ game.home_team.short_name || game.home_team.name }}</span>
+                                    <span class="hidden sm:inline">{{ game.home_team.name }}</span>
+                                </span>
                             </div>
                             <div class="text-center">
                                 <span class="text-gray-500 text-sm">vs</span>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <span class="text-gray-900 font-medium">{{ game.away_team.name }}</span>
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                     :style="{ backgroundColor: game.away_team.primary_color || '#22C55E' }">
-                                    <span class="text-xs font-bold text-white">A</span>
+                                <span class="text-gray-900 font-medium">
+                                    <span class="sm:hidden">{{ game.away_team.short_name || game.away_team.name }}</span>
+                                    <span class="hidden sm:inline">{{ game.away_team.name }}</span>
+                                </span>
+                                <div class="w-8 h-8 flex items-center justify-center">
+                                    <img :src="game.away_team.logo_url" :alt="game.away_team.name" class="w-full h-full object-contain"
+                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.away_team.short_name)}&background=${encodeURIComponent(game.away_team.primary_color || '#22C55E')}&color=fff&size=32`" />
                                 </div>
                             </div>
                         </div>
@@ -57,7 +63,7 @@
                 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div v-for="team in availableTeams" :key="team.id" 
+                        <div v-for="team in sortedTeams" :key="team.id" 
                              class="relative">
                             <input
                                 type="radio"
@@ -67,15 +73,18 @@
                                 v-model="form.team_id"
                                 class="sr-only"
                             />
-                            <label :for="`team-${team.id}`" 
-                                   class="block cursor-pointer">
+                            <label :for="`team-${team.id}`" class="block cursor-pointer">
                                 <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
-                                     :class="{ 'bg-green-100 border-green-400': form.team_id == team.id }">
-                                    <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
-                                         :style="{ backgroundColor: team.primary_color || '#22C55E' }">
-                                        <span class="font-bold text-white text-sm">{{ team.short_name }}</span>
+                                     :class="{ 'bg-green-100 border-green-400 ring-2 ring-green-300': form.team_id == team.id }">
+                                    <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                                        <img :src="team.logo_url" :alt="team.name" class="w-full h-full object-contain"
+                                             @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=64`" />
                                     </div>
                                     <div class="font-medium text-gray-900 text-sm">{{ team.name }}</div>
+                                    <div v-if="fixtureMap[team.id]" class="mt-1 text-xs text-gray-600">
+                                        vs <span class="font-medium text-gray-700">{{ fixtureMap[team.id].opponent.short_name || fixtureMap[team.id].opponent.name }}</span>
+                                        <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-gray-200 text-gray-700">{{ fixtureMap[team.id].homeAway === 'home' ? 'H' : 'A' }}</span>
+                                    </div>
                                 </div>
                             </label>
                         </div>
@@ -116,6 +125,7 @@
 
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -126,11 +136,26 @@ const props = defineProps({
     gameWeek: Object,
     availableTeams: Array,
     usedTeams: Array,
+    gameWeekGames: Array,
 });
 
 const form = useForm({
     team_id: '',
 });
+
+// Teams sorted A→Z by name
+const sortedTeams = computed(() => {
+    return [...(props.availableTeams || [])].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+});
+
+// Build a quick lookup of opponent and home/away per team for this gameweek
+const fixtureMap = {};
+const gameWeekGames = Array.isArray(props.gameWeekGames) ? props.gameWeekGames : [];
+for (const game of gameWeekGames) {
+    if (!game?.home_team || !game?.away_team) continue;
+    fixtureMap[game.home_team.id] = { opponent: game.away_team, homeAway: 'home' };
+    fixtureMap[game.away_team.id] = { opponent: game.home_team, homeAway: 'away' };
+}
 
 const submit = () => {
     form.post(route('tournaments.gameweeks.picks.store', { tournament: props.tournament.id, gameWeek: props.gameWeek.id }));

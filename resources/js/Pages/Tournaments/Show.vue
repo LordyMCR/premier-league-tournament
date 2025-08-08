@@ -191,7 +191,7 @@ const timeUntilNextSelection = computed(() => {
                     </div>
                     <div>
                         <p class="text-gray-900 font-medium">{{ currentPick.team.name }}</p>
-                        <p class="text-gray-500 text-sm">Gameweek {{ currentPick.gameweek.week_number }}</p>
+                        <p class="text-gray-500 text-sm">Gameweek {{ currentPick.gameweek?.week_number || 'N/A' }}</p>
                     </div>
                 </div>
             </div>
@@ -357,7 +357,7 @@ const timeUntilNextSelection = computed(() => {
                 <div class="sm:hidden p-4 space-y-2">
                     <div v-for="pick in userPicks" :key="pick.id" class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
                         <div class="flex items-center min-w-0 space-x-3">
-                            <span class="text-xs text-gray-500 font-medium flex-shrink-0">GW {{ pick.gameweek.week_number }}</span>
+                            <span class="text-xs text-gray-500 font-medium flex-shrink-0">GW {{ pick.gameweek?.week_number || 'N/A' }}</span>
                             <div class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center border border-green-200 flex-shrink-0"
                                  :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }">
                                 <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
@@ -391,7 +391,7 @@ const timeUntilNextSelection = computed(() => {
                         <tbody class="bg-white divide-y divide-green-200">
                             <tr v-for="pick in userPicks" :key="pick.id" class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ pick.gameweek.week_number }}
+                                    {{ pick.gameweek?.week_number || 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center min-w-0">
