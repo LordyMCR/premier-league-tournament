@@ -184,6 +184,18 @@ class TournamentController extends Controller
             ->where('selection_opens', '>', now())
             ->orderBy('selection_opens')
             ->first();
+
+        // If no date-range current gameweek matched, prefer the one with an open selection window
+        if (!$currentGameweek && $selectionGameweek) {
+            $currentGameweek = $selectionGameweek;
+        }
+        // Otherwise, if still null, choose the earliest not-completed upcoming gameweek in range
+        if (!$currentGameweek) {
+            $currentGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+                ->where('is_completed', false)
+                ->orderBy('week_number')
+                ->first();
+        }
         
         // Get user's picks if participant
         $userPicks = null;
