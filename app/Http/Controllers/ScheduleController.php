@@ -449,7 +449,34 @@ class ScheduleController extends Controller
                 $finalRating = $weightedSum / $totalWeight;
             }
 
-                                    // Determine difficulty label and class based on final rating
+            // Additional adjustments: venue and sample-size-aware head-to-head dominance
+            // Venue: away games are generally tougher, home slightly easier
+            $venueAdjustment = $isHome ? -5 : 10; // negative lowers difficulty, positive raises
+            $finalRating += $venueAdjustment;
+
+            // Head-to-head dominance bonus/penalty with confidence by sample size
+            $h2hAdjustment = 0; // negative reduces difficulty, positive increases
+            if ($h2hRecord['total_games'] > 0) {
+                $totalGames = $h2hRecord['total_games'];
+                $confidence = min(1.0, $totalGames / 6.0); // more meetings → more confidence (cap at 6)
+                $teamPerformance = ($h2hRecord['wins'] * 3 + $h2hRecord['draws']) / ($totalGames * 3); // 0..1
+                $dominance = ($teamPerformance - 0.5) * 2; // -1..1 (positive means favorable H2H)
+
+                if ($dominance > 0) {
+                    // Reward for historical dominance; stronger effect with more meetings
+                    $h2hAdjustment = -((5 + 10 * $confidence) * $dominance);
+                } elseif ($dominance < 0) {
+                    // Penalize if historically poor vs opponent
+                    $h2hAdjustment = (6 * $confidence) * abs($dominance);
+                }
+
+                $finalRating += $h2hAdjustment;
+            }
+
+            // Clamp to sane bounds
+            $finalRating = max(0, min(100, $finalRating));
+
+            // Determine difficulty label and class based on final rating
             if ($finalRating >= 75) {
                 $difficulty = 'Very Hard';
                 $difficultyClass = 'bg-red-800 text-white font-bold shadow-lg';
@@ -484,6 +511,8 @@ class ScheduleController extends Controller
                     'historical_strength' => $difficultyData['rating'],
                     'current_form' => $opponentStats['form_percentage'],
                     'h2h_factor' => isset($h2hRating) ? round($h2hRating, 1) : null,
+                    'venue_adjustment' => $venueAdjustment,
+                    'h2h_adjustment' => round($h2hAdjustment, 1),
                     'games_played_vs_opponent' => $h2hRecord['total_games'],
                 ]
             ];
