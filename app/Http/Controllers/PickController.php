@@ -50,12 +50,10 @@ class PickController extends Controller
         $existingPick = Pick::where('tournament_id', $tournament->id)
             ->where('user_id', $user->id)
             ->where('game_week_id', $gameWeek->id)
+            ->with('team')
             ->first();
 
-        if ($existingPick) {
-            return redirect()->route('tournaments.show', $tournament)
-                ->with('info', 'You have already made your pick for this game week.');
-        }
+        // If a pick already exists, allow user to change it during the open window
 
         // Get available teams (considering home/away logic if applicable)
         if ($tournament->allowsHomeAwayPicks()) {
@@ -76,9 +74,30 @@ class PickController extends Controller
             $team->game_week = $pick->gameWeek->name;
             return $team;
         });
+        // When amending, hide the current gameweek's selection from the used list
+        if ($existingPick) {
+            $usedTeams = $usedTeams->filter(function ($team) use ($existingPick) {
+                return $team->id !== $existingPick->team_id;
+            })->values();
+        }
         
         // Get games for this gameweek
         $gameWeekGames = $gameWeek->games()->with(['homeTeam', 'awayTeam'])->get();
+
+        // Ensure currently selected team is present in the list for editing (all strategies)
+        if ($existingPick) {
+            $alreadyIncluded = $availableTeams->firstWhere('id', $existingPick->team_id);
+            if (!$alreadyIncluded) {
+                $team = $existingPick->team ?: $existingPick->team()->first();
+                if ($team) {
+                    if ($tournament->allowsHomeAwayPicks()) {
+                        $team->home_away = $existingPick->home_away;
+                    }
+                    $team->game_id = null;
+                    $availableTeams->push($team);
+                }
+            }
+        }
 
         return Inertia::render('Tournaments/SelectTeam', [
             'tournament' => $tournament,
@@ -88,6 +107,7 @@ class PickController extends Controller
             'gameWeekGames' => $gameWeekGames,
             'allowsHomeAwayPicks' => $tournament->allowsHomeAwayPicks(),
             'selectionStrategy' => $tournament->getSelectionStrategy(),
+            'existingPick' => $existingPick,
         ]);
     }
 
@@ -129,17 +149,13 @@ class PickController extends Controller
             return back()->withErrors(['error' => 'This game week has already passed.']);
         }
 
-        // Check if user already made a pick for this game week
+        // Check if user already made a pick for this game week (allow update)
         $existingPick = Pick::where('tournament_id', $tournament->id)
             ->where('user_id', $user->id)
             ->where('game_week_id', $gameWeek->id)
             ->first();
 
-        if ($existingPick) {
-            return back()->withErrors(['error' => 'You have already made your pick for this game week.']);
-        }
-
-        // Check if user can pick this team considering home/away logic
+        // Check if user can pick this team considering home/away logic (allow keeping same team when updating)
         if ($tournament->allowsHomeAwayPicks()) {
             $homeAway = $validated['home_away'] ?? null;
             
@@ -147,25 +163,36 @@ class PickController extends Controller
                 return back()->withErrors(['home_away' => 'You must specify if the team is playing home or away.']);
             }
             
-            if (!Pick::canUserPickTeamHomeAway($user->id, $tournament->id, $validated['team_id'], $homeAway)) {
+            $isSameAsExisting = $existingPick && (int)$existingPick->team_id === (int)$validated['team_id'] && $existingPick->home_away === $homeAway;
+            if (!$isSameAsExisting && !Pick::canUserPickTeamHomeAway($user->id, $tournament->id, $validated['team_id'], $homeAway)) {
                 $homeAwayText = $homeAway === 'home' ? 'at home' : 'away';
                 return back()->withErrors(['team_id' => "You have already picked this team playing {$homeAwayText} in this tournament."]);
             }
         } else {
-            if (!Pick::canUserPickTeam($user->id, $tournament->id, $validated['team_id'])) {
+            $isSameAsExisting = $existingPick && (int)$existingPick->team_id === (int)$validated['team_id'];
+            if (!$isSameAsExisting && !Pick::canUserPickTeam($user->id, $tournament->id, $validated['team_id'])) {
                 return back()->withErrors(['team_id' => 'You have already picked this team in this tournament.']);
             }
         }
 
-        // Create the pick
-        Pick::create([
-            'tournament_id' => $tournament->id,
-            'user_id' => $user->id,
-            'game_week_id' => $gameWeek->id,
-            'team_id' => $validated['team_id'],
-            'home_away' => $validated['home_away'] ?? null,
-            'picked_at' => now(),
-        ]);
+        if ($existingPick) {
+            // Update existing pick
+            $existingPick->update([
+                'team_id' => $validated['team_id'],
+                'home_away' => $validated['home_away'] ?? null,
+                'picked_at' => now(),
+            ]);
+        } else {
+            // Create the pick
+            Pick::create([
+                'tournament_id' => $tournament->id,
+                'user_id' => $user->id,
+                'game_week_id' => $gameWeek->id,
+                'team_id' => $validated['team_id'],
+                'home_away' => $validated['home_away'] ?? null,
+                'picked_at' => now(),
+            ]);
+        }
 
         $team = Team::find($validated['team_id']);
         $homeAwayText = '';
@@ -174,8 +201,9 @@ class PickController extends Controller
             $homeAwayText = ' (' . ($homeAwayValue === 'home' ? 'Home' : 'Away') . ')';
         }
 
+        $action = $existingPick ? 'updated' : 'picked';
         return redirect()->route('tournaments.show', $tournament)
-            ->with('success', "You have picked {$team->name}{$homeAwayText} for {$gameWeek->name}!");
+            ->with('success', "You have {$action} {$team->name}{$homeAwayText} for {$gameWeek->name}!");
     }
 
     /**

@@ -99,7 +99,7 @@
                             :class="{ 'opacity-25': form.processing }"
                             :disabled="form.processing"
                         >
-                            Confirm Selection
+                            {{ existingPick ? 'Update Selection' : 'Confirm Selection' }}
                         </PrimaryButton>
                     </div>
                 </form>
@@ -111,7 +111,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     <div v-for="team in usedTeams" :key="team.id" 
                          class="bg-gray-100 rounded-lg p-3 text-center opacity-60">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-1"
+                         <div class="w-8 h-8 flex items-center justify-center mx-auto mb-1"
                              :style="{ backgroundColor: team.primary_color || '#22C55E' }">
                             <span class="font-bold text-white text-xs">{{ team.short_name }}</span>
                         </div>
@@ -137,11 +137,16 @@ const props = defineProps({
     availableTeams: Array,
     usedTeams: Array,
     gameWeekGames: Array,
+    existingPick: Object,
 });
 
 const form = useForm({
     team_id: '',
 });
+
+if (props.existingPick && props.existingPick.team_id) {
+    form.team_id = props.existingPick.team_id;
+}
 
 // Teams sorted A→Z by name
 const sortedTeams = computed(() => {
@@ -158,7 +163,15 @@ for (const game of gameWeekGames) {
 }
 
 const submit = () => {
-    form.post(route('tournaments.gameweeks.picks.store', { tournament: props.tournament.id, gameWeek: props.gameWeek.id }));
+    form.post(
+        route('tournaments.gameweeks.picks.store', { tournament: props.tournament.id, gameWeek: props.gameWeek.id }),
+        {
+            onSuccess: () => {
+                // After confirming, go back to tournament show which will read flash.success
+                window.location = route('tournaments.show', props.tournament.id);
+            }
+        }
+    );
 };
 </script>
 

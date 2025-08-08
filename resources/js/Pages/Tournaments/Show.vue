@@ -155,10 +155,20 @@ const timeUntilNextSelection = computed(() => {
                         <p class="text-gray-600">Gameweek {{ selectionGameweek.week_number }}</p>
                         <p class="text-sm text-gray-500">Closes {{ formatDate(selectionGameweek.selection_deadline) }}</p>
                     </div>
-                    <Link :href="route('tournaments.gameweeks.picks.create', { tournament: tournament.id, gameWeek: selectionGameweek.id })"
-                          class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
-                        Make Your Pick
-                    </Link>
+                    <div>
+                        <template v-if="currentPick">
+                            <Link :href="route('tournaments.gameweeks.picks.create', { tournament: tournament.id, gameWeek: selectionGameweek.id })"
+                                  class="bg-white border border-green-300 text-green-700 px-5 py-2.5 rounded-lg font-medium transition-all hover:bg-green-50">
+                                Change Selection
+                            </Link>
+                        </template>
+                        <template v-else>
+                            <Link :href="route('tournaments.gameweeks.picks.create', { tournament: tournament.id, gameWeek: selectionGameweek.id })"
+                                  class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
+                                Make Your Pick
+                            </Link>
+                        </template>
+                    </div>
                 </div>
             </div>
 
@@ -181,7 +191,7 @@ const timeUntilNextSelection = computed(() => {
             <div v-if="currentPick" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Pick</h3>
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200"
+                    <div class="w-12 h-12 overflow-hidden flex items-center justify-center"
                          :style="{ backgroundColor: currentPick.team.primary_color || '#22C55E' }">
                         <img v-if="currentPick.team.logo_url"
                              :src="currentPick.team.logo_url"
@@ -310,11 +320,11 @@ const timeUntilNextSelection = computed(() => {
                                      <div class="flex items-center flex-wrap gap-x-3 gap-y-1 w-full justify-start md:justify-end">
                                         <!-- Team Badge + Name -->
                                         <div class="flex items-center space-x-2 min-w-0">
-                                            <div class="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center border border-green-200"
+                                        <div class="w-7 h-7 overflow-hidden flex items-center justify-center"
                                                  :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }"
                                                  :title="pick.team.name">
-                                                <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
-                                                <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
+                                            <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
+                                            <span v-else class="text-gray-900 text-xs font-bold">{{ pick.team.short_name }}</span>
                                             </div>
                                             <span class="text-sm text-gray-900 font-medium truncate leading-tight max-w-[7rem] sm:max-w-[12rem]" :title="pick.team.name">
                                                 <span class="sm:hidden">{{ pick.team.short_name }}</span>
@@ -395,10 +405,10 @@ const timeUntilNextSelection = computed(() => {
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center min-w-0">
-                                        <div class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center border border-green-200"
+                                        <div class="w-6 h-6 overflow-hidden flex items-center justify-center"
                                              :style="{ backgroundColor: pick.team.primary_color || '#22C55E' }">
                                             <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
-                                            <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
+                                            <span v-else class="text-gray-900 text-xs font-bold">{{ pick.team.short_name }}</span>
                                         </div>
                                         <span class="ml-2 text-sm text-gray-900 truncate" :title="pick.team.name">
                                             <span class="sm:hidden">{{ pick.team.short_name }}</span>

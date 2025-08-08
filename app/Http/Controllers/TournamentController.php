@@ -192,17 +192,59 @@ class TournamentController extends Controller
         $allParticipantPicks = [];
         
         if ($isParticipant) {
-            $userPicks = Pick::getUserPicksInTournament($user->id, $tournament->id);
+            $userPicksRaw = Pick::getUserPicksInTournament($user->id, $tournament->id);
+            // Normalize shape for frontend
+            $userPicks = $userPicksRaw->map(function ($pick) {
+                return [
+                    'id' => $pick->id,
+                    'team' => [
+                        'id' => $pick->team->id,
+                        'name' => $pick->team->name,
+                        'short_name' => $pick->team->short_name,
+                        'primary_color' => $pick->team->primary_color,
+                        'logo_url' => $pick->team->logo_url,
+                    ],
+                    'gameweek' => [
+                        'id' => $pick->gameWeek->id ?? null,
+                        'week_number' => $pick->gameWeek->week_number ?? null,
+                        'name' => $pick->gameWeek->name ?? null,
+                    ],
+                    'result' => $pick->result,
+                    'points' => $pick->points_earned,
+                    'home_away' => $pick->home_away,
+                    'picked_at' => $pick->picked_at,
+                ];
+            });
             
             if ($selectionGameweek) {
-                $currentPick = Pick::where('tournament_id', $tournament->id)
+                $currentPickModel = Pick::where('tournament_id', $tournament->id)
                     ->where('user_id', $user->id)
                     ->where('game_week_id', $selectionGameweek->id)
-                    ->with('team')
+                    ->with(['team','gameWeek'])
                     ->first();
-                
+
+                // Normalize current pick for frontend (consistent keys)
+                if ($currentPickModel) {
+                    $currentPick = [
+                        'id' => $currentPickModel->id,
+                        'team' => [
+                            'id' => $currentPickModel->team->id,
+                            'name' => $currentPickModel->team->name,
+                            'short_name' => $currentPickModel->team->short_name,
+                            'primary_color' => $currentPickModel->team->primary_color,
+                            'logo_url' => $currentPickModel->team->logo_url,
+                        ],
+                        'gameweek' => [
+                            'id' => $selectionGameweek->id,
+                            'week_number' => $selectionGameweek->week_number,
+                            'name' => $selectionGameweek->name,
+                        ],
+                        'home_away' => $currentPickModel->home_away,
+                    ];
+                }
+
                 // Get available teams for the current selection gameweek
-                if (!$currentPick) {
+                if (!$currentPickModel) {
                     if ($tournament->allowsHomeAwayPicks()) {
                         $availableTeams = Pick::getAvailableTeamsForGameWeek($user->id, $tournament->id, $selectionGameweek->id);
                     } else {
@@ -241,7 +283,7 @@ class TournamentController extends Controller
                             'name' => $pick->gameWeek->name,
                         ],
                         'result' => $pick->result,
-                        'points' => $pick->points,
+                        'points' => $pick->points_earned,
                         'home_away' => $pick->home_away,
                         'picked_at' => $pick->picked_at,
                     ];
