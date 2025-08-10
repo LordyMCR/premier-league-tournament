@@ -53,9 +53,9 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => true,
+            'url' => null, // Remove custom URL to force standard S3 URLs
+            'endpoint' => null, // Remove custom endpoint
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT'),
             'throw' => true,
             'report' => true,
         ],
