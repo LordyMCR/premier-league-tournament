@@ -11,10 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
@@ -298,17 +298,31 @@ class ProfileController extends Controller
         // Use configured default disk (public locally, s3 in production if set)
         $disk = config('filesystems.default', 'public');
 
-        // Delete old avatar if exists
-        if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
-            Storage::disk($disk)->delete('avatars/' . $user->avatar);
+        try {
+            // Delete old avatar if exists
+            if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
+                Storage::disk($disk)->delete('avatars/' . $user->avatar);
+            }
+
+            // Store new avatar (make public so it can be served without signed URLs)
+            $filename = $user->id . '_' . time() . '.' . $request->file('avatar')->getClientOriginalExtension();
+            Storage::disk($disk)->putFileAs(
+                'avatars',
+                $request->file('avatar'),
+                $filename,
+                ['visibility' => 'public']
+            );
+
+            $user->update(['avatar' => $filename]);
+            $user->updateLastActive();
+        } catch (\Throwable $e) {
+            Log::error('Avatar upload error', [
+                'disk' => $disk,
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+            return back()->withErrors(['avatar' => 'Failed to upload avatar. Please try again.']);
         }
-
-        // Store new avatar
-        $filename = $user->id . '_' . time() . '.' . $request->file('avatar')->getClientOriginalExtension();
-        $path = $request->file('avatar')->storeAs('avatars', $filename, $disk);
-
-        $user->update(['avatar' => $filename]);
-        $user->updateLastActive();
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
     }
@@ -325,17 +339,31 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $disk = config('filesystems.default', 'public');
-        // Delete old avatar if exists
-        if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
-            Storage::disk($disk)->delete('avatars/' . $user->avatar);
+        try {
+            // Delete old avatar if exists
+            if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
+                Storage::disk($disk)->delete('avatars/' . $user->avatar);
+            }
+
+            // Store new avatar
+            $filename = $user->id . '_' . time() . '.png';
+            Storage::disk($disk)->putFileAs(
+                'avatars',
+                $request->file('avatar'),
+                $filename,
+                ['visibility' => 'public']
+            );
+
+            $user->update(['avatar' => $filename]);
+            $user->updateLastActive();
+        } catch (\Throwable $e) {
+            Log::error('Cropped avatar upload error', [
+                'disk' => $disk,
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+            return back()->withErrors(['avatar' => 'Failed to upload avatar. Please try again.']);
         }
-
-        // Store new avatar
-        $filename = $user->id . '_' . time() . '.png';
-        $path = $request->file('avatar')->storeAs('avatars', $filename, $disk);
-
-        $user->update(['avatar' => $filename]);
-        $user->updateLastActive();
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
     }
