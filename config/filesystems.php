@@ -51,11 +51,11 @@ return [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'region' => env('AWS_DEFAULT_REGION', 'eu-west-2'),
             'bucket' => env('AWS_BUCKET'),
-            'url' => null, // Remove custom URL to force standard S3 URLs
-            'endpoint' => null, // Remove custom endpoint
-            'use_path_style_endpoint' => true,
+            'url' => null,
+            'endpoint' => null,
+            'use_path_style_endpoint' => false, // Use virtual-hosted style
             'throw' => true,
             'report' => true,
         ],
