@@ -415,14 +415,41 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $disk = config('filesystems.default', 'public');
-        if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
-            Storage::disk($disk)->delete('avatars/' . $user->avatar);
+        try {
+            $disk = config('filesystems.default', 'public');
+            
+            Log::info('Avatar removal attempt', [
+                'disk' => $disk,
+                'user_id' => $user->id,
+                'avatar_filename' => $user->avatar,
+            ]);
+
+            if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
+                Storage::disk($disk)->delete('avatars/' . $user->avatar);
+                Log::info('Avatar file deleted from storage', [
+                    'filename' => $user->avatar,
+                    'disk' => $disk,
+                ]);
+            }
+
+            $user->update(['avatar' => null]);
+            
+            Log::info('Avatar removal successful', [
+                'user_id' => $user->id,
+            ]);
+
+            return Redirect::route('profile.edit')->with('status', 'avatar-removed');
+        } catch (\Throwable $e) {
+            Log::error('Avatar removal error', [
+                'disk' => $disk,
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return back()->withErrors(['avatar' => 'Failed to remove avatar: ' . $e->getMessage()]);
         }
-
-        $user->update(['avatar' => null]);
-
-        return Redirect::route('profile.edit')->with('status', 'avatar-removed');
     }
 
     /**

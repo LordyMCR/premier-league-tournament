@@ -161,7 +161,16 @@ const uploadAvatar = () => {
 
 const removeAvatar = () => {
     if (confirm('Are you sure you want to remove your avatar?')) {
-        useForm({}).delete(route('profile.avatar.remove'))
+        useForm({}).delete(route('profile.avatar.remove'), {
+            onSuccess: () => {
+                console.log('✅ Avatar removal successful!')
+                avatarPreview.value = null
+            },
+            onError: (errors) => {
+                console.error('❌ Avatar removal failed:', errors)
+                console.error('Response errors:', errors)
+            }
+        })
     }
 }
 
