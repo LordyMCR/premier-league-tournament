@@ -228,7 +228,8 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            // Always return the public URL; if the symlink is missing on Heroku, ensure release phase runs storage:link
+            // Avatars are stored on the 'public' disk and served via the /storage symlink
+            // Local/public disk: serve via storage symlink
             return asset('storage/avatars/' . $this->avatar);
         }
         

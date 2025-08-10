@@ -295,14 +295,17 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Always use the 'public' disk for avatars so they resolve under /storage
+        $disk = 'public';
+
         // Delete old avatar if exists
-        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
+            Storage::disk($disk)->delete('avatars/' . $user->avatar);
         }
 
         // Store new avatar
         $filename = $user->id . '_' . time() . '.' . $request->file('avatar')->getClientOriginalExtension();
-        $path = $request->file('avatar')->storeAs('avatars', $filename, 'public');
+        $path = $request->file('avatar')->storeAs('avatars', $filename, $disk);
 
         $user->update(['avatar' => $filename]);
         $user->updateLastActive();
@@ -321,14 +324,16 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Always use the 'public' disk for avatars so they resolve under /storage
+        $disk = 'public';
         // Delete old avatar if exists
-        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
+            Storage::disk($disk)->delete('avatars/' . $user->avatar);
         }
 
         // Store new avatar
         $filename = $user->id . '_' . time() . '.png';
-        $path = $request->file('avatar')->storeAs('avatars', $filename, 'public');
+        $path = $request->file('avatar')->storeAs('avatars', $filename, $disk);
 
         $user->update(['avatar' => $filename]);
         $user->updateLastActive();
@@ -343,8 +348,9 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        $disk = 'public';
+        if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
+            Storage::disk($disk)->delete('avatars/' . $user->avatar);
         }
 
         $user->update(['avatar' => null]);
