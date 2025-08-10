@@ -1,7 +1,7 @@
 <template>
     <TournamentLayout>
         <!-- Check if profile is visible (ignore when previewing public view as owner) -->
-        <div v-if="profileUser?.profile_settings && !profileUser.profile_settings.profile_visible && !isOwnProfile && !previewPublic" class="min-h-screen py-8">
+        <div v-if="!settings.profile_visible && !isOwnProfile && !previewPublic" class="min-h-screen py-8">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-lg">
                     <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -29,7 +29,7 @@
                                     @error="handleImageError"
                                     @load="handleImageLoad"
                                 >
-                                <div v-if="profileUser.profile_settings.show_favorite_team && profileUser.favorite_team" 
+                                <div v-if="settings.show_favorite_team && profileUser.favorite_team" 
                                      class="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-white shadow-lg overflow-hidden"
                                      :style="{ backgroundColor: profileUser.favorite_team.primary_color || '#22C55E' }">
                                     <img :src="profileUser.favorite_team.logo_url"
@@ -42,7 +42,7 @@
                                 <template v-if="profileUser.display_name">
                                     {{ profileUser.display_name }}
                                 </template>
-                                <template v-else-if="profileUser.profile_settings.show_real_name || isOwnProfile">
+                                <template v-else-if="settings.show_real_name || isOwnProfile">
                                     {{ profileUser.name }}
                                 </template>
                                 <template v-else>
@@ -56,33 +56,33 @@
                             </p>
                             
                             <!-- Email Address -->
-                            <p v-if="profileUser.profile_settings.show_email && profileUser.email" 
+                            <p v-if="settings.show_email && profileUser.email" 
                                class="text-gray-500 text-sm flex items-center gap-1">
                                 <i class="fas fa-envelope"></i>
                                 {{ profileUser.email }}
                             </p>
                             
                             <!-- Age -->
-                            <p v-if="profileUser.profile_settings.show_age && profileUser.date_of_birth" 
+                            <p v-if="settings.show_age && profileUser.date_of_birth" 
                                class="text-gray-500 text-sm flex items-center gap-1">
                                 <i class="fas fa-birthday-cake"></i>
                                 {{ calculateAge(profileUser.date_of_birth) }} years old
                             </p>
                             
                             <div class="flex flex-wrap justify-center lg:justify-start gap-2 mt-3">
-                                <span v-if="profileUser.profile_settings.show_location && profileUser.location" 
+                                <span v-if="settings.show_location && profileUser.location" 
                                       class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-map-marker-alt"></i>
                                     {{ profileUser.location }}
                                 </span>
                                 
-                                <span v-if="profileUser.profile_settings.show_join_date" 
+                                <span v-if="settings.show_join_date" 
                                       class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-calendar"></i>
                                     Member since {{ new Date(profileUser.created_at).getFullYear() }}
                                 </span>
                                 
-                                <span v-if="profileUser.profile_settings.show_last_active && profileUser.last_active_at" 
+                                <span v-if="settings.show_last_active && profileUser.last_active_at" 
                                       class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-clock"></i>
                                     Last active {{ formatDate(profileUser.last_active_at) }}
@@ -93,13 +93,13 @@
                         <!-- Profile Details -->
                         <div class="flex-1 space-y-6">
                             <!-- Bio -->
-                            <div v-if="profileUser.profile_settings.show_bio && profileUser.bio">
+                            <div v-if="settings.show_bio && profileUser.bio">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">About</h3>
                                 <p class="text-gray-600 leading-relaxed">{{ profileUser.bio }}</p>
                             </div>
                             
                             <!-- Favorite Team Info -->
-                            <div v-if="profileUser.profile_settings.show_favorite_team && profileUser.favorite_team" class="space-y-2">
+                            <div v-if="settings.show_favorite_team && profileUser.favorite_team" class="space-y-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Favorite Team</h3>
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white p-1"
@@ -110,7 +110,7 @@
                                     </div>
                                     <div class="flex-1">
                                         <div class="font-medium text-gray-900">{{ profileUser.favorite_team.name }}</div>
-                                        <span v-if="profileUser.profile_settings.show_supporter_since && profileUser.supporter_since" 
+                                        <span v-if="settings.show_supporter_since && profileUser.supporter_since" 
                                               class="text-sm text-gray-500">
                                             Supporting since {{ profileUser.supporter_since }}
                                         </span>
@@ -119,7 +119,7 @@
                             </div>
                             
                             <!-- Social Links -->
-                            <div v-if="profileUser.profile_settings.show_social_links && (profileUser.twitter_handle || profileUser.instagram_handle)" 
+                            <div v-if="settings.show_social_links && (profileUser.twitter_handle || profileUser.instagram_handle)" 
                                  class="space-y-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Social Media</h3>
                                 <div class="flex gap-4">
@@ -142,7 +142,7 @@
                         </div>
                         
                         <!-- Quick Stats - Desktop -->
-                        <div v-if="profileUser.profile_settings.show_statistics && profileUser.statistics" 
+                        <div v-if="settings.show_statistics && profileUser.statistics" 
                              class="hidden lg:block bg-gray-50 rounded-xl p-4 min-w-72 border border-green-200 self-start">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
                             <div class="space-y-3">
@@ -167,7 +167,7 @@
                     </div>
                     
                     <!-- Quick Stats - Mobile -->
-                    <div v-if="profileUser.profile_settings.show_statistics && profileUser.statistics" 
+                    <div v-if="settings.show_statistics && profileUser.statistics" 
                          class="lg:hidden mt-6 pt-6 border-t border-green-200">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -203,7 +203,7 @@
                 <!-- Content Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
                     <!-- Featured Achievements -->
-                    <div v-if="profileUser.profile_settings.show_achievements && profileUser.achievements?.length" 
+                    <div v-if="settings.show_achievements && profileUser.achievements?.length" 
                          class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 shadow-lg">
                         <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-trophy text-yellow-500"></i>
@@ -230,7 +230,7 @@
                     </div>
                     
                     <!-- Recent Tournaments -->
-                    <div v-if="profileUser.profile_settings.show_tournament_history && recentTournaments?.length" 
+                    <div v-if="settings.show_tournament_history && recentTournaments?.length" 
                          class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 shadow-lg">
                         <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-futbol text-green-600"></i>
@@ -264,7 +264,7 @@
                     </div>
                     
                     <!-- Detailed Statistics -->
-                    <div v-if="profileUser.profile_settings.show_statistics && profileUser.statistics" 
+                    <div v-if="settings.show_statistics && profileUser.statistics" 
                          class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 shadow-lg md:col-span-2 xl:col-span-1">
                         <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-chart-bar text-blue-600"></i>
@@ -315,7 +315,7 @@
                     </div>
                     
                     <!-- Current Tournaments -->
-                    <div v-if="profileUser.profile_settings.show_current_tournaments && profileUser.current_tournaments?.length" 
+                    <div v-if="settings.show_current_tournaments && profileUser.current_tournaments?.length" 
                          class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 shadow-lg">
                         <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-trophy text-amber-600"></i>
@@ -348,7 +348,7 @@
                     </div>
                     
                     <!-- Team Preferences -->
-                    <div v-if="profileUser.profile_settings.show_team_preferences && profileUser.team_preferences?.length" 
+                    <div v-if="settings.show_team_preferences && profileUser.team_preferences?.length" 
                          class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 shadow-lg">
                         <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-heart text-red-500"></i>
@@ -387,6 +387,30 @@ const props = defineProps({
     isOwnProfile: Boolean,
     canEdit: Boolean,
     previewPublic: { type: Boolean, default: false },
+})
+
+// Safe wrapper around profile settings with sensible defaults
+const settings = computed(() => {
+    const s = props.profileUser?.profile_settings || {}
+    return {
+        profile_visible: s.profile_visible ?? true,
+        show_real_name: s.show_real_name ?? false,
+        show_email: s.show_email ?? false,
+        show_location: s.show_location ?? false,
+        show_age: s.show_age ?? false,
+        show_bio: s.show_bio ?? true,
+        show_favorite_team: s.show_favorite_team ?? true,
+        show_supporter_since: s.show_supporter_since ?? true,
+        show_social_links: s.show_social_links ?? true,
+        show_tournament_history: s.show_tournament_history ?? true,
+        show_statistics: s.show_statistics ?? true,
+        show_achievements: s.show_achievements ?? true,
+        show_current_tournaments: s.show_current_tournaments ?? true,
+        show_pick_history: s.show_pick_history ?? true,
+        show_team_preferences: s.show_team_preferences ?? true,
+        show_last_active: s.show_last_active ?? true,
+        show_join_date: s.show_join_date ?? true,
+    }
 })
 
 const winRate = computed(() => {
