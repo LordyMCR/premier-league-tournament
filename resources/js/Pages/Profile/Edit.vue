@@ -123,12 +123,16 @@ const handleCropComplete = (croppedBlob) => {
     avatarForm.post(route('profile.avatar.upload'), {
         preserveScroll: true,
         onSuccess: () => {
+            console.log('✅ Avatar upload successful!')
             // Reset state and close cropper after successful upload
             avatarForm.reset()
             showCropper.value = false
             selectedImageFile.value = null
         },
-        onError: () => {
+        onError: (errors) => {
+            console.error('❌ Avatar upload failed:', errors)
+            console.error('Form errors:', avatarForm.errors)
+            console.error('Response errors:', errors)
             // Keep cropper closed but retain preview so user can retry
             showCropper.value = false
         }
@@ -143,8 +147,14 @@ const handleCropCancel = () => {
 const uploadAvatar = () => {
     avatarForm.post(route('profile.avatar.upload'), {
         onSuccess: () => {
+            console.log('✅ Direct avatar upload successful!')
             avatarForm.reset()
             avatarPreview.value = null
+        },
+        onError: (errors) => {
+            console.error('❌ Direct avatar upload failed:', errors)
+            console.error('Form errors:', avatarForm.errors)
+            console.error('Response errors:', errors)
         }
     })
 }

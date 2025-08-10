@@ -299,6 +299,20 @@ class ProfileController extends Controller
         $disk = config('filesystems.default', 'public');
 
         try {
+            // Log upload attempt details
+            Log::info('Avatar upload attempt', [
+                'disk' => $disk,
+                'user_id' => $user->id,
+                'file_size' => $request->file('avatar')->getSize(),
+                'file_mime' => $request->file('avatar')->getMimeType(),
+                's3_config' => [
+                    'key' => config('filesystems.disks.s3.key') ? 'set' : 'not set',
+                    'secret' => config('filesystems.disks.s3.secret') ? 'set' : 'not set',
+                    'region' => config('filesystems.disks.s3.region'),
+                    'bucket' => config('filesystems.disks.s3.bucket'),
+                ]
+            ]);
+
             // Delete old avatar if exists
             if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
                 Storage::disk($disk)->delete('avatars/' . $user->avatar);
@@ -313,6 +327,12 @@ class ProfileController extends Controller
                 ['visibility' => 'public']
             );
 
+            Log::info('Avatar upload successful', [
+                'filename' => $filename,
+                'disk' => $disk,
+                'user_id' => $user->id,
+            ]);
+
             $user->update(['avatar' => $filename]);
             $user->updateLastActive();
         } catch (\Throwable $e) {
@@ -320,8 +340,11 @@ class ProfileController extends Controller
                 'disk' => $disk,
                 'user_id' => $user->id,
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
-            return back()->withErrors(['avatar' => 'Failed to upload avatar. Please try again.']);
+            return back()->withErrors(['avatar' => 'Failed to upload avatar: ' . $e->getMessage()]);
         }
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
@@ -340,6 +363,14 @@ class ProfileController extends Controller
 
         $disk = config('filesystems.default', 'public');
         try {
+            // Log upload attempt details
+            Log::info('Cropped avatar upload attempt', [
+                'disk' => $disk,
+                'user_id' => $user->id,
+                'file_size' => $request->file('avatar')->getSize(),
+                'file_mime' => $request->file('avatar')->getMimeType(),
+            ]);
+
             // Delete old avatar if exists
             if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
                 Storage::disk($disk)->delete('avatars/' . $user->avatar);
@@ -354,6 +385,12 @@ class ProfileController extends Controller
                 ['visibility' => 'public']
             );
 
+            Log::info('Cropped avatar upload successful', [
+                'filename' => $filename,
+                'disk' => $disk,
+                'user_id' => $user->id,
+            ]);
+
             $user->update(['avatar' => $filename]);
             $user->updateLastActive();
         } catch (\Throwable $e) {
@@ -361,8 +398,11 @@ class ProfileController extends Controller
                 'disk' => $disk,
                 'user_id' => $user->id,
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
-            return back()->withErrors(['avatar' => 'Failed to upload avatar. Please try again.']);
+            return back()->withErrors(['avatar' => 'Failed to upload avatar: ' . $e->getMessage()]);
         }
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
