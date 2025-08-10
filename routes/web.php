@@ -107,3 +107,36 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Temporary S3 test route
+Route::get('/test-s3', function () {
+    try {
+        $disk = \Storage::disk('s3');
+        
+        // Test 1: Can we list bucket contents?
+        $files = $disk->files('avatars');
+        
+        // Test 2: Can we write a test file?
+        $disk->put('avatars/test.txt', 'Hello S3!');
+        
+        // Test 3: Can we read it back?
+        $content = $disk->get('avatars/test.txt');
+        
+        // Test 4: Clean up
+        $disk->delete('avatars/test.txt');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'S3 connection working!',
+            'files_in_avatars' => $files,
+            'test_content' => $content
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
