@@ -96,6 +96,9 @@ return [
     */
 
     'restrictions_enabled' => (bool) env('APP_RESTRICTIONS_ENABLED', false),
+    
+    'admin_email' => env('APP_ADMIN_EMAIL', 'daniel.lord18@gmail.com'),
+    'admin_name' => env('APP_ADMIN_NAME', 'Admin'),
 
     /*
     |--------------------------------------------------------------------------
