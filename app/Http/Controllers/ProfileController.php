@@ -318,14 +318,19 @@ class ProfileController extends Controller
                 Storage::disk($disk)->delete('avatars/' . $user->avatar);
             }
 
-            // Store new avatar (make public so it can be served without signed URLs)
+            // Store new avatar (simplified - no visibility options)
             $filename = $user->id . '_' . time() . '.' . $request->file('avatar')->getClientOriginalExtension();
-            Storage::disk($disk)->putFileAs(
+            $uploaded = Storage::disk($disk)->putFileAs(
                 'avatars',
                 $request->file('avatar'),
-                $filename,
-                ['visibility' => 'public']
+                $filename
             );
+            
+            Log::info('Storage operation result', [
+                'uploaded' => $uploaded,
+                'filename' => $filename,
+                'disk' => $disk,
+            ]);
 
             Log::info('Avatar upload successful', [
                 'filename' => $filename,
@@ -376,14 +381,19 @@ class ProfileController extends Controller
                 Storage::disk($disk)->delete('avatars/' . $user->avatar);
             }
 
-            // Store new avatar
+            // Store new avatar (simplified - no visibility options)
             $filename = $user->id . '_' . time() . '.png';
-            Storage::disk($disk)->putFileAs(
+            $uploaded = Storage::disk($disk)->putFileAs(
                 'avatars',
                 $request->file('avatar'),
-                $filename,
-                ['visibility' => 'public']
+                $filename
             );
+            
+            Log::info('Cropped storage operation result', [
+                'uploaded' => $uploaded,
+                'filename' => $filename,
+                'disk' => $disk,
+            ]);
 
             Log::info('Cropped avatar upload successful', [
                 'filename' => $filename,
