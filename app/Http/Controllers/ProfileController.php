@@ -66,7 +66,8 @@ class ProfileController extends Controller
                 'show_last_active' => true,
                 'show_join_date' => true,
             ];
-            $settingsModel = $user->profileSettings ?: $user->profileSettings()->make([]);
+            // Persist settings if missing, then safely merge defaults for serialization
+            $settingsModel = $user->getOrCreateProfileSettings();
             $user->setRelation('profileSettings', $settingsModel->fill(array_merge($defaults, $settingsModel->toArray())));
 
             // Get current active tournaments for the user

@@ -1,7 +1,7 @@
 <template>
     <TournamentLayout>
         <!-- Check if profile is visible (ignore when previewing public view as owner) -->
-        <div v-if="!profileUser.profile_settings.profile_visible && !isOwnProfile && !previewPublic" class="min-h-screen py-8">
+        <div v-if="profileUser?.profile_settings && !profileUser.profile_settings.profile_visible && !isOwnProfile && !previewPublic" class="min-h-screen py-8">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-lg">
                     <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
