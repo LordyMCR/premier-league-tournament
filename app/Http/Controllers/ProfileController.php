@@ -414,10 +414,9 @@ class ProfileController extends Controller
     public function removeAvatar(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $disk = config('filesystems.default', 'public');
 
         try {
-            $disk = config('filesystems.default', 'public');
-            
             Log::info('Avatar removal attempt', [
                 'disk' => $disk,
                 'user_id' => $user->id,
@@ -427,6 +426,11 @@ class ProfileController extends Controller
             if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
                 Storage::disk($disk)->delete('avatars/' . $user->avatar);
                 Log::info('Avatar file deleted from storage', [
+                    'filename' => $user->avatar,
+                    'disk' => $disk,
+                ]);
+            } else {
+                Log::info('Avatar file not found in storage, only clearing database', [
                     'filename' => $user->avatar,
                     'disk' => $disk,
                 ]);
