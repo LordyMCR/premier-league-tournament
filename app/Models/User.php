@@ -176,18 +176,60 @@ class User extends Authenticatable
 
     // Profile Methods
 
-
-
+    /**
+     * Boot model to ensure dependent rows exist for new users
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::created(function (User $user) {
+            // Create default statistics and profile settings if missing
+            if (!$user->statistics) {
+                $user->statistics()->create([
+                    'total_tournaments' => 0,
+                    'tournaments_won' => 0,
+                    'tournaments_completed' => 0,
+                    'tournaments_active' => 0,
+                    'total_points' => 0,
+                    'average_points_per_tournament' => 0,
+                    'highest_tournament_score' => 0,
+                    'lowest_tournament_score' => 0,
+                    'total_picks' => 0,
+                    'winning_picks' => 0,
+                    'drawing_picks' => 0,
+                    'losing_picks' => 0,
+                    'win_percentage' => 0,
+                    'current_win_streak' => 0,
+                    'longest_win_streak' => 0,
+                ]);
+            }
+            if (!$user->profileSettings) {
+                $user->profileSettings()->create([
+                    'profile_visible' => true,
+                    'show_bio' => true,
+                    'show_favorite_team' => true,
+                    'show_supporter_since' => true,
+                    'show_social_links' => true,
+                    'show_tournament_history' => true,
+                    'show_statistics' => true,
+                    'show_achievements' => true,
+                    'show_current_tournaments' => true,
+                    'show_pick_history' => true,
+                    'show_team_preferences' => true,
+                    'show_last_active' => true,
+                    'show_join_date' => true,
+                ]);
+            }
+        });
+    }
     /**
      * Get the user's avatar URL
      */
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            // Check if file exists in public storage
-            if (Storage::disk('public')->exists('avatars/' . $this->avatar)) {
-                return asset('storage/avatars/' . $this->avatar);
-            }
+            // Always return the public URL; if the symlink is missing on Heroku, ensure release phase runs storage:link
+            return asset('storage/avatars/' . $this->avatar);
         }
         
         // Return default avatar

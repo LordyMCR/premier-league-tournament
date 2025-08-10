@@ -93,15 +93,16 @@
                         <!-- Profile Details -->
                         <div class="flex-1 space-y-6">
                             <!-- Bio -->
-                            <div v-if="settings.show_bio && profileUser.bio">
+                            <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">About</h3>
-                                <p class="text-gray-600 leading-relaxed">{{ profileUser.bio }}</p>
+                                <p v-if="settings.show_bio && profileUser.bio" class="text-gray-600 leading-relaxed">{{ profileUser.bio }}</p>
+                                <p v-else class="text-gray-500 text-sm italic">No bio added yet.</p>
                             </div>
                             
                             <!-- Favorite Team Info -->
-                            <div v-if="settings.show_favorite_team && profileUser.favorite_team" class="space-y-2">
+                            <div class="space-y-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Favorite Team</h3>
-                                <div class="flex items-center gap-3">
+                                <div v-if="settings.show_favorite_team && profileUser.favorite_team" class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white p-1"
                                          :style="{ borderColor: profileUser.favorite_team.primary_color || '#22C55E' }">
                                         <img :src="profileUser.favorite_team.logo_url"
@@ -116,13 +117,13 @@
                                         </span>
                                     </div>
                                 </div>
+                                <p v-else class="text-gray-500 text-sm italic">No favorite team set yet.</p>
                             </div>
                             
                             <!-- Social Links -->
-                            <div v-if="settings.show_social_links && (profileUser.twitter_handle || profileUser.instagram_handle)" 
-                                 class="space-y-2">
+                            <div class="space-y-2">
                                 <h3 class="text-lg font-semibold text-gray-900">Social Media</h3>
-                                <div class="flex gap-4">
+                                <div v-if="settings.show_social_links && (profileUser.twitter_handle || profileUser.instagram_handle)" class="flex gap-4">
                                     <a v-if="profileUser.twitter_handle" 
                                        :href="`https://twitter.com/${profileUser.twitter_handle}`"
                                        target="_blank"
@@ -138,6 +139,7 @@
                                         @{{ profileUser.instagram_handle }}
                                     </a>
                                 </div>
+                                <p v-else class="text-gray-500 text-sm italic">No social links added yet.</p>
                             </div>
                         </div>
                         
@@ -168,7 +170,7 @@
                     
                     <!-- Quick Stats - Mobile -->
                     <div v-if="settings.show_statistics && profileUser.statistics" 
-                         class="lg:hidden mt-6 pt-6 border-t border-green-200">
+                         class="lg:hidden mt-6" :class="{ 'pt-6 border-t border-green-200' : settings.show_favorite_team && profileUser.favorite_team }">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div class="text-center p-3 bg-gray-50 rounded-lg">
