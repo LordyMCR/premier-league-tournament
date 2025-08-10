@@ -21,9 +21,7 @@ return [
         'scheme' => 'https',
     ],
 
-    'brevo' => [
-        'key' => env('BREVO_KEY'),
-    ],
+
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
