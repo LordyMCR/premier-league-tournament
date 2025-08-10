@@ -50,7 +50,7 @@
                                 </template>
                             </h1>
                             
-                            <p v-if="profileUser.profile_settings.show_real_name && profileUser.display_name && profileUser.display_name !== profileUser.name" 
+                            <p v-if="settings.show_real_name && profileUser.display_name && profileUser.display_name !== profileUser.name" 
                                class="text-gray-500 text-sm">
                                 {{ profileUser.name }}
                             </p>
