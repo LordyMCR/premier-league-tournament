@@ -46,8 +46,28 @@ class ProfileController extends Controller
                 }
             ]);
 
-            // Ensure profile settings instance exists for frontend consumption
-            $user->setRelation('profileSettings', $user->getOrCreateProfileSettings());
+            // Ensure profile settings instance exists for frontend consumption with safe defaults
+            $defaults = [
+                'profile_visible' => true,
+                'show_real_name' => false,
+                'show_email' => false,
+                'show_location' => false,
+                'show_age' => false,
+                'show_bio' => true,
+                'show_favorite_team' => true,
+                'show_supporter_since' => true,
+                'show_social_links' => true,
+                'show_tournament_history' => true,
+                'show_statistics' => true,
+                'show_achievements' => true,
+                'show_current_tournaments' => true,
+                'show_pick_history' => true,
+                'show_team_preferences' => true,
+                'show_last_active' => true,
+                'show_join_date' => true,
+            ];
+            $settingsModel = $user->profileSettings ?: $user->profileSettings()->make([]);
+            $user->setRelation('profileSettings', $settingsModel->fill(array_merge($defaults, $settingsModel->toArray())));
 
             // Get current active tournaments for the user
             $currentTournaments = collect();
