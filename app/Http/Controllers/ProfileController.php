@@ -295,8 +295,8 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        // Always use the 'public' disk for avatars so they resolve under /storage
-        $disk = 'public';
+        // Use configured default disk (public locally, s3 in production if set)
+        $disk = config('filesystems.default', 'public');
 
         // Delete old avatar if exists
         if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
@@ -324,8 +324,7 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        // Always use the 'public' disk for avatars so they resolve under /storage
-        $disk = 'public';
+        $disk = config('filesystems.default', 'public');
         // Delete old avatar if exists
         if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
             Storage::disk($disk)->delete('avatars/' . $user->avatar);
@@ -348,7 +347,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $disk = 'public';
+        $disk = config('filesystems.default', 'public');
         if ($user->avatar && Storage::disk($disk)->exists('avatars/' . $user->avatar)) {
             Storage::disk($disk)->delete('avatars/' . $user->avatar);
         }

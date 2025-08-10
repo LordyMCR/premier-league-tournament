@@ -228,7 +228,18 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            // Avatars are stored on the 'public' disk and served via the /storage symlink
+            $disk = config('filesystems.default', 'public');
+            if ($disk === 's3') {
+                // Public URL for S3
+                $base = rtrim(config('filesystems.disks.s3.url'), '/');
+                $bucket = config('filesystems.disks.s3.bucket');
+                if ($base && $bucket) {
+                    return $base.'/'.$bucket.'/avatars/'.$this->avatar;
+                }
+                // Fallback to standard AWS pattern if url not set
+                $region = config('filesystems.disks.s3.region');
+                return 'https://'.$bucket.'.s3.'.$region.'.amazonaws.com/avatars/'.$this->avatar;
+            }
             // Local/public disk: serve via storage symlink
             return asset('storage/avatars/' . $this->avatar);
         }
