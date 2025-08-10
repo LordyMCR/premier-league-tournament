@@ -16,7 +16,43 @@ const page = usePage();
 </script>
 
 <template>
-    <Head title="PL Tournament - Premier League Predictions" />
+    <Head title="PL Tournament - Premier League Predictions Game | Join Private Tournaments">
+        <meta name="description" content="PL Tournament - The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends. Simple rules, strategic gameplay." />
+        <meta name="keywords" content="PL Tournament, Premier League predictions, football predictions, soccer picks, tournament game, Premier League game, football tournament" />
+        <meta name="author" content="PL Tournament" />
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.pl-tournament.com/" />
+        <meta property="og:title" content="PL Tournament - Premier League Predictions Game" />
+        <meta property="og:description" content="The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends." />
+        <meta property="og:image" content="https://www.pl-tournament.com/favicon.ico" />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://www.pl-tournament.com/" />
+        <meta property="twitter:title" content="PL Tournament - Premier League Predictions Game" />
+        <meta property="twitter:description" content="The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends." />
+        <meta property="twitter:image" content="https://www.pl-tournament.com/favicon.ico" />
+        
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "PL Tournament",
+          "url": "https://www.pl-tournament.com",
+          "description": "Premier League predictions game with private tournaments and weekly team picks",
+          "applicationCategory": "Game",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+        </script>
+    </Head>
     <div class="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 relative">
         <!-- Football pitch pattern overlay -->
         <div class="absolute inset-0 opacity-10">

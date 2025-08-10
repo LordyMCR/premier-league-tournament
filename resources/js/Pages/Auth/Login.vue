@@ -23,8 +23,24 @@ const form = useForm({
 });
 
 const submit = () => {
+    // Ensure CSRF token is fresh before submitting
+    if (window.axios && window.axios.defaults.headers.common['X-CSRF-TOKEN']) {
+        // Refresh CSRF token if available
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        if (metaToken) {
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = metaToken.getAttribute('content');
+        }
+    }
+    
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
+        onError: (errors) => {
+            // Handle 419 CSRF errors specifically
+            if (errors.message && errors.message.includes('419')) {
+                // Reload page to get fresh CSRF token
+                window.location.reload();
+            }
+        }
     });
 };
 </script>

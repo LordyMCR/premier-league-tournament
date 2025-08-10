@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /tournaments/*/
+Disallow: /profile/
+
+Sitemap: https://www.pl-tournament.com/sitemap.xml
