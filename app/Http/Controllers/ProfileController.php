@@ -297,7 +297,7 @@ class ProfileController extends Controller
 
         // Check if user can change avatar (restrictions)
         if (!$user->canChangeAvatar()) {
-            return back()->withErrors(['avatar' => 'You have reached the maximum number of avatar changes (3) allowed.']);
+            return back()->withErrors(['avatar' => 'You have reached the maximum number of avatar changes (3) allowed. Contact support@pl-tournament.com if you need additional changes.']);
         }
 
         // Use configured default disk (public locally, s3 in production if set)
@@ -374,7 +374,7 @@ class ProfileController extends Controller
 
         // Check if user can change avatar (restrictions)
         if (!$user->canChangeAvatar()) {
-            return back()->withErrors(['avatar' => 'You have reached the maximum number of avatar changes (3) allowed.']);
+            return back()->withErrors(['avatar' => 'You have reached the maximum number of avatar changes (3) allowed. Contact support@pl-tournament.com if you need additional changes.']);
         }
 
         $disk = config('filesystems.default', 'public');

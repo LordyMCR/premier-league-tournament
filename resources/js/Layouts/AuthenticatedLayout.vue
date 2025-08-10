@@ -39,6 +39,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+                                <a
+                                    href="mailto:support@pl-tournament.com"
+                                    class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out"
+                                >
+                                    <i class="fas fa-envelope mr-1"></i>
+                                    Support
+                                </a>
                             </div>
                         </div>
 
@@ -167,6 +174,13 @@ const showingNavigationDropdown = ref(false);
                             <ResponsiveNavLink :href="route('profile.edit')">
                                 Profile
                             </ResponsiveNavLink>
+                            <a
+                                href="mailto:support@pl-tournament.com"
+                                class="block w-full ps-3 pe-4 py-2 border-l-4 border-transparent text-start text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out"
+                            >
+                                <i class="fas fa-envelope mr-2"></i>
+                                Contact Support
+                            </a>
                             <ResponsiveNavLink
                                 :href="route('logout')"
                                 method="post"
@@ -193,6 +207,27 @@ const showingNavigationDropdown = ref(false);
             <main>
                 <slot />
             </main>
+
+            <!-- Footer -->
+            <footer class="bg-white border-t border-gray-200 mt-8">
+                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                    <div class="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
+                        <div class="mb-2 sm:mb-0">
+                            © 2025 PL Tournament. A proof-of-concept football tournament platform.
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span>Need help?</span>
+                            <a 
+                                href="mailto:support@pl-tournament.com"
+                                class="inline-flex items-center text-green-600 hover:text-green-700 font-medium"
+                            >
+                                <i class="fas fa-envelope mr-1"></i>
+                                support@pl-tournament.com
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 </template>

@@ -52,11 +52,20 @@ const submit = () => {
                         Account Approval Required
                     </h3>
                     <div class="mt-2 text-sm text-amber-700">
-                        <p>
-                            New accounts require approval before gaining access. After registration, please contact 
-                            <a href="mailto:support@pl-tournament.com" class="underline font-medium">support@pl-tournament.com</a> 
+                        <p class="mb-3">
+                            New accounts require approval before gaining access. After registration, contact our support team 
                             to request account activation. You will receive an email confirmation once approved.
                         </p>
+                        <div class="flex items-center space-x-4">
+                            <a 
+                                href="mailto:support@pl-tournament.com?subject=Account Approval Request"
+                                class="inline-flex items-center px-3 py-2 border border-amber-300 rounded-md text-sm font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 transition-colors duration-200"
+                            >
+                                <i class="fas fa-envelope mr-2"></i>
+                                Contact Support
+                            </a>
+                            <span class="text-amber-600">support@pl-tournament.com</span>
+                        </div>
                     </div>
                 </div>
             </div>

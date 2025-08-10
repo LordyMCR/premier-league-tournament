@@ -35,23 +35,7 @@ const page = usePage();
         <meta property="twitter:description" content="The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends." />
         <meta property="twitter:image" content="https://www.pl-tournament.com/favicon.ico" />
         
-        <!-- Structured Data -->
-        <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          "name": "PL Tournament",
-          "url": "https://www.pl-tournament.com",
-          "description": "Premier League predictions game with private tournaments and weekly team picks",
-          "applicationCategory": "Game",
-          "operatingSystem": "Any",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
-          }
-        }
-        </script>
+
     </Head>
     <div class="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 relative">
         <!-- Football pitch pattern overlay -->
