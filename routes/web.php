@@ -111,32 +111,78 @@ require __DIR__.'/auth.php';
 // Temporary S3 test route
 Route::get('/test-s3', function () {
     try {
-        $disk = \Storage::disk('s3');
+        // Test AWS SDK directly
+        $config = [
+            'version' => 'latest',
+            'region' => env('AWS_DEFAULT_REGION', 'eu-west-2'),
+            'credentials' => [
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            ],
+        ];
         
-        // Test 1: Can we list bucket contents?
-        $files = $disk->files('avatars');
+        $s3Client = new \Aws\S3\S3Client($config);
         
-        // Test 2: Can we write a test file?
-        $disk->put('avatars/test.txt', 'Hello S3!');
+        // Test basic bucket access
+        $result = $s3Client->listObjectsV2([
+            'Bucket' => env('AWS_BUCKET'),
+            'Prefix' => 'avatars/',
+            'MaxKeys' => 10,
+        ]);
         
-        // Test 3: Can we read it back?
-        $content = $disk->get('avatars/test.txt');
+        $objects = [];
+        if (isset($result['Contents'])) {
+            foreach ($result['Contents'] as $object) {
+                $objects[] = $object['Key'];
+            }
+        }
         
-        // Test 4: Clean up
-        $disk->delete('avatars/test.txt');
+        // Test write operation
+        $s3Client->putObject([
+            'Bucket' => env('AWS_BUCKET'),
+            'Key' => 'avatars/test.txt',
+            'Body' => 'Hello S3 Direct!',
+            'ACL' => 'public-read',
+        ]);
+        
+        // Test read operation
+        $getResult = $s3Client->getObject([
+            'Bucket' => env('AWS_BUCKET'),
+            'Key' => 'avatars/test.txt',
+        ]);
+        
+        $content = (string) $getResult['Body'];
+        
+        // Clean up
+        $s3Client->deleteObject([
+            'Bucket' => env('AWS_BUCKET'),
+            'Key' => 'avatars/test.txt',
+        ]);
         
         return response()->json([
             'success' => true,
-            'message' => 'S3 connection working!',
-            'files_in_avatars' => $files,
-            'test_content' => $content
+            'message' => 'Direct S3 SDK working!',
+            'config' => [
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET'),
+                'key_set' => env('AWS_ACCESS_KEY_ID') ? 'yes' : 'no',
+                'secret_set' => env('AWS_SECRET_ACCESS_KEY') ? 'yes' : 'no',
+            ],
+            'objects_found' => $objects,
+            'test_content' => $content,
         ]);
         
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
+            'config_debug' => [
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET'),
+                'key_set' => env('AWS_ACCESS_KEY_ID') ? 'yes' : 'no',
+                'secret_set' => env('AWS_SECRET_ACCESS_KEY') ? 'yes' : 'no',
+            ]
         ], 500);
     }
 });
