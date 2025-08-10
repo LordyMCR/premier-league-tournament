@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +42,22 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        // If restrictions are enabled, check for unapproved accounts
+        if (config('app.restrictions_enabled')) {
+            $user = User::where('email', $this->email)->first();
+            
+            if ($user && Hash::check($this->password, $user->password)) {
+                // Credentials are valid, but check approval status
+                if (!$user->isApproved()) {
+                    RateLimiter::hit($this->throttleKey());
+                    
+                    throw ValidationException::withMessages([
+                        'email' => 'Your account is pending approval. Please contact support@pl-tournament.com for assistance.',
+                    ]);
+                }
+            }
+        }
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

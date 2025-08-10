@@ -25,7 +25,7 @@ class CheckUserApproval
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
                 
-                return redirect()->route('login')->with('error', 'Your account is pending approval. Please contact support@pl-tournament.com');
+                return redirect()->route('login')->with('status', 'Your account is pending approval. Please contact support@pl-tournament.com for assistance.');
             }
         }
 

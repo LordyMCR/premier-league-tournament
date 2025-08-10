@@ -14,6 +14,9 @@ defineProps({
     status: {
         type: String,
     },
+    error: {
+        type: String,
+    },
 });
 
 const form = useForm({
@@ -59,10 +62,22 @@ const submit = () => {
             <p class="text-gray-600">Sign in to your PL Tournament account</p>
         </div>
 
-        <div v-if="status" class="mb-6 p-4 bg-green-100 border border-green-300 rounded-lg">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-600 mr-3"></i>
-                <span class="text-green-800">{{ status }}</span>
+        <!-- Status Messages -->
+        <div v-if="status || error" class="mb-6 p-4 rounded-lg" :class="(status && (status.includes('approval') || status.includes('pending'))) || error ? 'bg-amber-100 border border-amber-300' : 'bg-green-100 border border-green-300'">
+            <div class="flex items-start">
+                <i class="mr-3 mt-0.5" :class="(status && (status.includes('approval') || status.includes('pending'))) || error ? 'fas fa-exclamation-triangle text-amber-600' : 'fas fa-check-circle text-green-600'"></i>
+                <div>
+                    <span :class="(status && (status.includes('approval') || status.includes('pending'))) || error ? 'text-amber-800' : 'text-green-800'">{{ status || error }}</span>
+                    <div v-if="(status && (status.includes('approval') || status.includes('pending'))) || (error && error.includes('approval'))" class="mt-2">
+                        <a 
+                            href="mailto:support@pl-tournament.com?subject=Account Approval Request"
+                            class="inline-flex items-center text-amber-700 hover:text-amber-800 text-sm font-medium"
+                        >
+                            <i class="fas fa-envelope mr-1"></i>
+                            Contact Support
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
