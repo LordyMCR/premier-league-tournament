@@ -295,6 +295,11 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Check if user can change avatar (restrictions)
+        if (!$user->canChangeAvatar()) {
+            return back()->withErrors(['avatar' => 'You have reached the maximum number of avatar changes (3) allowed.']);
+        }
+
         // Use configured default disk (public locally, s3 in production if set)
         $disk = config('filesystems.default', 'public');
 
@@ -339,6 +344,7 @@ class ProfileController extends Controller
             ]);
 
             $user->update(['avatar' => $filename]);
+            $user->incrementAvatarChanges();
             $user->updateLastActive();
         } catch (\Throwable $e) {
             Log::error('Avatar upload error', [
@@ -365,6 +371,11 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Check if user can change avatar (restrictions)
+        if (!$user->canChangeAvatar()) {
+            return back()->withErrors(['avatar' => 'You have reached the maximum number of avatar changes (3) allowed.']);
+        }
 
         $disk = config('filesystems.default', 'public');
         try {
@@ -402,6 +413,7 @@ class ProfileController extends Controller
             ]);
 
             $user->update(['avatar' => $filename]);
+            $user->incrementAvatarChanges();
             $user->updateLastActive();
         } catch (\Throwable $e) {
             Log::error('Cropped avatar upload error', [

@@ -70,6 +70,13 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        
+        // Check if user can create more tournaments (restrictions)
+        if (!$user->canCreateTournament()) {
+            return back()->withErrors(['tournament' => 'You have reached the maximum number of tournaments (3) you can create.']);
+        }
+
         $currentGameWeek = GameWeek::getCurrentGameWeek();
         $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
         

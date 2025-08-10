@@ -6,6 +6,13 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+defineProps({
+    restrictionsEnabled: {
+        type: Boolean,
+        default: false,
+    },
+});
+
 const form = useForm({
     name: '',
     email: '',
@@ -32,6 +39,27 @@ const submit = () => {
             </div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Join PL Tournament</h1>
             <p class="text-gray-600">Create your account and start playing</p>
+        </div>
+
+        <!-- Restrictions Notice -->
+        <div v-if="restrictionsEnabled" class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-amber-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-amber-800">
+                        Account Approval Required
+                    </h3>
+                    <div class="mt-2 text-sm text-amber-700">
+                        <p>
+                            New accounts require approval before gaining access. After registration, please contact 
+                            <a href="mailto:support@pl-tournament.com" class="underline font-medium">support@pl-tournament.com</a> 
+                            to request account activation. You will receive an email confirmation once approved.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <form @submit.prevent="submit" class="space-y-6">

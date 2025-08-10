@@ -87,6 +87,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Restrictions
+    |--------------------------------------------------------------------------
+    |
+    | Enable restrictions mode to limit user registrations, tournament creation,
+    | and avatar changes. Useful for proof-of-concept deployments.
+    |
+    */
+
+    'restrictions_enabled' => (bool) env('APP_RESTRICTIONS_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

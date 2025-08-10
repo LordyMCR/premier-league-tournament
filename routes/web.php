@@ -67,14 +67,14 @@ Route::get('/dashboard', function () {
         'favoriteFixtures' => $favoriteFixtures,
         'favoriteTeam'     => $user->favoriteTeam?->name,
     ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'user.approval'])->name('dashboard');
 
 // Public profile routes (accessible to all authenticated users)
 Route::middleware('auth')->group(function () {
     Route::get('/users/{user:id}', [ProfileController::class, 'show'])->name('profile.show');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'user.approval'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtended'])->name('profile.update.extended');

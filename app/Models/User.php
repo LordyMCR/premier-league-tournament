@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
+        'avatar_changes_count',
         'bio',
         'location',
         'date_of_birth',
@@ -37,6 +38,9 @@ class User extends Authenticatable
         'show_age',
         'profile_public',
         'last_active_at',
+        'is_approved',
+        'approved_at',
+        'approval_token',
     ];
 
     /**
@@ -75,6 +79,8 @@ class User extends Authenticatable
             'show_age' => 'boolean',
             'profile_public' => 'boolean',
             'last_active_at' => 'datetime',
+            'is_approved' => 'boolean',
+            'approved_at' => 'datetime',
         ];
     }
 
@@ -351,5 +357,66 @@ class User extends Authenticatable
         }
         
         return false;
+    }
+
+    // Restriction Methods
+
+    /**
+     * Check if user can create more tournaments
+     */
+    public function canCreateTournament()
+    {
+        if (!config('app.restrictions_enabled')) {
+            return true;
+        }
+
+        return $this->createdTournaments()->count() < 3;
+    }
+
+    /**
+     * Check if user can change avatar
+     */
+    public function canChangeAvatar()
+    {
+        if (!config('app.restrictions_enabled')) {
+            return true;
+        }
+
+        return $this->avatar_changes_count < 3;
+    }
+
+    /**
+     * Increment avatar changes count
+     */
+    public function incrementAvatarChanges()
+    {
+        $this->increment('avatar_changes_count');
+    }
+
+    /**
+     * Check if user is approved for access
+     */
+    public function isApproved()
+    {
+        if (!config('app.restrictions_enabled')) {
+            return true;
+        }
+
+        return $this->is_approved;
+    }
+
+    /**
+     * Approve user account
+     */
+    public function approve()
+    {
+        $this->update([
+            'is_approved' => true,
+            'approved_at' => now(),
+            'approval_token' => null,
+        ]);
+
+        // Send approval notification
+        $this->notify(new \App\Notifications\UserApproved());
     }
 }
