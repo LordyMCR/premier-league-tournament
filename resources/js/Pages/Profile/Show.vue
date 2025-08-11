@@ -85,7 +85,7 @@
                                 <span v-if="settings.show_last_active && profileUser.last_active_at" 
                                       class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm flex items-center gap-1">
                                     <i class="fas fa-clock"></i>
-                                    Last active {{ formatDate(profileUser.last_active_at) }}
+                                    Last active {{ formatLastActive(profileUser.last_active_at) }}
                                 </span>
                             </div>
                         </div>
@@ -438,6 +438,38 @@ const formatDate = (dateString) => {
         return `${Math.ceil(diffDays / 30)} months ago`
     } else {
         return `${Math.ceil(diffDays / 365)} years ago`
+    }
+}
+
+const formatLastActive = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = now - date
+    const diffMinutes = Math.floor(diffTime / (1000 * 60))
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffMinutes < 5) {
+        return 'just now'
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes} minutes ago`
+    } else if (diffHours < 24) {
+        return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`
+    } else if (diffDays === 0) {
+        return 'today'
+    } else if (diffDays === 1) {
+        return 'yesterday'
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`
+    } else if (diffDays < 30) {
+        const weeks = Math.floor(diffDays / 7)
+        return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`
+    } else if (diffDays < 365) {
+        const months = Math.floor(diffDays / 30)
+        return months === 1 ? '1 month ago' : `${months} months ago`
+    } else {
+        const years = Math.floor(diffDays / 365)
+        return years === 1 ? '1 year ago' : `${years} years ago`
     }
 }
 
