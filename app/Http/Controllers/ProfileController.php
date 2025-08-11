@@ -239,7 +239,6 @@ class ProfileController extends Controller
         if (!empty($settingsPayload)) {
             $settings->update($settingsPayload);
         }
-        $user->updateLastActive();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -345,7 +344,6 @@ class ProfileController extends Controller
 
             $user->update(['avatar' => $filename]);
             $user->incrementAvatarChanges();
-            $user->updateLastActive();
         } catch (\Throwable $e) {
             Log::error('Avatar upload error', [
                 'disk' => $disk,
@@ -414,7 +412,6 @@ class ProfileController extends Controller
 
             $user->update(['avatar' => $filename]);
             $user->incrementAvatarChanges();
-            $user->updateLastActive();
         } catch (\Throwable $e) {
             Log::error('Cropped avatar upload error', [
                 'disk' => $disk,
