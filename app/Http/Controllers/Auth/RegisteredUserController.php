@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Log;
 
 class RegisteredUserController extends Controller
 {
@@ -63,13 +64,21 @@ class RegisteredUserController extends Controller
         if ($restrictionsEnabled && !$user->is_approved) {
             try {
                 $adminEmail = config('app.admin_email', 'daniel.lord18@gmail.com');
-                \Log::info('Sending admin notification to: ' . $adminEmail);
+                Log::info('Admin notification - Restrictions enabled: ' . ($restrictionsEnabled ? 'YES' : 'NO'));
+                Log::info('Admin notification - User approved: ' . ($user->is_approved ? 'YES' : 'NO'));
+                Log::info('Admin notification - Sending to: ' . $adminEmail);
+                Log::info('Admin notification - Mail driver: ' . config('mail.default'));
+                
                 Notification::route('mail', $adminEmail)
                     ->notify(new NewUserRegistration($user));
-                \Log::info('Admin notification sent successfully');
+                    
+                Log::info('Admin notification sent successfully to: ' . $adminEmail);
             } catch (\Exception $e) {
-                \Log::error('Failed to send admin notification: ' . $e->getMessage());
+                Log::error('Failed to send admin notification: ' . $e->getMessage());
+                Log::error('Exception trace: ' . $e->getTraceAsString());
             }
+        } else {
+            Log::info('Admin notification NOT sent - Restrictions: ' . ($restrictionsEnabled ? 'YES' : 'NO') . ', User approved: ' . ($user->is_approved ? 'YES' : 'NO'));
         }
 
         // Only auto-login if not restricted or if approved
