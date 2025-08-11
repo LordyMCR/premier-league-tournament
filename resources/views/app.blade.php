@@ -5,7 +5,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'PL Tournament') }}</title>
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="{{ config('app.name', 'PL Tournament') }}">
+        <meta property="og:description" content="Premier League Tournament">
+        <meta property="og:site_name" content="PL Tournament">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="{{ url()->current() }}">
+        <meta property="twitter:title" content="{{ config('app.name', 'PL Tournament') }}">
+        <meta property="twitter:description" content="Premier League Tournament">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
