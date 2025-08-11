@@ -118,7 +118,8 @@ class ApproveUser extends Command
             return;
         }
 
-        $user->update(['is_approved' => false, 'approved_at' => null]);
+        $user->disapprove();
         $this->info("User {$email} approval has been revoked.");
+        $this->comment("Disapproval email notification has been sent to the user.");
     }
 }

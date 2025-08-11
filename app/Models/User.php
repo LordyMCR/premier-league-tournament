@@ -419,4 +419,18 @@ class User extends Authenticatable
         // Send approval notification
         $this->notify(new \App\Notifications\UserApproved());
     }
+
+    /**
+     * Disapprove the user account and send notification
+     */
+    public function disapprove()
+    {
+        $this->update([
+            'is_approved' => false,
+            'approved_at' => null,
+        ]);
+
+        // Send disapproval notification
+        $this->notify(new \App\Notifications\UserDisapproved());
+    }
 }
