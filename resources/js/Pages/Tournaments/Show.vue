@@ -189,7 +189,10 @@ const timeUntilNextSelection = computed(() => {
 
             <!-- Current Pick -->
             <div v-if="currentPick" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Pick</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-thumbtack text-red-500"></i>
+                    Current Pick
+                </h3>
                 <div class="flex items-center space-x-4">
                     <div class="w-12 h-12 overflow-hidden flex items-center justify-center"
                          :style="{ backgroundColor: currentPick.team.primary_color || '#22C55E' }">
