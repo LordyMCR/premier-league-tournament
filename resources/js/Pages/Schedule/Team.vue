@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     team: Object,
@@ -10,6 +11,33 @@ const props = defineProps({
     analytics: Object,
     teamNews: Object,
     squadData: Object,
+    referer: String,
+});
+
+// Dynamic back button based on referer
+const backButton = computed(() => {
+    const referer = props.referer;
+    console.log('Referer from backend:', referer); // Debug log
+    
+    // Check if coming from a tournament page (but not schedule-related)
+    if (referer && referer.includes('/tournaments/') && !referer.includes('/schedule')) {
+        // Extract tournament ID from the referer URL
+        const tournamentMatch = referer.match(/\/tournaments\/(\d+)(?:\/|$)/);
+        if (tournamentMatch) {
+            console.log('Tournament ID found:', tournamentMatch[1]); // Debug log
+            return {
+                text: '← Back to Tournament',
+                href: route('tournaments.show', tournamentMatch[1])
+            };
+        }
+    }
+    
+    // Default to schedule for all other cases
+    console.log('Defaulting to schedule'); // Debug log
+    return {
+        text: '← Back to Schedule',
+        href: route('schedule.index')
+    };
 });
 
 const formatDate = (dateString) => {
@@ -80,9 +108,9 @@ const getScoreDisplay = (game, team) => {
                         </p>
                     </div>
                 </div>
-                <Link :href="route('schedule.index')" 
+                <Link :href="backButton.href" 
                       class="bg-white border border-green-200 text-gray-700 px-3 py-2 lg:px-4 lg:py-2 rounded-lg text-sm font-medium transition-all hover:bg-green-50 self-start sm:self-auto">
-                    ← Back to Schedule
+                    {{ backButton.text }}
                 </Link>
             </div>
         </template>

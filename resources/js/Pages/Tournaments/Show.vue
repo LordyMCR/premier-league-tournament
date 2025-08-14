@@ -189,22 +189,31 @@ const timeUntilNextSelection = computed(() => {
 
             <!-- Current Pick -->
             <div v-if="currentPick" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <i class="fas fa-thumbtack text-red-500"></i>
                     Current Pick
                 </h3>
                 <div class="flex items-center space-x-4">
                     <div class="w-12 h-12 overflow-hidden flex items-center justify-center"
                          :style="{ backgroundColor: currentPick.team.primary_color || '#22C55E' }">
-                        <img v-if="currentPick.team.logo_url"
-                             :src="currentPick.team.logo_url"
-                             :alt="currentPick.team.name"
-                             class="w-full h-full object-contain bg-white" />
-                        <span v-else class="text-white text-sm font-bold">{{ currentPick.team.short_name }}</span>
+                        <Link v-if="currentPick.team.logo_url" 
+                              :href="route('schedule.team', currentPick.team.id)"
+                              class="w-full h-full flex items-center justify-center hover:scale-105 transition-transform">
+                            <img :src="currentPick.team.logo_url"
+                                 :alt="currentPick.team.name"
+                                 class="w-full h-full object-contain bg-white" />
+                        </Link>
+                        <Link v-else :href="route('schedule.team', currentPick.team.id)" 
+                              class="text-white text-sm font-bold hover:text-gray-200 transition-colors">
+                            {{ currentPick.team.short_name }}
+                        </Link>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-3">
-                            <p class="text-gray-900 font-medium">{{ currentPick.team.name }}</p>
+                            <Link :href="route('schedule.team', currentPick.team.id)" 
+                                  class="text-gray-900 font-medium hover:text-green-600 transition-colors">
+                                {{ currentPick.team.name }}
+                            </Link>
                             <span v-if="currentPick.home_away" 
                                   class="px-3 py-1 text-sm font-medium rounded-full"
                                   :class="currentPick.home_away === 'home' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'">
@@ -336,10 +345,12 @@ const timeUntilNextSelection = computed(() => {
                                             <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
                                             <span v-else class="text-gray-900 text-xs font-bold">{{ pick.team.short_name }}</span>
                                             </div>
-                                            <span class="text-sm text-gray-900 font-medium truncate leading-tight max-w-[7rem] sm:max-w-[12rem]" :title="pick.team.name">
+                                            <Link :href="route('schedule.team', pick.team.id)" 
+                                                  class="text-sm text-gray-900 font-medium truncate leading-tight max-w-[7rem] sm:max-w-[12rem] hover:text-green-600 transition-colors" 
+                                                  :title="pick.team.name">
                                                 <span class="sm:hidden">{{ pick.team.short_name }}</span>
                                                 <span class="hidden sm:inline">{{ pick.team.name }}</span>
-                                            </span>
+                                            </Link>
                                         </div>
                                         
                                         <!-- Home/Away indicator if applicable -->
@@ -387,7 +398,11 @@ const timeUntilNextSelection = computed(() => {
                                 <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <span class="text-sm text-gray-900 font-medium truncate block" :title="pick.team.name">{{ pick.team.short_name }}</span>
+                                <Link :href="route('schedule.team', pick.team.id)" 
+                                      class="text-sm text-gray-900 font-medium truncate block hover:text-green-600 transition-colors" 
+                                      :title="pick.team.name">
+                                    {{ pick.team.short_name }}
+                                </Link>
                                 <span v-if="pick.home_away" 
                                       class="inline-block px-1.5 py-0.5 text-xs font-medium rounded-full mt-1"
                                       :class="pick.home_away === 'home' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'">
@@ -431,10 +446,12 @@ const timeUntilNextSelection = computed(() => {
                                             <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
                                             <span v-else class="text-gray-900 text-xs font-bold">{{ pick.team.short_name }}</span>
                                         </div>
-                                        <span class="ml-2 text-sm text-gray-900 truncate" :title="pick.team.name">
+                                        <Link :href="route('schedule.team', pick.team.id)" 
+                                              class="ml-2 text-sm text-gray-900 truncate hover:text-green-600 transition-colors" 
+                                              :title="pick.team.name">
                                             <span class="sm:hidden">{{ pick.team.short_name }}</span>
                                             <span class="hidden sm:inline">{{ pick.team.name }}</span>
-                                        </span>
+                                        </Link>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

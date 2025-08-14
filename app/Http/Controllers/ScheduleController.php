@@ -105,7 +105,7 @@ class ScheduleController extends Controller
     /**
      * Display fixtures for a specific team
      */
-    public function team(Team $team)
+    public function team(Request $request, Team $team)
     {
         $games = Game::with(['homeTeam', 'awayTeam', 'gameWeek'])
             ->where(function ($query) use ($team) {
@@ -174,6 +174,9 @@ class ScheduleController extends Controller
             'squad_by_position' => $squadService->getSquadByPosition($team),
         ];
 
+        // Get referer to determine back button
+        $referer = $request->header('referer');
+
         return Inertia::render('Schedule/Team', [
             'team' => $team,
             'completedGames' => $completedGames,
@@ -182,6 +185,7 @@ class ScheduleController extends Controller
             'analytics' => $analytics,
             'teamNews' => $teamNews,
             'squadData' => $squadData,
+            'referer' => $referer,
         ]);
     }
 
