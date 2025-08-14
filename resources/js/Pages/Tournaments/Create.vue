@@ -6,7 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 const props = defineProps({
     currentGameWeek: Object,
@@ -111,6 +111,11 @@ const updateStartGameWeek = () => {
         form.end_game_week = null;
     }
 };
+
+// Initialize form with default values for full season
+onMounted(() => {
+    updateStartGameWeek();
+});
 </script>
 
 <template>

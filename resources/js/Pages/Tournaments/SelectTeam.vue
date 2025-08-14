@@ -59,10 +59,12 @@
             <!-- Team Selection -->
             <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Your Team</h3>
-                <p class="text-gray-600 mb-6">Choose one Premier League team for this gameweek. Once selected, you cannot use this team again.</p>
+                <p v-if="!allowsHomeAwayPicks" class="text-gray-600 mb-6">Choose one Premier League team for this gameweek. Once selected, you cannot use this team again.</p>
+                <p v-else class="text-gray-600 mb-6">Choose one Premier League team for this gameweek and whether you want them playing at home or away. You can pick each team twice (once home, once away).</p>
                 
                 <form @submit.prevent="submit" class="space-y-6">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- For tournaments that don't allow home/away picks (original logic) -->
+                    <div v-if="!allowsHomeAwayPicks" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         <div v-for="team in sortedTeams" :key="team.id" 
                              class="relative">
                             <input
@@ -90,9 +92,107 @@
                         </div>
                     </div>
 
-                    <div v-if="form.team_id" class="text-center">
+                    <!-- For tournaments that allow home/away picks (full season) -->
+                    <div v-else class="space-y-6">
+                        <!-- Step 1: Select Team -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-3">Step 1: Choose Your Team</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div v-for="team in uniqueTeams" :key="team.id" 
+                                     class="relative">
+                                    <input
+                                        type="radio"
+                                        :id="`team-${team.id}`"
+                                        name="team_id"
+                                        :value="team.id"
+                                        v-model="form.team_id"
+                                        @change="form.home_away = ''"
+                                        class="sr-only"
+                                    />
+                                    <label :for="`team-${team.id}`" class="block cursor-pointer">
+                                        <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
+                                             :class="{ 'bg-green-100 border-green-400 ring-2 ring-green-300': form.team_id == team.id }">
+                                            <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                                                <img :src="team.logo_url" :alt="team.name" class="w-full h-full object-contain"
+                                                     @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=64`" />
+                                            </div>
+                                            <div class="font-medium text-gray-900 text-sm">{{ team.name }}</div>
+                                            <div v-if="fixtureMap[team.id]" class="mt-1 text-xs text-gray-600">
+                                                vs <span class="font-medium text-gray-700">{{ fixtureMap[team.id].opponent.short_name || fixtureMap[team.id].opponent.name }}</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Select Home/Away (only when a team is selected) -->
+                        <div v-if="form.team_id" class="border-t pt-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-3">Step 2: Choose Home or Away</h4>
+                            <div class="grid grid-cols-2 gap-4 max-w-md">
+                                <!-- Home Option -->
+                                <div class="relative">
+                                    <input
+                                        type="radio"
+                                        id="home"
+                                        name="home_away"
+                                        value="home"
+                                        v-model="form.home_away"
+                                        :disabled="!isHomeAwayAvailable('home')"
+                                        class="sr-only"
+                                    />
+                                    <label for="home" class="block cursor-pointer" :class="{ 'cursor-not-allowed opacity-50': !isHomeAwayAvailable('home') }">
+                                        <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
+                                             :class="{ 'bg-green-100 border-green-400 ring-2 ring-green-300': form.home_away === 'home', 'bg-red-50 border-red-200': !isHomeAwayAvailable('home') }">
+                                            <div class="text-2xl mb-2">🏠</div>
+                                            <div class="font-medium text-gray-900">Home</div>
+                                            <div v-if="fixtureMap[form.team_id] && fixtureMap[form.team_id].homeAway === 'home'" class="text-xs text-green-600 mt-1">
+                                                Playing at home this week
+                                            </div>
+                                            <div v-if="!isHomeAwayAvailable('home')" class="text-xs text-red-600 mt-1">
+                                                {{ getDisabledReason('home') }}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <!-- Away Option -->
+                                <div class="relative">
+                                    <input
+                                        type="radio"
+                                        id="away"
+                                        name="home_away"
+                                        value="away"
+                                        v-model="form.home_away"
+                                        :disabled="!isHomeAwayAvailable('away')"
+                                        class="sr-only"
+                                    />
+                                    <label for="away" class="block cursor-pointer" :class="{ 'cursor-not-allowed opacity-50': !isHomeAwayAvailable('away') }">
+                                        <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
+                                             :class="{ 'bg-green-100 border-green-400 ring-2 ring-green-300': form.home_away === 'away', 'bg-red-50 border-red-200': !isHomeAwayAvailable('away') }">
+                                            <div class="text-2xl mb-2">✈️</div>
+                                            <div class="font-medium text-gray-900">Away</div>
+                                            <div v-if="fixtureMap[form.team_id] && fixtureMap[form.team_id].homeAway === 'away'" class="text-xs text-green-600 mt-1">
+                                                Playing away this week
+                                            </div>
+                                            <div v-if="!isHomeAwayAvailable('away')" class="text-xs text-red-600 mt-1">
+                                                {{ getDisabledReason('away') }}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="form.team_id && (!allowsHomeAwayPicks || form.home_away)" class="text-center">
                         <p class="text-gray-600 mb-4">
-                            Selected: <span class="font-semibold text-green-600">{{ availableTeams.find(t => t.id == form.team_id)?.name }}</span>
+                            Selected: <span class="font-semibold text-green-600">
+                                {{ getSelectedTeamName() }}
+                                <span v-if="allowsHomeAwayPicks && form.home_away" class="ml-1 px-2 py-1 rounded text-xs bg-green-100 text-green-700">
+                                    {{ form.home_away === 'home' ? 'Home' : 'Away' }}
+                                </span>
+                            </span>
                         </p>
                         <PrimaryButton
                             class="w-full md:w-auto"
@@ -109,13 +209,19 @@
             <div v-if="usedTeams.length > 0" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h4 class="text-md font-medium text-gray-900 mb-3">Teams Already Used</h4>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    <div v-for="team in usedTeams" :key="team.id" 
+                    <div v-for="team in usedTeams" :key="`${team.id}-${team.home_away || 'once'}`" 
                          class="bg-gray-100 rounded-lg p-3 text-center opacity-60">
                          <div class="w-8 h-8 flex items-center justify-center mx-auto mb-1"
                              :style="{ backgroundColor: team.primary_color || '#22C55E' }">
                             <span class="font-bold text-white text-xs">{{ team.short_name }}</span>
                         </div>
                         <div class="text-gray-600 text-xs">{{ team.name }}</div>
+                        <div v-if="allowsHomeAwayPicks && team.home_away" class="text-[10px] text-gray-500 mt-1">
+                            {{ team.home_away === 'home' ? 'Home' : 'Away' }}
+                        </div>
+                        <div v-if="team.game_week" class="text-[10px] text-gray-400 mt-1">
+                            {{ team.game_week }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -137,21 +243,101 @@ const props = defineProps({
     availableTeams: Array,
     usedTeams: Array,
     gameWeekGames: Array,
+    allowsHomeAwayPicks: Boolean,
+    selectionStrategy: String,
     existingPick: Object,
 });
 
 const form = useForm({
     team_id: '',
+    home_away: '', // For tournaments that allow home/away picks
 });
 
 if (props.existingPick && props.existingPick.team_id) {
     form.team_id = props.existingPick.team_id;
+    if (props.allowsHomeAwayPicks && props.existingPick.home_away) {
+        form.home_away = props.existingPick.home_away;
+    }
 }
 
 // Teams sorted A→Z by name
 const sortedTeams = computed(() => {
     return [...(props.availableTeams || [])].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 });
+
+// For home/away tournaments, get unique teams (remove duplicates based on team ID)
+const uniqueTeams = computed(() => {
+    if (!props.allowsHomeAwayPicks) return sortedTeams.value;
+    
+    const seen = new Set();
+    return sortedTeams.value.filter(team => {
+        if (seen.has(team.id)) return false;
+        seen.add(team.id);
+        return true;
+    });
+});
+
+// Check if a home/away option is available for the selected team
+const isHomeAwayAvailable = (homeAway) => {
+    if (!form.team_id) return false;
+    
+    // If we're editing an existing pick with the same team and home_away, allow it
+    if (props.existingPick && 
+        props.existingPick.team_id == form.team_id && 
+        props.existingPick.home_away === homeAway) {
+        return true;
+    }
+    
+    // Check what the team is actually playing this week (home or away)
+    const fixture = fixtureMap[form.team_id];
+    if (fixture) {
+        // If team is playing at home this week, only allow "home" selection
+        // If team is playing away this week, only allow "away" selection
+        if (fixture.homeAway !== homeAway) {
+            return false; // Team is not playing in this home/away context this week
+        }
+    }
+    
+    // Check if this team+home_away combination has already been used
+    const alreadyUsed = props.usedTeams.some(team => 
+        team.id == form.team_id && team.home_away === homeAway
+    );
+    
+    return !alreadyUsed;
+};
+
+// Get the reason why a home/away option is disabled
+const getDisabledReason = (homeAway) => {
+    if (!form.team_id) return '';
+    
+    // Check if already picked
+    const alreadyUsed = props.usedTeams.some(team => 
+        team.id == form.team_id && team.home_away === homeAway
+    );
+    
+    if (alreadyUsed) {
+        return `Already picked ${homeAway}`;
+    }
+    
+    // Check fixture context
+    const fixture = fixtureMap[form.team_id];
+    if (fixture && fixture.homeAway !== homeAway) {
+        return `Playing ${fixture.homeAway} this week`;
+    }
+    
+    return '';
+};
+
+// Get the name of the currently selected team
+const getSelectedTeamName = () => {
+    if (!form.team_id) return '';
+    
+    const team = props.allowsHomeAwayPicks 
+        ? uniqueTeams.value.find(t => t.id == form.team_id)
+        : sortedTeams.value.find(t => t.id == form.team_id);
+        
+    return team?.name || '';
+};
 
 // Build a quick lookup of opponent and home/away per team for this gameweek
 const fixtureMap = {};

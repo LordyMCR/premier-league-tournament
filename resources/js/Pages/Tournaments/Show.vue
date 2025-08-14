@@ -199,8 +199,15 @@ const timeUntilNextSelection = computed(() => {
                              class="w-full h-full object-contain bg-white" />
                         <span v-else class="text-white text-sm font-bold">{{ currentPick.team.short_name }}</span>
                     </div>
-                    <div>
-                        <p class="text-gray-900 font-medium">{{ currentPick.team.name }}</p>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3">
+                            <p class="text-gray-900 font-medium">{{ currentPick.team.name }}</p>
+                            <span v-if="currentPick.home_away" 
+                                  class="px-3 py-1 text-sm font-medium rounded-full"
+                                  :class="currentPick.home_away === 'home' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'">
+                                {{ currentPick.home_away === 'home' ? '🏠 Home' : '✈️ Away' }}
+                            </span>
+                        </div>
                         <p class="text-gray-500 text-sm">Gameweek {{ currentPick.gameweek?.week_number || 'N/A' }}</p>
                     </div>
                 </div>
@@ -334,8 +341,11 @@ const timeUntilNextSelection = computed(() => {
                                         
                                         <!-- Home/Away indicator if applicable -->
                                          <span v-if="pick.home_away" 
-                                              class="text-xs px-1.5 py-0.5 rounded text-gray-600 bg-gray-200 flex-shrink-0"
-                                               :title="pick.home_away === 'home' ? 'Home fixture' : 'Away fixture'">{{ pick.home_away === 'home' ? 'H' : 'A' }}</span>
+                                              class="px-2 py-1 text-xs font-medium rounded-full flex-shrink-0"
+                                              :class="pick.home_away === 'home' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'"
+                                               :title="pick.home_away === 'home' ? 'Home fixture' : 'Away fixture'">
+                                            {{ pick.home_away === 'home' ? '🏠 H' : '✈️ A' }}
+                                        </span>
                                         
                                         <!-- Result indicator -->
                                          <div class="flex items-center space-x-1 flex-shrink-0">
@@ -373,7 +383,14 @@ const timeUntilNextSelection = computed(() => {
                                 <img v-if="pick.team.logo_url" :src="pick.team.logo_url" :alt="pick.team.name" class="w-full h-full object-contain bg-white" />
                                 <span v-else class="text-white text-xs font-bold">{{ pick.team.short_name }}</span>
                             </div>
-                            <span class="text-sm text-gray-900 font-medium truncate" :title="pick.team.name">{{ pick.team.short_name }}</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-sm text-gray-900 font-medium truncate block" :title="pick.team.name">{{ pick.team.short_name }}</span>
+                                <span v-if="pick.home_away" 
+                                      class="inline-block px-1.5 py-0.5 text-xs font-medium rounded-full mt-1"
+                                      :class="pick.home_away === 'home' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'">
+                                    {{ pick.home_away === 'home' ? '🏠 H' : '✈️ A' }}
+                                </span>
+                            </div>
                         </div>
                         <div class="text-right flex-shrink-0">
                             <div>
@@ -394,6 +411,7 @@ const timeUntilNextSelection = computed(() => {
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gameweek</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Home/Away</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
                             </tr>
@@ -415,6 +433,14 @@ const timeUntilNextSelection = computed(() => {
                                             <span class="hidden sm:inline">{{ pick.team.name }}</span>
                                         </span>
                                     </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span v-if="pick.home_away" 
+                                          class="px-3 py-1 text-sm font-medium rounded-full"
+                                          :class="pick.home_away === 'home' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'">
+                                        {{ pick.home_away === 'home' ? '🏠 Home' : '✈️ Away' }}
+                                    </span>
+                                    <span v-else class="text-gray-400 text-sm">-</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span v-if="pick.result === 'win'" class="text-green-600 font-medium">Win</span>
