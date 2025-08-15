@@ -369,7 +369,8 @@ const timeUntilNextSelection = computed(() => {
                                             <span v-else class="w-2 h-2 bg-gray-300 rounded-full" title="Pending"></span>
                                             
                                             <!-- Points -->
-                                            <span class="text-xs font-medium text-gray-600">{{ pick.points || 0 }}pts</span>
+                                            <span v-if="pick.result" class="text-xs font-medium text-gray-600">{{ pick.points || 0 }}pts</span>
+                                            <span v-else class="text-xs font-medium text-gray-500">TBA</span>
                                         </div>
                                     </div>
                                 </div>
@@ -417,7 +418,10 @@ const timeUntilNextSelection = computed(() => {
                                 <span v-else-if="pick.result === 'loss'" class="text-red-600 text-sm font-medium">Loss</span>
                                 <span v-else class="text-gray-500 text-sm">Pending</span>
                             </div>
-                            <div class="text-xs text-gray-600">{{ pick.points }} pts</div>
+                            <div class="text-xs text-gray-600">
+                                <span v-if="pick.result">{{ pick.points }} pts</span>
+                                <span v-else>TBA</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -469,7 +473,8 @@ const timeUntilNextSelection = computed(() => {
                                     <span v-else class="text-gray-500">Pending</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-green-600 font-bold">{{ pick.points }}</span>
+                                    <span v-if="pick.result" class="text-green-600 font-bold">{{ pick.points }}</span>
+                                    <span v-else class="text-gray-500">TBA</span>
                                 </td>
                             </tr>
                         </tbody>
