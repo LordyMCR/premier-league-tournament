@@ -9,7 +9,10 @@
                         Select Your Team
                     </h2>
                     <p class="text-gray-600">
-                        Gameweek {{ gameWeek.week_number }} - {{ gameWeek.name }}
+                        {{ gameWeek.name }}
+                    </p>
+                    <p v-if="gameWeekDateRange" class="text-gray-500 text-sm">
+                        {{ gameWeekDateRange }}
                     </p>
                 </div>
                 <div class="text-right">
@@ -73,19 +76,45 @@
                                 name="team_id"
                                 :value="team.id"
                                 v-model="form.team_id"
+                                :disabled="team.isDisabled"
                                 class="sr-only"
                             />
-                            <label :for="`team-${team.id}`" class="block cursor-pointer">
-                                <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
-                                     :class="{ 'bg-green-100 border-green-400 ring-2 ring-green-300': form.team_id == team.id }">
-                                    <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
-                                        <img :src="team.logo_url" :alt="team.name" class="w-full h-full object-contain"
-                                             @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=64`" />
+                            <label :for="`team-${team.id}`" 
+                                   class="block h-full"
+                                   :class="team.isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'">
+                                <div class="border-2 rounded-lg p-4 text-center transition-all h-full flex flex-col justify-between min-h-[140px]"
+                                     :class="{
+                                         // Selected state
+                                         'bg-green-100 border-green-400 ring-2 ring-green-300': form.team_id == team.id && !team.isDisabled,
+                                         // Available state
+                                         'bg-gray-50 border-green-200 hover:bg-green-50 hover:border-green-300': !team.isDisabled && form.team_id != team.id,
+                                         // Disabled state
+                                         'bg-gray-100 border-gray-300 opacity-60': team.isDisabled
+                                     }">
+                                    <div class="flex-1 flex flex-col justify-center">
+                                        <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                                            <img :src="team.logo_url" :alt="team.name" class="w-full h-full object-contain"
+                                                 @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=64`" />
+                                        </div>
+                                        <div class="font-medium text-sm"
+                                             :class="team.isDisabled ? 'text-gray-500' : 'text-gray-900'">
+                                            {{ team.name }}
+                                        </div>
                                     </div>
-                                    <div class="font-medium text-gray-900 text-sm">{{ team.name }}</div>
-                                    <div v-if="fixtureMap[team.id]" class="mt-1 text-xs text-gray-600">
-                                        vs <span class="font-medium text-gray-700">{{ fixtureMap[team.id].opponent.short_name || fixtureMap[team.id].opponent.name }}</span>
-                                        <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-gray-200 text-gray-700">{{ fixtureMap[team.id].homeAway === 'home' ? 'H' : 'A' }}</span>
+                                    <div class="mt-auto">
+                                        <div v-if="fixtureMap[team.id]" class="text-xs"
+                                             :class="team.isDisabled ? 'text-gray-400' : 'text-gray-600'">
+                                            vs <span class="font-medium" :class="team.isDisabled ? 'text-gray-500' : 'text-gray-700'">{{ fixtureMap[team.id].opponent.short_name || fixtureMap[team.id].opponent.name }}</span>
+                                            <span class="ml-1 px-1.5 py-0.5 rounded text-[10px]"
+                                                  :class="team.isDisabled ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700'">
+                                                {{ fixtureMap[team.id].homeAway === 'home' ? 'H' : 'A' }}
+                                            </span>
+                                        </div>
+                                        <div v-if="team.isDisabled" class="text-xs text-red-600 mt-1">
+                                            Already picked
+                                        </div>
+                                        <!-- Spacer for teams without fixture info or disabled state -->
+                                        <div v-else-if="!fixtureMap[team.id]" class="text-xs h-4"></div>
                                     </div>
                                 </div>
                             </label>
@@ -186,14 +215,25 @@
                     </div>
 
                     <div v-if="form.team_id && (!allowsHomeAwayPicks || form.home_away)" class="text-center">
-                        <p class="text-gray-600 mb-4">
-                            Selected: <span class="font-semibold text-green-600">
-                                {{ getSelectedTeamName() }}
-                                <span v-if="allowsHomeAwayPicks && form.home_away" class="ml-1 px-2 py-1 rounded text-xs bg-green-100 text-green-700">
-                                    {{ form.home_away === 'home' ? 'Home' : 'Away' }}
-                                </span>
-                            </span>
-                        </p>
+                        <div class="flex items-center justify-center mb-4">
+                            <div v-if="getSelectedTeam()" class="flex items-center space-x-3">
+                                <div class="w-10 h-10 flex items-center justify-center">
+                                    <img :src="getSelectedTeam().logo_url" 
+                                         :alt="getSelectedTeam().name" 
+                                         class="w-full h-full object-contain"
+                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getSelectedTeam().short_name)}&background=${encodeURIComponent(getSelectedTeam().primary_color || '#22C55E')}&color=fff&size=40`" />
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">Selected:</p>
+                                    <p class="font-semibold text-green-600 text-lg">
+                                        {{ getSelectedTeamName() }}
+                                        <span v-if="allowsHomeAwayPicks && form.home_away" class="ml-2 px-2 py-1 rounded text-sm bg-green-100 text-green-700">
+                                            {{ form.home_away === 'home' ? '🏠 Home' : '✈️ Away' }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <PrimaryButton
                             class="w-full md:w-auto"
                             :class="{ 'opacity-25': form.processing }"
@@ -211,13 +251,15 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     <div v-for="team in usedTeams" :key="`${team.id}-${team.home_away || 'once'}`" 
                          class="bg-gray-100 rounded-lg p-3 text-center opacity-60">
-                         <div class="w-8 h-8 flex items-center justify-center mx-auto mb-1"
-                             :style="{ backgroundColor: team.primary_color || '#22C55E' }">
-                            <span class="font-bold text-white text-xs">{{ team.short_name }}</span>
+                         <div class="w-8 h-8 flex items-center justify-center mx-auto mb-1">
+                            <img :src="team.logo_url" 
+                                 :alt="team.name" 
+                                 class="w-full h-full object-contain"
+                                 @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=32`" />
                         </div>
                         <div class="text-gray-600 text-xs">{{ team.name }}</div>
                         <div v-if="allowsHomeAwayPicks && team.home_away" class="text-[10px] text-gray-500 mt-1">
-                            {{ team.home_away === 'home' ? 'Home' : 'Away' }}
+                            {{ team.home_away === 'home' ? '🏠 Home' : '✈️ Away' }}
                         </div>
                         <div v-if="team.game_week" class="text-[10px] text-gray-400 mt-1">
                             {{ team.game_week }}
@@ -241,6 +283,7 @@ const props = defineProps({
     tournament: Object,
     gameWeek: Object,
     availableTeams: Array,
+    actuallyAvailableTeams: Array, // For once_only tournaments: teams that can actually be selected
     usedTeams: Array,
     gameWeekGames: Array,
     allowsHomeAwayPicks: Boolean,
@@ -260,9 +303,25 @@ if (props.existingPick && props.existingPick.team_id) {
     }
 }
 
+// For once_only tournaments, we need to show all teams but mark which are disabled
+const allTeamsForDisplay = computed(() => {
+    if (props.allowsHomeAwayPicks) {
+        return [...(props.availableTeams || [])].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+    
+    // For once_only tournaments, use availableTeams (which now contains all teams) and determine disabled status
+    const actuallyAvailableTeamIds = new Set((props.actuallyAvailableTeams || []).map(team => team.id));
+    
+    return (props.availableTeams || []).map(team => ({
+        ...team,
+        isDisabled: !actuallyAvailableTeamIds.has(team.id) && 
+                   (!props.existingPick || props.existingPick.team_id != team.id)
+    })).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+});
+
 // Teams sorted A→Z by name
 const sortedTeams = computed(() => {
-    return [...(props.availableTeams || [])].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    return allTeamsForDisplay.value;
 });
 
 // For home/away tournaments, get unique teams (remove duplicates based on team ID)
@@ -339,6 +398,17 @@ const getSelectedTeamName = () => {
     return team?.name || '';
 };
 
+// Get the full team object for the currently selected team
+const getSelectedTeam = () => {
+    if (!form.team_id) return null;
+    
+    const team = props.allowsHomeAwayPicks 
+        ? uniqueTeams.value.find(t => t.id == form.team_id)
+        : sortedTeams.value.find(t => t.id == form.team_id);
+        
+    return team || null;
+};
+
 // Build a quick lookup of opponent and home/away per team for this gameweek
 const fixtureMap = {};
 const gameWeekGames = Array.isArray(props.gameWeekGames) ? props.gameWeekGames : [];
@@ -347,6 +417,35 @@ for (const game of gameWeekGames) {
     fixtureMap[game.home_team.id] = { opponent: game.away_team, homeAway: 'home' };
     fixtureMap[game.away_team.id] = { opponent: game.home_team, homeAway: 'away' };
 }
+
+// Calculate the date range for this gameweek
+const gameWeekDateRange = computed(() => {
+    if (!gameWeekGames.length) return null;
+    
+    const dates = gameWeekGames
+        .filter(game => game.kick_off_time)
+        .map(game => new Date(game.kick_off_time))
+        .sort((a, b) => a - b);
+    
+    if (dates.length === 0) return null;
+    
+    const firstDate = dates[0];
+    const lastDate = dates[dates.length - 1];
+    
+    const formatDate = (date) => {
+        return date.toLocaleDateString('en-GB', { 
+            day: 'numeric', 
+            month: 'short',
+            year: firstDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+        });
+    };
+    
+    if (firstDate.toDateString() === lastDate.toDateString()) {
+        return formatDate(firstDate);
+    } else {
+        return `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+    }
+});
 
 const submit = () => {
     form.post(

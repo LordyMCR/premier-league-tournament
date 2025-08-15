@@ -78,34 +78,34 @@ defineProps({
                     
                     <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         <div v-for="tournament in tournaments" :key="tournament.id" 
-                             class="bg-gray-50 rounded-lg p-4 border border-green-200 hover:shadow-md transition-all">
+                             class="bg-gray-50 rounded-lg p-4 border border-green-200 hover:shadow-md transition-all h-full flex flex-col min-h-[280px]">
                             <div class="flex items-start justify-between mb-3">
-                                <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2">{{ tournament.name }}</h4>
+                                <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2 leading-tight">{{ tournament.name }}</h4>
                                 <span class="px-2 py-1 rounded text-xs font-medium flex-shrink-0"
                                       :class="tournament.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
                                     {{ tournament.status }}
                                 </span>
                             </div>
                             
-                            <p class="text-gray-600 text-sm mb-4">{{ tournament.description || 'No description' }}</p>
+                            <p class="text-gray-600 text-sm mb-4 flex-1 line-clamp-3">{{ tournament.description || 'No description' }}</p>
                             
-                            <div class="text-sm text-gray-500 mb-4 space-y-1">
+                            <div class="text-sm text-gray-500 mb-4 space-y-2 mt-auto">
                                 <div class="flex justify-between">
                                     <span>Creator:</span>
-                                    <span class="text-gray-700">{{ tournament.creator.name }}</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.creator.name }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Participants:</span>
-                                    <span class="text-gray-700">{{ tournament.participants_count }}/{{ tournament.max_participants }}</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.participants_count }}/{{ tournament.max_participants }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Progress:</span>
-                                    <span class="text-gray-700">{{ tournament.current_game_week }}/20</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.current_game_week }}/20</span>
                                 </div>
                             </div>
                             
                             <Link :href="route('tournaments.show', tournament.id)"
-                                  class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-all font-medium text-center block">
+                                  class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-all font-medium text-center block mt-auto">
                                 View Tournament
                             </Link>
                         </div>
@@ -140,29 +140,29 @@ defineProps({
                     
                     <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         <div v-for="tournament in createdTournaments" :key="tournament.id" 
-                             class="bg-gray-50 rounded-lg p-4 border border-green-200 hover:shadow-md transition-all">
+                             class="bg-gray-50 rounded-lg p-4 border border-green-200 hover:shadow-md transition-all h-full flex flex-col min-h-[280px]">
                             <div class="flex items-start justify-between mb-3">
-                                <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2">{{ tournament.name }}</h4>
+                                <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2 leading-tight">{{ tournament.name }}</h4>
                                 <span class="px-2 py-1 rounded text-xs font-medium flex-shrink-0"
                                       :class="tournament.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
                                     {{ tournament.status }}
                                 </span>
                             </div>
                             
-                            <p class="text-gray-600 text-sm mb-4">{{ tournament.description || 'No description' }}</p>
+                            <p class="text-gray-600 text-sm mb-4 flex-1 line-clamp-3">{{ tournament.description || 'No description' }}</p>
                             
-                            <div class="text-sm text-gray-500 mb-4 space-y-1">
+                            <div class="text-sm text-gray-500 mb-4 space-y-2 mt-auto">
                                 <div class="flex justify-between">
                                     <span>Participants:</span>
-                                    <span class="text-gray-700">{{ tournament.participants_count }}/{{ tournament.max_participants }}</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.participants_count }}/{{ tournament.max_participants }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Progress:</span>
-                                    <span class="text-gray-700">{{ tournament.current_game_week }}/20</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.current_game_week }}/20</span>
                                 </div>
                             </div>
                             
-                            <div class="flex flex-col sm:flex-row gap-2">
+                            <div class="flex flex-col sm:flex-row gap-2 mt-auto">
                                 <Link :href="route('tournaments.show', tournament.id)"
                                       class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-all text-sm font-medium text-center">
                                     View
