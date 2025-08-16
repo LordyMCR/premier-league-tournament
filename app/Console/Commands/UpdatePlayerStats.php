@@ -48,22 +48,12 @@ class UpdatePlayerStats extends Command
 
         $this->info("Processing {$teams->count()} team(s)...");
         
-        $bar = $this->output->createProgressBar($teams->count());
-        $bar->start();
-
-        foreach ($teams as $team) {
-            try {
-                $squadService->updatePlayerStatistics($team);
-                $this->line(" ✓ Updated stats for {$team->name}");
-            } catch (\Exception $e) {
-                $this->line(" ✗ Error updating {$team->name}: " . $e->getMessage());
-            }
-
-            $bar->advance();
-        }
-
-        $bar->finish();
-        $this->newLine(2);
+        // Player statistics update functionality has been disabled
+        // This feature relied on transfer/player data that requires paid API access
+        $this->warn("⚠ Player statistics update is currently disabled (requires paid API access)");
+        $this->info("Found {$teams->count()} team(s) with players, but skipping stats update.");
+        
+        $this->newLine();
 
         $this->info('Player statistics update completed!');
         return 0;

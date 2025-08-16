@@ -43,7 +43,7 @@ class FetchSquadData extends Command
             $success = $squadService->fetchAndStoreSquadData($team, $this->option('force'));
             
             if ($success) {
-                $squadService->updatePlayerStatistics($team);
+                // Player statistics update has been disabled (requires paid API access)
                 $this->info("✓ Successfully updated squad for {$team->name}");
                 return 0;
             } else {
@@ -69,15 +69,15 @@ class FetchSquadData extends Command
             }
         }
 
-        // Update statistics for successful teams
+        // Player statistics update has been disabled (requires paid API access)
         if ($results['success'] > 0) {
-            $this->info("\n📈 Updating player statistics...");
+            $this->info("\n📈 Player statistics update disabled (requires paid API access)");
             $teams = Team::whereHas('players')->get();
             foreach ($teams as $team) {
                 try {
-                    $squadService->updatePlayerStatistics($team);
+                    $this->line("  ⚠ Stats update disabled for {$team->name}");
                 } catch (\Exception $e) {
-                    $this->warn("Failed to update stats for {$team->name}");
+                    $this->warn("Failed to process {$team->name}");
                 }
             }
         }
