@@ -31,8 +31,18 @@ Artisan::command('test:historical-data', function () {
     }
 })->purpose('Test historical data loading');
 
-// Schedule daily football data updates
+// Smart Football Data Updates
+// Full update once daily at 1am (teams, gameweeks, games) - 3 API calls
 Schedule::command('football:update')->dailyAt('01:00')->withoutOverlapping();
+
+// Smart results updates - only runs when games actually need checking
+// This analyzes the database to determine if updates are needed, saving API calls
+Schedule::command('football:smart-update')->hourly()->withoutOverlapping(); // Checks every hour but only runs when needed
+
+// Manual scheduling analysis (run this to see upcoming fixtures and plan updates)
+Artisan::command('football:analyze-schedule', function () {
+    $this->call('football:schedule-smart-updates', ['--dry-run' => true]);
+})->purpose('Analyze upcoming fixtures and show optimal update times');
 
 // Schedule player statistics updates (after matches and data updates)
 Schedule::command('squad:update-stats')->dailyAt('02:00')->withoutOverlapping();
