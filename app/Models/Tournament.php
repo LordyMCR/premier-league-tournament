@@ -95,7 +95,15 @@ class Tournament extends Model
                         $query->where('tournament_id', $this->id);
                     }])
                     ->orderBy('total_points', 'desc')
-                    ->get();
+                    ->get()
+                    ->map(function ($participant) {
+                        return [
+                            'id' => $participant->id,
+                            'user' => $participant->user,
+                            'points' => $participant->total_points,
+                            'picks_count' => $participant->picks_count,
+                        ];
+                    });
     }
 
     /**
