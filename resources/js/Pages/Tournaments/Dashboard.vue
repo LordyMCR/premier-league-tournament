@@ -25,14 +25,14 @@ defineProps({
                 <div class="flex flex-col sm:flex-row gap-3">
                     <Link
                         :href="route('tournaments.join-form')"
-                        class="bg-white border border-green-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center"
+                        class="bg-white border border-green-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center flex items-center justify-center"
                     >
                         <i class="fas fa-sign-in-alt mr-2"></i>
                         Join Tournament
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg text-center"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg text-center flex items-center justify-center"
                     >
                         <i class="fas fa-plus mr-2"></i>
                         Create Tournament
@@ -61,14 +61,14 @@ defineProps({
                         <div class="flex flex-col sm:flex-row gap-3 justify-center px-4">
                             <Link
                                 :href="route('tournaments.join-form')"
-                                class="bg-white border border-green-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center"
+                                class="bg-white border border-green-200 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all hover:bg-green-50 text-center flex items-center justify-center"
                             >
                                 <i class="fas fa-sign-in-alt mr-2"></i>
                                 Join Tournament
                             </Link>
                             <Link
                                 :href="route('tournaments.create')"
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg text-center"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg text-center flex items-center justify-center"
                             >
                                 <i class="fas fa-plus mr-2"></i>
                                 Create Tournament

@@ -37,15 +37,16 @@ class TournamentParticipant extends Model
     }
 
     /**
-     * Get all picks for this participant
+     * Get all picks for this participant in this tournament
      */
     public function picks()
     {
-        return $this->hasMany(Pick::class, 'user_id', 'user_id');
+        return $this->hasMany(Pick::class, 'user_id', 'user_id')
+                    ->where('tournament_id', $this->tournament_id);
     }
 
     /**
-     * Calculate and update total points
+     * Calculate and update total points for this tournament
      */
     public function updateTotalPoints()
     {

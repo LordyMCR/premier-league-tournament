@@ -44,7 +44,9 @@ const statsSafe = computed(() => ({
                     <Link :href="route('tournaments.index')" class="block">
                         <div class="bg-gray-50 rounded-lg p-3 hover:bg-green-50 transition-all">
                             <div class="flex items-center space-x-3">
-                                <i class="fas fa-trophy text-green-600 text-lg"></i>
+                                <div class="w-5 flex justify-center">
+                                    <i class="fas fa-trophy text-green-600 text-lg"></i>
+                                </div>
                                 <span class="text-gray-900 font-medium">My Tournaments</span>
                             </div>
                         </div>
@@ -52,7 +54,9 @@ const statsSafe = computed(() => ({
                     <Link :href="route('tournaments.create')" class="block">
                         <div class="bg-gray-50 rounded-lg p-3 hover:bg-green-50 transition-all">
                             <div class="flex items-center space-x-3">
-                                <i class="fas fa-plus text-green-600 text-lg"></i>
+                                <div class="w-5 flex justify-center">
+                                    <i class="fas fa-plus text-green-600 text-lg"></i>
+                                </div>
                                 <span class="text-gray-900 font-medium">Create Tournament</span>
                             </div>
                         </div>
@@ -60,7 +64,9 @@ const statsSafe = computed(() => ({
                     <Link :href="route('tournaments.join-form')" class="block">
                         <div class="bg-gray-50 rounded-lg p-3 hover:bg-green-50 transition-all">
                             <div class="flex items-center space-x-3">
-                                <i class="fas fa-users text-green-600 text-lg"></i>
+                                <div class="w-5 flex justify-center">
+                                    <i class="fas fa-users text-green-600 text-lg"></i>
+                                </div>
                                 <span class="text-gray-900 font-medium">Join Tournament</span>
                             </div>
                         </div>
@@ -68,7 +74,9 @@ const statsSafe = computed(() => ({
                     <Link :href="route('schedule.index')" class="block">
                         <div class="bg-gray-50 rounded-lg p-3 hover:bg-green-50 transition-all">
                             <div class="flex items-center space-x-3">
-                                <i class="fas fa-calendar text-green-600 text-lg"></i>
+                                <div class="w-5 flex justify-center">
+                                    <i class="fas fa-calendar text-green-600 text-lg"></i>
+                                </div>
                                 <span class="text-gray-900 font-medium">Premier League Schedule</span>
                             </div>
                         </div>
