@@ -91,9 +91,6 @@ class Tournament extends Model
     {
         return $this->participantRecords()
                     ->with('user')
-                    ->withCount(['picks' => function ($query) {
-                        $query->where('tournament_id', $this->id);
-                    }])
                     ->orderBy('total_points', 'desc')
                     ->get()
                     ->map(function ($participant) {
@@ -101,7 +98,9 @@ class Tournament extends Model
                             'id' => $participant->id,
                             'user' => $participant->user,
                             'points' => $participant->total_points,
-                            'picks_count' => $participant->picks_count,
+                            'picks_count' => Pick::where('tournament_id', $this->id)
+                                                 ->where('user_id', $participant->user_id)
+                                                 ->count(),
                         ];
                     });
     }
