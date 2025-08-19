@@ -119,7 +119,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="Create Tournament" />
+    <Head title="Create Tournament - PL Tournament" />
 
     <TournamentLayout>
         <template #header>

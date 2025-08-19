@@ -1,5 +1,5 @@
 <template>
-    <Head :title="`Select Team - ${tournament.name}`" />
+    <Head :title="`Select Team - ${tournament.name} - PL Tournament`" />
 
     <TournamentLayout>
         <template #header>

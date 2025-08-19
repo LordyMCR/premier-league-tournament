@@ -89,7 +89,7 @@ const getScoreDisplay = (game, team) => {
 </script>
 
 <template>
-    <Head :title="`${team.name} - Fixtures & Results`" />
+    <Head :title="`${team.name} - Fixtures & Results - PL Tournament`" />
 
     <TournamentLayout>
         <template #header>

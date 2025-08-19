@@ -19,7 +19,7 @@ const statsSafe = computed(() => ({
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Dashboard - PL Tournament" />
 
     <TournamentLayout>
         <template #header>

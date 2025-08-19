@@ -90,7 +90,7 @@ const getFormClass = (form) => {
 </script>
 
 <template>
-    <Head :title="`${game.home_team.name} vs ${game.away_team.name} - ${game.game_week.name}`" />
+    <Head :title="`${game.home_team.name} vs ${game.away_team.name} - ${game.game_week.name} - PL Tournament`" />
 
     <TournamentLayout>
         <template #header>

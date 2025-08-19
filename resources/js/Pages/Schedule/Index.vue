@@ -99,7 +99,7 @@ const filteredGameweeks = computed(() => {
 </script>
 
 <template>
-    <Head title="Premier League Schedule" />
+    <Head title="Premier League Schedule - PL Tournament" />
 
     <TournamentLayout>
         <template #header>

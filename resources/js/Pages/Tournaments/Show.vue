@@ -55,7 +55,7 @@ const timeUntilNextSelection = computed(() => {
 </script>
 
 <template>
-    <Head :title="tournament.name" />
+    <Head :title="`${tournament.name} - PL Tournament`" />
 
     <TournamentLayout>
         <template #header>

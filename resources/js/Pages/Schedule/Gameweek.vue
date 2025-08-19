@@ -72,7 +72,7 @@ const gamesByDate = getGamesByDate();
 </script>
 
 <template>
-    <Head :title="`${gameweek.name} - Premier League`" />
+    <Head :title="`${gameweek.name} - Premier League - PL Tournament`" />
 
     <TournamentLayout>
         <template #header>

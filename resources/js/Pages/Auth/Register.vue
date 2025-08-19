@@ -29,7 +29,7 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Create Account" />
+        <Head title="Create Account - PL Tournament" />
 
         <div class="text-center mb-8">
             <div class="flex justify-center mb-6">
