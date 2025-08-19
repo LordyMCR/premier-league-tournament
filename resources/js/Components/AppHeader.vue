@@ -158,37 +158,37 @@ const logout = () => {
                 <div class="space-y-2" v-if="page.props.auth.user">
                     <Link
                         :href="route('tournaments.index')"
-                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
-                        <i class="fas fa-trophy mr-2"></i>
+                        <i class="fas fa-trophy mr-2 w-4 text-center"></i>
                         My Tournaments
                     </Link>
                     <Link
                         :href="route('schedule.index')"
-                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
-                        <i class="fas fa-calendar mr-2"></i>
+                        <i class="fas fa-calendar mr-2 w-4 text-center"></i>
                         Schedule
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
-                        class="block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                        class="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >
-                        <i class="fas fa-plus mr-2"></i>
+                        <i class="fas fa-plus mr-2 w-4 text-center"></i>
                         Create Tournament
                     </Link>
                     <Link
                         :href="route('profile.show', { user: page.props.auth.user.id })"
-                        class="block text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
-                        <i class="fas fa-user mr-2"></i>
+                        <i class="fas fa-user mr-2 w-4 text-center"></i>
                         Profile
                     </Link>
                     <button 
                         @click="logout"
-                        class="block w-full text-left text-red-600 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-red-50"
+                        class="flex items-center w-full text-left text-red-600 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-red-50"
                     >
-                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        <i class="fas fa-sign-out-alt mr-2 w-4 text-center"></i>
                         Logout
                     </button>
                 </div>
