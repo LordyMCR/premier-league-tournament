@@ -37,56 +37,60 @@
                 </div>
 
                 <!-- Standings Table -->
-                <div class="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                <div class="bg-white rounded-xl p-3 sm:p-6 border border-green-200 shadow-md">
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="text-xs text-gray-500 uppercase border-b border-gray-200">
-                                    <th class="text-left py-3 px-2 font-semibold">Pos</th>
-                                    <th class="text-left py-3 px-4 font-semibold">Club</th>
-                                    <th class="text-center py-3 px-2 font-semibold">Pl</th>
-                                    <th class="text-center py-3 px-2 font-semibold">W</th>
-                                    <th class="text-center py-3 px-2 font-semibold">D</th>
-                                    <th class="text-center py-3 px-2 font-semibold">L</th>
-                                    <th class="text-center py-3 px-2 font-semibold">GF</th>
-                                    <th class="text-center py-3 px-2 font-semibold">GA</th>
-                                    <th class="text-center py-3 px-2 font-semibold">GD</th>
-                                    <th class="text-center py-3 px-2 font-semibold">Pts</th>
-                                    <th class="text-center py-3 px-2 font-semibold hidden sm:table-cell">Form</th>
+                                    <th class="text-left py-2 sm:py-3 px-1 sm:px-2 font-semibold">Pos</th>
+                                    <th class="text-left py-2 sm:py-3 px-2 sm:px-4 font-semibold">Club</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">Pl</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">W</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">D</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">L</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold hidden xs:table-cell">GF</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold hidden xs:table-cell">GA</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">GD</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">Pts</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold hidden sm:table-cell">Form</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="team in standings" :key="team.position" 
                                     class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                                     :class="getPositionClass(team.position)">
-                                    <td class="py-4 px-2">
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2">
                                         <div class="flex items-center">
-                                            <span class="font-bold text-gray-700">{{ team.position }}</span>
+                                            <span class="font-bold text-gray-700 text-xs sm:text-sm">{{ team.position }}</span>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-4">
-                                        <div class="flex items-center">
+                                    <td class="py-2 sm:py-4 px-2 sm:px-4">
+                                        <div class="flex items-center space-x-2 sm:space-x-3">
+                                            <img :src="team.team_logo" 
+                                                 :alt="team.team"
+                                                 class="w-4 h-4 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                                                 @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.team_short)}&background=${encodeURIComponent(team.team_primary_color || '#22C55E')}&color=fff&size=24`">
                                             <Link :href="route('schedule.team', team.team_id)" 
-                                                  class="font-semibold text-gray-900 hover:text-green-600 transition-colors">
+                                                  class="font-semibold text-gray-900 hover:text-green-600 transition-colors text-xs sm:text-sm truncate">
                                                 <span class="hidden sm:inline">{{ team.team }}</span>
                                                 <span class="sm:hidden">{{ team.team_short }}</span>
                                             </Link>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-2 text-center text-gray-600 font-medium">{{ team.played }}</td>
-                                    <td class="py-4 px-2 text-center text-green-600 font-semibold">{{ team.wins }}</td>
-                                    <td class="py-4 px-2 text-center text-yellow-600 font-semibold">{{ team.draws }}</td>
-                                    <td class="py-4 px-2 text-center text-red-600 font-semibold">{{ team.losses }}</td>
-                                    <td class="py-4 px-2 text-center text-gray-700 font-medium">{{ team.goals_for }}</td>
-                                    <td class="py-4 px-2 text-center text-gray-700 font-medium">{{ team.goals_against }}</td>
-                                    <td class="py-4 px-2 text-center font-semibold" :class="team.goal_difference >= 0 ? 'text-green-600' : 'text-red-600'">
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center text-gray-600 font-medium text-xs sm:text-sm">{{ team.played }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center text-green-600 font-semibold text-xs sm:text-sm">{{ team.wins }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center text-yellow-600 font-semibold text-xs sm:text-sm">{{ team.draws }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center text-red-600 font-semibold text-xs sm:text-sm">{{ team.losses }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center text-gray-700 font-medium text-xs sm:text-sm hidden xs:table-cell">{{ team.goals_for }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center text-gray-700 font-medium text-xs sm:text-sm hidden xs:table-cell">{{ team.goals_against }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center font-semibold text-xs sm:text-sm" :class="team.goal_difference >= 0 ? 'text-green-600' : 'text-red-600'">
                                         {{ team.goal_difference >= 0 ? '+' : '' }}{{ team.goal_difference }}
                                     </td>
-                                    <td class="py-4 px-2 text-center font-bold text-lg text-gray-900">{{ team.points }}</td>
-                                    <td class="py-4 px-2 text-center hidden sm:table-cell">
-                                        <div class="flex justify-center space-x-1">
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center font-bold text-sm sm:text-lg text-gray-900">{{ team.points }}</td>
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center hidden sm:table-cell">
+                                        <div class="flex justify-center space-x-0.5 sm:space-x-1">
                                             <div v-for="(result, index) in team.form" :key="index" 
-                                                 class="w-6 h-6 rounded text-xs font-bold flex items-center justify-center text-white"
+                                                 class="w-4 h-4 sm:w-6 sm:h-6 rounded text-xs font-bold flex items-center justify-center text-white"
                                                  :class="getFormClass(result)">
                                                 {{ result || '' }}
                                             </div>
@@ -98,23 +102,23 @@
                     </div>
 
                     <!-- Legend -->
-                    <div class="mt-6 pt-6 border-t border-gray-200">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                    <div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 text-xs">
                             <div class="flex items-center">
-                                <div class="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                                <span class="text-gray-600">Champions League</span>
+                                <div class="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded mr-1 sm:mr-2"></div>
+                                <span class="text-gray-600 text-xs">Champions League</span>
                             </div>
                             <div class="flex items-center">
-                                <div class="w-3 h-3 bg-orange-500 rounded mr-2"></div>
-                                <span class="text-gray-600">Europa League</span>
+                                <div class="w-2 h-2 sm:w-3 sm:h-3 bg-orange-500 rounded mr-1 sm:mr-2"></div>
+                                <span class="text-gray-600 text-xs">Europa League</span>
                             </div>
                             <div class="flex items-center">
-                                <div class="w-3 h-3 bg-green-500 rounded mr-2"></div>
-                                <span class="text-gray-600">Conference League</span>
+                                <div class="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded mr-1 sm:mr-2"></div>
+                                <span class="text-gray-600 text-xs">Conference League</span>
                             </div>
                             <div class="flex items-center">
-                                <div class="w-3 h-3 bg-red-500 rounded mr-2"></div>
-                                <span class="text-gray-600">Relegation</span>
+                                <div class="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded mr-1 sm:mr-2"></div>
+                                <span class="text-gray-600 text-xs">Relegation</span>
                             </div>
                         </div>
                     </div>
@@ -149,3 +153,12 @@ const getFormClass = (result) => {
     return 'bg-gray-200'; // No game played yet
 };
 </script>
+
+<style scoped>
+/* Ensure table fits on mobile without scrolling */
+@media (max-width: 475px) {
+    table {
+        font-size: 11px;
+    }
+}
+</style>

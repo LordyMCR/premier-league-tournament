@@ -969,6 +969,8 @@ class ScheduleController extends Controller
                 'team' => $team->name,
                 'team_short' => $team->short_name ?? substr($team->name, 0, 3),
                 'team_id' => $team->id,
+                'team_logo' => $team->logo_url,
+                'team_primary_color' => $team->primary_color,
                 'played' => $played,
                 'wins' => $wins,
                 'draws' => $draws,
