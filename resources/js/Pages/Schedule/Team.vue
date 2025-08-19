@@ -128,7 +128,8 @@ const getScoreDisplay = (game, team) => {
 
         <div class="space-y-6 lg:space-y-8">
             <!-- Team Stats -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 lg:gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
+                <!-- First Row -->
                 <div class="bg-white rounded-xl p-3 lg:p-4 border border-green-200 shadow-lg text-center">
                     <p class="text-gray-600 text-xs lg:text-sm">Played</p>
                     <p class="text-gray-900 font-bold text-lg lg:text-xl">{{ stats.games_played }}</p>
@@ -145,6 +146,8 @@ const getScoreDisplay = (game, team) => {
                     <p class="text-gray-600 text-xs lg:text-sm">Lost</p>
                     <p class="text-red-600 font-bold text-lg lg:text-xl">{{ stats.losses }}</p>
                 </div>
+                
+                <!-- Second Row -->
                 <div class="bg-white rounded-xl p-3 lg:p-4 border border-green-200 shadow-lg text-center">
                     <p class="text-gray-600 text-xs lg:text-sm">Points</p>
                     <p class="text-gray-900 font-bold text-lg lg:text-xl">{{ stats.points }}</p>
@@ -152,6 +155,10 @@ const getScoreDisplay = (game, team) => {
                 <div class="bg-white rounded-xl p-3 lg:p-4 border border-green-200 shadow-lg text-center">
                     <p class="text-gray-600 text-xs lg:text-sm">Goals For</p>
                     <p class="text-gray-900 font-bold text-lg lg:text-xl">{{ stats.goals_for }}</p>
+                </div>
+                <div class="bg-white rounded-xl p-3 lg:p-4 border border-green-200 shadow-lg text-center">
+                    <p class="text-gray-600 text-xs lg:text-sm">Goals Against</p>
+                    <p class="text-gray-900 font-bold text-lg lg:text-xl">{{ stats.goals_against }}</p>
                 </div>
                 <div class="bg-white rounded-xl p-3 lg:p-4 border border-green-200 shadow-lg text-center">
                     <p class="text-gray-600 text-xs lg:text-sm">Goal Diff</p>
