@@ -53,7 +53,14 @@ const logout = () => {
                         class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
                         <i class="fas fa-calendar mr-2"></i>
-                        Schedule
+                        Fixtures
+                    </Link>
+                    <Link
+                        :href="route('schedule.standings')"
+                        class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
+                    >
+                        <i class="fas fa-trophy mr-2"></i>
+                        Standings
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
@@ -168,7 +175,14 @@ const logout = () => {
                         class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
                     >
                         <i class="fas fa-calendar mr-2 w-4 text-center"></i>
-                        Schedule
+                        Fixtures
+                    </Link>
+                    <Link
+                        :href="route('schedule.standings')"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                    >
+                        <i class="fas fa-trophy mr-2 w-4 text-center"></i>
+                        Standings
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
