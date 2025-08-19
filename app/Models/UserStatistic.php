@@ -127,7 +127,7 @@ class UserStatistic extends Model
         
         // Team statistics
         $teamPicks = Pick::where('user_id', $user->id)
-            ->selectRaw('team_id, COUNT(*) as pick_count, SUM(CASE WHEN result = "win" THEN 1 ELSE 0 END) as wins')
+            ->selectRaw('team_id, COUNT(*) as pick_count, SUM(CASE WHEN result = ? THEN 1 ELSE 0 END) as wins', ['win'])
             ->groupBy('team_id')
             ->with('team')
             ->get();
