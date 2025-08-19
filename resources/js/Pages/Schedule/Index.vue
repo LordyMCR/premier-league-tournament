@@ -161,7 +161,10 @@ const resetFilters = () => {
                     <i class="fas fa-calendar mr-2"></i>
                     Fixtures
                 </div>
-                <Link :href="route('schedule.standings')" 
+                <Link :href="route('schedule.standings', { 
+                        status: selectedFilter !== 'all' ? selectedFilter : undefined,
+                        team: selectedTeam || undefined
+                    })" 
                       class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors">
                     <i class="fas fa-trophy mr-2"></i>
                     Table

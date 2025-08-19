@@ -21,7 +21,10 @@
                 <!-- Navigation Tabs -->
                 <div class="bg-white rounded-xl mb-6 border border-green-200 shadow-md overflow-hidden">
                     <div class="flex border-b border-gray-200">
-                        <Link :href="route('schedule.index')" 
+                        <Link :href="route('schedule.index', { 
+                                status: filters?.status || undefined,
+                                team: filters?.team || undefined
+                            })" 
                               class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors">
                             <i class="fas fa-calendar mr-2"></i>
                             Fixtures
@@ -128,6 +131,7 @@ import { Head, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     standings: Array,
+    filters: Object, // Add filters to preserve state
 });
 
 const getPositionClass = (position) => {

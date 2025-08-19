@@ -885,7 +885,7 @@ class ScheduleController extends Controller
     /**
      * Display the Premier League standings table
      */
-    public function standings()
+    public function standings(Request $request)
     {
         // Calculate Premier League standings
         $teams = Team::all();
@@ -999,6 +999,10 @@ class ScheduleController extends Controller
 
         return Inertia::render('Schedule/Standings', [
             'standings' => $standings,
+            'filters' => [
+                'status' => $request->get('status'),
+                'team' => $request->get('team'),
+            ],
         ]);
     }
 }
