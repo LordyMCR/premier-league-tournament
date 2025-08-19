@@ -263,7 +263,7 @@ class ScheduleController extends Controller
 
             // Goal trends by gameweek
             $analytics['goal_trends'][] = [
-                'gameweek' => $game->game_week->week_number,
+                'gameweek' => $game->game_week ? $game->game_week->week_number : null,
                 'goals_scored' => $teamScore,
                 'goals_conceded' => $opponentScore,
                 'date' => $game->kick_off_time
