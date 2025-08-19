@@ -103,10 +103,42 @@ Route::get('/dashboard', function () {
         $goalDifference = $goalsFor - $goalsAgainst;
         $points = ($wins * 3) + $draws;
         
+        // Get recent form (last 5 games)
+        $allGames = $homeGames->concat($awayGames)->sortByDesc('kick_off_time')->take(5);
+        $form = [];
+        
+        foreach ($allGames as $game) {
+            if ($game->home_team_id == $team->id) {
+                // Home game
+                if ($game->home_score > $game->away_score) {
+                    $form[] = 'W';
+                } elseif ($game->home_score == $game->away_score) {
+                    $form[] = 'D';
+                } else {
+                    $form[] = 'L';
+                }
+            } else {
+                // Away game
+                if ($game->away_score > $game->home_score) {
+                    $form[] = 'W';
+                } elseif ($game->home_score == $game->away_score) {
+                    $form[] = 'D';
+                } else {
+                    $form[] = 'L';
+                }
+            }
+        }
+        
+        // Pad form with empty slots if less than 5 games
+        while (count($form) < 5) {
+            $form[] = null;
+        }
+        
         $standings[] = [
             'position' => 0, // Will be set after sorting
             'team' => $team->name,
             'team_short' => $team->short_name ?? substr($team->name, 0, 3),
+            'team_id' => $team->id,
             'played' => $played,
             'wins' => $wins,
             'draws' => $draws,
@@ -115,6 +147,7 @@ Route::get('/dashboard', function () {
             'goals_against' => $goalsAgainst,
             'goal_difference' => $goalDifference,
             'points' => $points,
+            'form' => $form, // Add form data
         ];
     }
     

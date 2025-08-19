@@ -2,8 +2,8 @@
     <Head title="Premier League Table - PL Tournament" />
     
     <TournamentLayout>
-        <div class="min-h-screen bg-gray-50 py-8">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="min-h-screen bg-gray-50">
+            <div class="max-w-6xl mx-auto">
                 
                 <!-- Header -->
                 <div class="bg-white rounded-xl p-6 mb-6 border border-green-200 shadow-md">
@@ -52,7 +52,7 @@
                                     <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold hidden xs:table-cell">GA</th>
                                     <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">GD</th>
                                     <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">Pts</th>
-                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold hidden sm:table-cell">Form</th>
+                                    <th class="text-center py-2 sm:py-3 px-1 sm:px-2 font-semibold">Form</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -87,12 +87,13 @@
                                         {{ team.goal_difference >= 0 ? '+' : '' }}{{ team.goal_difference }}
                                     </td>
                                     <td class="py-2 sm:py-4 px-1 sm:px-2 text-center font-bold text-sm sm:text-lg text-gray-900">{{ team.points }}</td>
-                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center hidden sm:table-cell">
-                                        <div class="flex justify-center space-x-0.5 sm:space-x-1">
+                                    <td class="py-2 sm:py-4 px-1 sm:px-2 text-center">
+                                        <div class="flex justify-center space-x-0.5">
                                             <div v-for="(result, index) in team.form" :key="index" 
-                                                 class="w-4 h-4 sm:w-6 sm:h-6 rounded text-xs font-bold flex items-center justify-center text-white"
+                                                 class="w-3 h-3 sm:w-6 sm:h-6 rounded text-xs font-bold flex items-center justify-center text-white"
                                                  :class="getFormClass(result)">
-                                                {{ result || '' }}
+                                                <span class="hidden sm:inline">{{ result || '' }}</span>
+                                                <span class="sm:hidden text-xs leading-none">{{ result ? result.charAt(0) : '' }}</span>
                                             </div>
                                         </div>
                                     </td>

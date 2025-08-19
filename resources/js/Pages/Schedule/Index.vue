@@ -138,11 +138,11 @@ const resetFilters = () => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900">
+                    <h2 class="text-2xl font-bold text-gray-900">
                         Premier League Schedule
                     </h2>
                     <p class="text-gray-600 mt-2">
-                        Complete fixture list for the 2024/25 season
+                        Complete fixture list for the 2025/26 season
                     </p>
                 </div>
                 <div class="text-right">
