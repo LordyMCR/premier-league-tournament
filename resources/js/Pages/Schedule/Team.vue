@@ -12,6 +12,7 @@ const props = defineProps({
     teamNews: Object,
     squadData: Object,
     referer: String,
+    scheduleFilters: Object, // Add schedule filters from referer
 });
 
 // Dynamic back button based on referer
@@ -34,9 +35,19 @@ const backButton = computed(() => {
     
     // Default to schedule for all other cases
     console.log('Defaulting to schedule'); // Debug log
+    const scheduleParams = {};
+    
+    // Add schedule filters if they exist
+    if (props.scheduleFilters?.status) {
+        scheduleParams.status = props.scheduleFilters.status;
+    }
+    if (props.scheduleFilters?.team) {
+        scheduleParams.team = props.scheduleFilters.team;
+    }
+    
     return {
         text: '← Back to Schedule',
-        href: route('schedule.index')
+        href: route('schedule.index', scheduleParams)
     };
 });
 

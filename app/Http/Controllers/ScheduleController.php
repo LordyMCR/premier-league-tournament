@@ -71,13 +71,17 @@ class ScheduleController extends Controller
             ],
             'recentGames' => $recentGames,
             'upcomingHighlights' => $upcomingHighlights,
+            'filters' => [
+                'status' => request('status'),
+                'team' => request('team'),
+            ],
         ]);
     }
 
     /**
      * Display a specific gameweek
      */
-    public function gameweek(GameWeek $gameweek)
+    public function gameweek(Request $request, GameWeek $gameweek)
     {
         $gameweek->load([
             'games' => function ($query) {
@@ -94,11 +98,25 @@ class ScheduleController extends Controller
         $nextGameweek = GameWeek::where('week_number', '>', $gameweek->week_number)
             ->orderBy('week_number')
             ->first();
+            
+        // Extract schedule filters if coming from schedule page
+        $scheduleFilters = [];
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/schedule')) {
+            parse_str(parse_url($referer, PHP_URL_QUERY) ?? '', $queryParams);
+            if (isset($queryParams['status'])) {
+                $scheduleFilters['status'] = $queryParams['status'];
+            }
+            if (isset($queryParams['team'])) {
+                $scheduleFilters['team'] = $queryParams['team'];
+            }
+        }
 
         return Inertia::render('Schedule/Gameweek', [
             'gameweek' => $gameweek,
             'previousGameweek' => $previousGameweek,
             'nextGameweek' => $nextGameweek,
+            'scheduleFilters' => $scheduleFilters,
         ]);
     }
 
@@ -176,6 +194,18 @@ class ScheduleController extends Controller
 
         // Get referer to determine back button
         $referer = $request->header('referer');
+        
+        // Extract schedule filters if coming from schedule page
+        $scheduleFilters = [];
+        if ($referer && str_contains($referer, '/schedule')) {
+            parse_str(parse_url($referer, PHP_URL_QUERY) ?? '', $queryParams);
+            if (isset($queryParams['status'])) {
+                $scheduleFilters['status'] = $queryParams['status'];
+            }
+            if (isset($queryParams['team'])) {
+                $scheduleFilters['team'] = $queryParams['team'];
+            }
+        }
 
         return Inertia::render('Schedule/Team', [
             'team' => $team,
@@ -186,6 +216,7 @@ class ScheduleController extends Controller
             'teamNews' => $teamNews,
             'squadData' => $squadData,
             'referer' => $referer,
+            'scheduleFilters' => $scheduleFilters,
         ]);
     }
 

@@ -131,9 +131,22 @@ class GameWeek extends Model
      */
     public static function getCurrentGameWeek()
     {
+        $now = now();
+        
+        // First, try to find a gameweek that's currently active
+        $activeGameweek = static::where('is_completed', false)
+                               ->where('start_date', '<=', $now)
+                               ->where('end_date', '>=', $now)
+                               ->first();
+        
+        if ($activeGameweek) {
+            return $activeGameweek;
+        }
+        
+        // If no active gameweek, return the next upcoming one
         return static::where('is_completed', false)
-                     ->where('start_date', '<=', now())
-                     ->where('end_date', '>=', now())
+                     ->where('start_date', '>', $now)
+                     ->orderBy('start_date')
                      ->first();
     }
 

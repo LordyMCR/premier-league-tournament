@@ -1,7 +1,7 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
     gameweeks: Array,
@@ -11,10 +11,12 @@ const props = defineProps({
     stats: Object,
     recentGames: Array,
     upcomingHighlights: Array,
+    filters: Object,
 });
 
-const selectedFilter = ref('all');
-const selectedTeam = ref('');
+// Initialize filters from URL parameters or defaults
+const selectedFilter = ref(props.filters?.status || 'all');
+const selectedTeam = ref(props.filters?.team || '');
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -96,6 +98,37 @@ const filteredGameweeks = computed(() => {
     
     return gameweeks;
 });
+
+// Watch for filter changes and update URL
+watch([selectedFilter, selectedTeam], ([newFilter, newTeam]) => {
+    const params = {};
+    
+    if (newFilter && newFilter !== 'all') {
+        params.status = newFilter;
+    }
+    
+    if (newTeam && newTeam !== '') {
+        params.team = newTeam;
+    }
+    
+    // Update URL without triggering a full page reload
+    router.get(route('schedule.index'), params, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true, // Replace current history entry instead of adding new one
+    });
+}, { deep: true });
+
+// Check if any filters are active
+const hasActiveFilters = computed(() => {
+    return selectedFilter.value !== 'all' || selectedTeam.value !== '';
+});
+
+// Reset filters to default
+const resetFilters = () => {
+    selectedFilter.value = 'all';
+    selectedTeam.value = '';
+};
 </script>
 
 <template>
@@ -146,6 +179,16 @@ const filteredGameweeks = computed(() => {
                             {{ team.name }}
                         </option>
                     </select>
+                </div>
+                <div class="flex items-end">
+                    <button 
+                        v-if="hasActiveFilters"
+                        @click="resetFilters"
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors border border-gray-300 whitespace-nowrap"
+                    >
+                        <i class="fas fa-times mr-2"></i>
+                        Reset Filters
+                    </button>
                 </div>
             </div>
         </div>

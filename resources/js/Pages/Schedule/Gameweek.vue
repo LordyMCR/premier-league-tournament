@@ -6,6 +6,7 @@ const props = defineProps({
     gameweek: Object,
     previousGameweek: Object,
     nextGameweek: Object,
+    scheduleFilters: Object,
 });
 
 const formatDate = (dateString) => {
@@ -86,7 +87,7 @@ const gamesByDate = getGamesByDate();
                     </p>
                     <!-- Mobile controls under title -->
                     <div class="mt-3 flex items-center gap-2 sm:hidden">
-                        <Link :href="route('schedule.index')" 
+                        <Link :href="route('schedule.index', scheduleFilters || {})" 
                               class="bg-white border border-green-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-green-50">
                             ← Back
                         </Link>
@@ -106,7 +107,7 @@ const gamesByDate = getGamesByDate();
                     <div v-else class="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
                         Upcoming
                     </div>
-                    <Link :href="route('schedule.index')" 
+                    <Link :href="route('schedule.index', scheduleFilters || {})" 
                           class="bg-white border border-green-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-green-50">
                         ← Back to Schedule
                     </Link>
