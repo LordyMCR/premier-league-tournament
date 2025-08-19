@@ -18,14 +18,12 @@ const props = defineProps({
 // Dynamic back button based on referer
 const backButton = computed(() => {
     const referer = props.referer;
-    console.log('Referer from backend:', referer); // Debug log
     
     // Check if coming from a tournament page (but not schedule-related)
     if (referer && referer.includes('/tournaments/') && !referer.includes('/schedule')) {
         // Extract tournament ID from the referer URL
         const tournamentMatch = referer.match(/\/tournaments\/(\d+)(?:\/|$)/);
         if (tournamentMatch) {
-            console.log('Tournament ID found:', tournamentMatch[1]); // Debug log
             return {
                 text: '← Back to Tournament',
                 href: route('tournaments.show', tournamentMatch[1])
@@ -33,8 +31,15 @@ const backButton = computed(() => {
         }
     }
     
+    // Check if coming from standings page
+    if (referer && referer.includes('/schedule/standings')) {
+        return {
+            text: '← Back to Standings',
+            href: route('schedule.standings')
+        };
+    }
+    
     // Default to schedule for all other cases
-    console.log('Defaulting to schedule'); // Debug log
     const scheduleParams = {};
     
     // Add schedule filters if they exist

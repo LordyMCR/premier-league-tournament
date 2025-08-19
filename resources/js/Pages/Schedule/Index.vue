@@ -154,6 +154,21 @@ const resetFilters = () => {
             </div>
         </template>
 
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-xl mb-6 border border-green-200 shadow-md overflow-hidden">
+            <div class="flex border-b border-gray-200">
+                <div class="flex-1 py-4 px-6 text-center font-medium text-green-600 bg-green-50 border-b-2 border-green-600">
+                    <i class="fas fa-calendar mr-2"></i>
+                    Fixtures
+                </div>
+                <Link :href="route('schedule.standings')" 
+                      class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-trophy mr-2"></i>
+                    Table
+                </Link>
+            </div>
+        </div>
+
         <!-- Filters -->
         <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-8">
             <div class="flex flex-col sm:flex-row gap-4">

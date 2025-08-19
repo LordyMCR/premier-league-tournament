@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserStatistic;
 use App\Models\Game;
+use App\Models\Team;
 use Carbon\Carbon;
 
 // Include debug routes
@@ -56,6 +57,86 @@ Route::get('/dashboard', function () {
             'when' => Carbon::parse($game->kick_off_time)->diffForHumans(),
         ]);
 
+    // Calculate Premier League standings
+    $teams = Team::all();
+    $standings = [];
+    
+    foreach ($teams as $team) {
+        $homeGames = Game::where('home_team_id', $team->id)->where('status', 'FINISHED')->get();
+        $awayGames = Game::where('away_team_id', $team->id)->where('status', 'FINISHED')->get();
+        
+        $played = $homeGames->count() + $awayGames->count();
+        $wins = 0;
+        $draws = 0;
+        $losses = 0;
+        $goalsFor = 0;
+        $goalsAgainst = 0;
+        
+        // Home games
+        foreach ($homeGames as $game) {
+            $goalsFor += $game->home_score;
+            $goalsAgainst += $game->away_score;
+            
+            if ($game->home_score > $game->away_score) {
+                $wins++;
+            } elseif ($game->home_score == $game->away_score) {
+                $draws++;
+            } else {
+                $losses++;
+            }
+        }
+        
+        // Away games  
+        foreach ($awayGames as $game) {
+            $goalsFor += $game->away_score;
+            $goalsAgainst += $game->home_score;
+            
+            if ($game->away_score > $game->home_score) {
+                $wins++;
+            } elseif ($game->home_score == $game->away_score) {
+                $draws++;
+            } else {
+                $losses++;
+            }
+        }
+        
+        $goalDifference = $goalsFor - $goalsAgainst;
+        $points = ($wins * 3) + $draws;
+        
+        $standings[] = [
+            'position' => 0, // Will be set after sorting
+            'team' => $team->name,
+            'team_short' => $team->short_name ?? substr($team->name, 0, 3),
+            'played' => $played,
+            'wins' => $wins,
+            'draws' => $draws,
+            'losses' => $losses,
+            'goals_for' => $goalsFor,
+            'goals_against' => $goalsAgainst,
+            'goal_difference' => $goalDifference,
+            'points' => $points,
+        ];
+    }
+    
+    // Sort by points (desc), then goal difference (desc), then goals for (desc)
+    usort($standings, function($a, $b) {
+        if ($a['points'] != $b['points']) {
+            return $b['points'] - $a['points'];
+        }
+        if ($a['goal_difference'] != $b['goal_difference']) {
+            return $b['goal_difference'] - $a['goal_difference'];
+        }
+        return $b['goals_for'] - $a['goals_for'];
+    });
+    
+    // Set positions
+    foreach ($standings as $key => $standing) {
+        $standings[$key]['position'] = $key + 1;
+    }
+    
+    // Limit to top 10 for dashboard
+    $topStandings = array_slice($standings, 0, 10);
+
     return Inertia::render('Dashboard', [
         'stats'            => [
             'tournaments'   => $stat->total_tournaments,
@@ -66,6 +147,7 @@ Route::get('/dashboard', function () {
         'upcomingFixtures' => $upcomingFixtures,
         'favoriteFixtures' => $favoriteFixtures,
         'favoriteTeam'     => $user->favoriteTeam?->name,
+        'standings'        => $topStandings,
     ]);
 })->middleware(['auth', 'verified', 'user.approval'])->name('dashboard');
 
@@ -100,6 +182,7 @@ Route::middleware(['auth', 'user.approval'])->group(function () {
     
     // Schedule routes
     Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
+    Route::get('/schedule/standings', [ScheduleController::class, 'standings'])->name('schedule.standings');
     Route::get('/schedule/gameweek/{gameweek}', [ScheduleController::class, 'gameweek'])->name('schedule.gameweek');
     Route::get('/schedule/team/{team}', [ScheduleController::class, 'team'])->name('schedule.team');
     Route::get('/schedule/match/{game}', [ScheduleController::class, 'match'])->name('schedule.match');

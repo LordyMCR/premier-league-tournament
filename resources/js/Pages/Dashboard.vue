@@ -7,6 +7,7 @@ const props = defineProps({
   stats: Object,
   upcomingFixtures: Array,
   favoriteFixtures: Array,
+  standings: Array,
 });
 
 // Provide robust defaults so layout never looks odd for new accounts
@@ -189,6 +190,59 @@ const statsSafe = computed(() => ({
                             No upcoming fixtures for your favorite team. Please set a favorite team in your profile.
                         </div>
                     </template>
+                </div>
+            </div>
+
+            <!-- Premier League Standings Card -->
+            <div class="bg-white rounded-xl p-6 border border-green-200 shadow-md md:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Premier League Table</h3>
+                    <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
+                        <i class="fas fa-trophy text-white text-lg"></i>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-xs text-gray-500 uppercase border-b">
+                                <th class="text-left py-2 px-1">#</th>
+                                <th class="text-left py-2 px-2">Team</th>
+                                <th class="text-center py-2 px-1">P</th>
+                                <th class="text-center py-2 px-1">W</th>
+                                <th class="text-center py-2 px-1">D</th>
+                                <th class="text-center py-2 px-1">L</th>
+                                <th class="text-center py-2 px-1">GF</th>
+                                <th class="text-center py-2 px-1">GA</th>
+                                <th class="text-center py-2 px-1">GD</th>
+                                <th class="text-center py-2 px-1 font-semibold">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="team in props.standings" :key="team.position" 
+                                class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-2 px-1 font-semibold text-gray-600">{{ team.position }}</td>
+                                <td class="py-2 px-2 font-medium">
+                                    <span class="hidden sm:inline">{{ team.team }}</span>
+                                    <span class="sm:hidden">{{ team.team_short }}</span>
+                                </td>
+                                <td class="py-2 px-1 text-center text-gray-600">{{ team.played }}</td>
+                                <td class="py-2 px-1 text-center text-green-600 font-medium">{{ team.wins }}</td>
+                                <td class="py-2 px-1 text-center text-yellow-600">{{ team.draws }}</td>
+                                <td class="py-2 px-1 text-center text-red-600">{{ team.losses }}</td>
+                                <td class="py-2 px-1 text-center text-gray-600">{{ team.goals_for }}</td>
+                                <td class="py-2 px-1 text-center text-gray-600">{{ team.goals_against }}</td>
+                                <td class="py-2 px-1 text-center" :class="team.goal_difference >= 0 ? 'text-green-600' : 'text-red-600'">
+                                    {{ team.goal_difference >= 0 ? '+' : '' }}{{ team.goal_difference }}
+                                </td>
+                                <td class="py-2 px-1 text-center font-bold text-green-600">{{ team.points }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-center">
+                    <Link :href="route('schedule.standings')" class="text-green-600 hover:text-green-700 text-xs font-medium">
+                        View Full Table & Fixtures →
+                    </Link>
                 </div>
             </div>
 
