@@ -7,6 +7,28 @@
 
         <title inertia>{{ config('app.name', 'PL Tournament') }}</title>
         
+        <!-- Favicon -->
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+        
+        <!-- Apple Touch Icons (iOS) - using favicon.ico -->
+        <link rel="apple-touch-icon" href="/favicon.ico">
+        <link rel="apple-touch-icon" sizes="32x32" href="/favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+        
+        <!-- Web App Manifest -->
+        <link rel="manifest" href="/manifest.json">
+        
+        <!-- iOS Safari -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="PL Tournament">
+        
+        <!-- Theme color -->
+        <meta name="theme-color" content="#22c55e">
+        <meta name="msapplication-navbutton-color" content="#22c55e">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
