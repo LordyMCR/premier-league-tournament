@@ -274,11 +274,21 @@ class TournamentController extends Controller
         }
         
         // Get all participants' picks for display (grouped by gameweek)
+        // Hide other users' picks for gameweeks where selection deadline hasn't passed yet
         $allParticipantPicks = Pick::where('tournament_id', $tournament->id)
             ->with(['user', 'team', 'gameWeek'])
             ->orderBy('game_week_id')
             ->orderBy('picked_at')
             ->get()
+            ->filter(function ($pick) use ($user, $isParticipant) {
+                // Always show the current user's own picks if they're a participant
+                if ($isParticipant && $pick->user_id === $user->id) {
+                    return true;
+                }
+                
+                // For other users' picks, only show them if the gameweek's selection deadline has passed
+                return $pick->gameWeek && $pick->gameWeek->isSelectionDeadlinePassed();
+            })
             ->groupBy('game_week_id')
             ->map(function ($picks) {
                 return $picks->map(function ($pick) {
@@ -309,6 +319,20 @@ class TournamentController extends Controller
                 });
             });
 
+        // Get gameweeks within tournament range that have hidden picks (selection deadline not passed)
+        $tournamentStart = $tournament->start_game_week;
+        $tournamentEnd = $tournament->start_game_week + $tournament->total_game_weeks - 1;
+        $gameweeksWithHiddenPicks = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+            ->where(function ($query) {
+                $query->whereNull('selection_deadline')
+                      ->orWhere('selection_deadline', '>', now());
+            })
+            ->whereHas('picks', function ($query) use ($tournament) {
+                $query->where('tournament_id', $tournament->id);
+            })
+            ->select('id', 'week_number', 'name', 'selection_deadline')
+            ->get();
+
         return Inertia::render('Tournaments/Show', [
             'tournament' => $tournament,
             'isParticipant' => $isParticipant,
@@ -321,6 +345,7 @@ class TournamentController extends Controller
             'availableTeams' => $availableTeams,
             'allTeams' => Team::all(),
             'allParticipantPicks' => $allParticipantPicks,
+            'gameweeksWithHiddenPicks' => $gameweeksWithHiddenPicks,
         ]);
     }
 

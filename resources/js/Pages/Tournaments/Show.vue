@@ -13,6 +13,7 @@ const props = defineProps({
     userPicks: Array,
     currentPick: Object,
     allParticipantPicks: Object,
+    gameweeksWithHiddenPicks: Array,
 });
 
 const formatDate = (dateString) => {
@@ -306,6 +307,23 @@ const timeUntilNextSelection = computed(() => {
                         All Participants' Picks
                     </h3>
                     <p class="text-gray-600 text-sm mt-1">See what teams everyone has selected</p>
+                    
+                    <!-- Hidden picks notice -->
+                    <div v-if="gameweeksWithHiddenPicks && gameweeksWithHiddenPicks.length > 0" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-eye-slash text-amber-600 mt-0.5"></i>
+                            <div class="text-sm">
+                                <p class="font-medium text-amber-800">Some picks are hidden</p>
+                                <p class="text-amber-700">
+                                    Picks for 
+                                    <span v-for="(gameweek, index) in gameweeksWithHiddenPicks" :key="gameweek.id">
+                                        <strong>{{ gameweek.name }}</strong><span v-if="index < gameweeksWithHiddenPicks.length - 1">, </span>
+                                    </span>
+                                    will be revealed after their selection deadline{{ gameweeksWithHiddenPicks.length > 1 ? 's' : '' }} pass{{ gameweeksWithHiddenPicks.length === 1 ? 'es' : '' }}.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="max-h-[34rem] overflow-y-auto">
