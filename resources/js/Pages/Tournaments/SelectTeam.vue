@@ -23,36 +23,41 @@
             </div>
         </template>
 
-        <div class="max-w-6xl mx-auto space-y-6">
+        <div class="max-w-7xl mx-auto space-y-6">
             <!-- Fixtures for this gameweek -->
             <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">This Week's Fixtures</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div v-for="game in gameWeekGames" :key="game.id" 
                          class="bg-gray-50 rounded-lg p-4 border border-green-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 flex items-center justify-center">
-                                    <img :src="game.home_team.logo_url" :alt="game.home_team.name" class="w-full h-full object-contain"
-                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=32`" />
-                                </div>
-                                <span class="text-gray-900 font-medium">
+                        <div class="flex items-center justify-center space-x-4">
+                            <!-- Home Team -->
+                            <div class="flex items-center space-x-2 min-w-0 flex-1 justify-end">
+                                <span class="text-gray-900 font-medium text-right truncate">
                                     <span class="sm:hidden">{{ game.home_team.short_name || game.home_team.name }}</span>
                                     <span class="hidden sm:inline">{{ game.home_team.name }}</span>
                                 </span>
+                                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                                    <img :src="game.home_team.logo_url" :alt="game.home_team.name" class="w-full h-full object-contain"
+                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=32`" />
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <span class="text-gray-500 text-sm">vs</span>
+                            
+                            <!-- VS - Fixed center -->
+                            <div class="flex-shrink-0">
+                                <span class="text-gray-500 text-sm font-medium">vs</span>
                             </div>
-                            <div class="flex items-center space-x-3">
-                                <span class="text-gray-900 font-medium">
-                                    <span class="sm:hidden">{{ game.away_team.short_name || game.away_team.name }}</span>
-                                    <span class="hidden sm:inline">{{ game.away_team.name }}</span>
-                                </span>
-                                <div class="w-8 h-8 flex items-center justify-center">
+                            
+                            <!-- Away Team -->
+                            <div class="flex items-center space-x-2 min-w-0 flex-1">
+                                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center">
                                     <img :src="game.away_team.logo_url" :alt="game.away_team.name" class="w-full h-full object-contain"
                                          @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.away_team.short_name)}&background=${encodeURIComponent(game.away_team.primary_color || '#22C55E')}&color=fff&size=32`" />
                                 </div>
+                                <span class="text-gray-900 font-medium text-left truncate">
+                                    <span class="sm:hidden">{{ game.away_team.short_name || game.away_team.name }}</span>
+                                    <span class="hidden sm:inline">{{ game.away_team.name }}</span>
+                                </span>
                             </div>
                         </div>
                     </div>
