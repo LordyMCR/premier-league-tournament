@@ -101,7 +101,8 @@ class AutoAssignMissingPicks extends Command
     }
 
     /**
-     * Auto-assign missing picks for a specific tournament and gameweek
+     * Auto-assign missing picks for a specific tournament and gameweek.
+     * Handles both regular tournaments (pick once) and home/away tournaments (pick home and away separately).
      */
     private function autoAssignForTournament(Tournament $tournament, GameWeek $gameweek)
     {
@@ -113,40 +114,54 @@ class AutoAssignMissingPicks extends Command
         $assignedCount = 0;
 
         foreach ($participants as $participant) {
-            // Check if user already has a pick for this gameweek
-            $existingPick = Pick::where('tournament_id', $tournament->id)
-                              ->where('user_id', $participant->user_id)
-                              ->where('game_week_id', $gameweek->id)
-                              ->first();
-
-            if ($existingPick) {
-                continue; // User already has a pick
-            }
-
-            // Get available teams for this user (teams they haven't picked before in this tournament)
-            $availableTeams = Pick::getAvailableTeamsForUser($participant->user_id, $tournament->id);
+            // Get available teams for this user, considering the tournament mode and gameweek
+            $availableTeams = Pick::getAvailableTeamsForUser($participant->user_id, $tournament->id, $gameweek->id);
 
             if ($availableTeams->isEmpty()) {
-                $this->warn("    No available teams for user {$participant->user->name} - they may have picked all teams");
+                // Check existing picks to provide better feedback
+                $existingPicksCount = Pick::where('tournament_id', $tournament->id)
+                                        ->where('user_id', $participant->user_id)
+                                        ->where('game_week_id', $gameweek->id)
+                                        ->count();
+
+                if ($existingPicksCount > 0) {
+                    // User has already made picks for this gameweek
+                    continue;
+                }
+
+                $this->warn("    No available teams for user {$participant->user->name} - they may have picked all teams or no games this week");
                 continue;
             }
 
             // Randomly select a team
             $randomTeam = $availableTeams->random();
 
-            // Create the pick
-            Pick::create([
+            // Prepare pick data
+            $pickData = [
                 'tournament_id' => $tournament->id,
                 'user_id' => $participant->user_id,
                 'game_week_id' => $gameweek->id,
                 'team_id' => $randomTeam->id,
                 'picked_at' => now(),
-            ]);
+            ];
 
-            // Send notification to user
+            // For tournaments that require home/away selection, include the home_away field
+            if ($tournament->allowsHomeAwayPicks() && isset($randomTeam->home_away)) {
+                $pickData['home_away'] = $randomTeam->home_away;
+            }
+
+            // Create the pick
+            Pick::create($pickData);
+
+            // Send notification to user with appropriate team context
+            $teamDisplayName = $randomTeam->name;
+            if ($tournament->allowsHomeAwayPicks() && isset($randomTeam->home_away)) {
+                $teamDisplayName .= ' (' . ucfirst($randomTeam->home_away) . ')';
+            }
+            
             $participant->user->notify(new TeamAutoAssigned($tournament, $gameweek, $randomTeam));
 
-            $this->line("    Auto-assigned {$randomTeam->name} to {$participant->user->name}");
+            $this->line("    Auto-assigned {$teamDisplayName} to {$participant->user->name}");
             $assignedCount++;
         }
 
