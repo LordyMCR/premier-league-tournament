@@ -41,7 +41,7 @@ Schedule::command('picks:auto-assign')->everyThirtyMinutes()->withoutOverlapping
 
 // Smart results updates - only runs when games actually need checking
 // This analyzes the database to determine if updates are needed, saving API calls
-Schedule::command('football:smart-update')->hourly()->withoutOverlapping(); // Checks every hour but only runs when needed
+Schedule::command('football:smart-update')->everyTenMinutes()->withoutOverlapping(); // Checks every 10 minutes for live game updates
 
 // Manual scheduling analysis (run this to see upcoming fixtures and plan updates)
 Artisan::command('football:analyze-schedule', function () {

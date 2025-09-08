@@ -79,8 +79,8 @@ class SmartFootballUpdate extends Command
             return true;
         }
 
-        // 3. Check for games that kicked off in the last 2 hours (catch live results)
-        $recentKickoffs = Game::where('kick_off_time', '>', $now->copy()->subHours(2))
+        // 3. Check for games that kicked off in the last 3 hours (catch live results)
+        $recentKickoffs = Game::where('kick_off_time', '>', $now->copy()->subHours(3))
             ->where('kick_off_time', '<=', $now)
             ->whereNotIn('status', ['FINISHED', 'CANCELLED', 'POSTPONED'])
             ->count();
@@ -90,7 +90,18 @@ class SmartFootballUpdate extends Command
             return true;
         }
 
-        // 4. Check for games finishing soon (within next hour) - proactive checking
+        // 4. Check for games starting soon (within next 15 minutes) - proactive status checking
+        $gamesSoonToStart = Game::where('kick_off_time', '>', $now)
+            ->where('kick_off_time', '<=', $now->copy()->addMinutes(15))
+            ->whereIn('status', ['SCHEDULED', 'TIMED'])
+            ->count();
+
+        if ($gamesSoonToStart > 0) {
+            $this->line("🕐 Found {$gamesSoonToStart} games starting soon - checking for early status updates");
+            return true;
+        }
+
+        // 5. Check for games finishing soon (within next hour) - proactive checking
         $gamesSoonToFinish = Game::where('kick_off_time', '>', $now->copy()->subMinutes(90))
             ->where('kick_off_time', '<=', $now->copy()->addMinutes(10))
             ->whereIn('status', ['TIMED', 'IN_PLAY', 'PAUSED'])
@@ -101,7 +112,7 @@ class SmartFootballUpdate extends Command
             return true;
         }
 
-        // 5. Weekend priority - run more frequently on Saturdays and Sundays
+        // 6. Weekend priority - run more frequently on Saturdays and Sundays
         if ($now->isWeekend()) {
             $todaysGames = Game::whereDate('kick_off_time', $now->toDateString())
                 ->whereNotIn('status', ['FINISHED', 'CANCELLED', 'POSTPONED'])
