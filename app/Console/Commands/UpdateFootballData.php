@@ -250,24 +250,40 @@ class UpdateFootballData extends Command
                     continue;
                 }
 
-                // Check if result has changed
+                // Check if result has changed or kick-off time has been updated
                 $hasNewResult = (
                     $game->status !== $gameData['status'] ||
                     $game->home_score !== $gameData['home_score'] ||
-                    $game->away_score !== $gameData['away_score']
+                    $game->away_score !== $gameData['away_score'] ||
+                    $game->kick_off_time->ne($gameData['kick_off_time'])
                 );
 
                 if ($hasNewResult) {
                     $oldStatus = $game->status;
+                    $oldKickOff = $game->kick_off_time;
                     
                     // Update game
                     $game->update([
                         'home_score' => $gameData['home_score'],
                         'away_score' => $gameData['away_score'],
                         'status' => $gameData['status'],
+                        'kick_off_time' => $gameData['kick_off_time'],
                     ]);
 
-                    $this->line("Updated: {$game->homeTeam->name} vs {$game->awayTeam->name} - {$gameData['status']}");
+                    // Show what was updated
+                    $updates = [];
+                    if ($oldStatus !== $gameData['status']) {
+                        $updates[] = "status: {$oldStatus} → {$gameData['status']}";
+                    }
+                    if ($oldKickOff->ne($gameData['kick_off_time'])) {
+                        $updates[] = "kick-off: {$oldKickOff->format('D j M @ H:i')} → {$gameData['kick_off_time']->format('D j M @ H:i')}";
+                    }
+                    if ($game->home_score !== $gameData['home_score'] || $game->away_score !== $gameData['away_score']) {
+                        $updates[] = "score updated";
+                    }
+                    
+                    $updateInfo = !empty($updates) ? ' (' . implode(', ', $updates) . ')' : '';
+                    $this->line("Updated: {$game->homeTeam->name} vs {$game->awayTeam->name}{$updateInfo}");
                     $updatedCount++;
 
                     // If game is finished and wasn't before, calculate pick results
