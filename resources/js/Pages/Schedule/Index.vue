@@ -15,7 +15,7 @@ const props = defineProps({
 });
 
 // Initialize filters from URL parameters or defaults
-const selectedFilter = ref(props.filters?.status || 'all');
+const selectedFilter = ref(props.filters?.status || 'upcoming');
 const selectedTeam = ref(props.filters?.team || '');
 
 const formatDate = (dateString) => {
@@ -103,7 +103,7 @@ const filteredGameweeks = computed(() => {
 watch([selectedFilter, selectedTeam], ([newFilter, newTeam]) => {
     const params = {};
     
-    if (newFilter && newFilter !== 'all') {
+    if (newFilter && newFilter !== 'upcoming') {
         params.status = newFilter;
     }
     
@@ -121,12 +121,12 @@ watch([selectedFilter, selectedTeam], ([newFilter, newTeam]) => {
 
 // Check if any filters are active
 const hasActiveFilters = computed(() => {
-    return selectedFilter.value !== 'all' || selectedTeam.value !== '';
+    return selectedFilter.value !== 'upcoming' || selectedTeam.value !== '';
 });
 
 // Reset filters to default
 const resetFilters = () => {
-    selectedFilter.value = 'all';
+    selectedFilter.value = 'upcoming';
     selectedTeam.value = '';
 };
 </script>
@@ -162,7 +162,7 @@ const resetFilters = () => {
                     Fixtures
                 </div>
                 <Link :href="route('schedule.standings', { 
-                        status: selectedFilter !== 'all' ? selectedFilter : undefined,
+                        status: selectedFilter !== 'upcoming' ? selectedFilter : undefined,
                         team: selectedTeam || undefined
                     })" 
                       class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors">
