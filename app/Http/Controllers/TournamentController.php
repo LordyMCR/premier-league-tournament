@@ -291,34 +291,38 @@ class TournamentController extends Controller
             })
             ->groupBy('game_week_id')
             ->sortKeysDesc() // Sort the grouped keys in descending order
-            ->map(function ($picks) {
-                return $picks->map(function ($pick) {
-                    return [
-                        'id' => $pick->id,
-                        'user' => [
-                            'id' => $pick->user->id,
-                            'name' => $pick->user->name,
-                            'avatar_url' => $pick->user->avatar_url,
-                        ],
-                        'team' => [
-                            'id' => $pick->team->id,
-                            'name' => $pick->team->name,
-                            'short_name' => $pick->team->short_name,
-                            'primary_color' => $pick->team->primary_color,
-                            'logo_url' => $pick->team->logo_url,
-                        ],
-                        'gameweek' => [
-                            'id' => $pick->gameWeek->id,
-                            'week_number' => $pick->gameWeek->week_number,
-                            'name' => $pick->gameWeek->name,
-                        ],
-                        'result' => $pick->result,
-                        'points' => $pick->points_earned,
-                        'home_away' => $pick->home_away,
-                        'picked_at' => $pick->picked_at,
-                    ];
-                });
-            });
+            ->map(function ($picks, $gameweekId) {
+                return [
+                    'gameweek_id' => $gameweekId,
+                    'picks' => $picks->map(function ($pick) {
+                        return [
+                            'id' => $pick->id,
+                            'user' => [
+                                'id' => $pick->user->id,
+                                'name' => $pick->user->name,
+                                'avatar_url' => $pick->user->avatar_url,
+                            ],
+                            'team' => [
+                                'id' => $pick->team->id,
+                                'name' => $pick->team->name,
+                                'short_name' => $pick->team->short_name,
+                                'primary_color' => $pick->team->primary_color,
+                                'logo_url' => $pick->team->logo_url,
+                            ],
+                            'gameweek' => [
+                                'id' => $pick->gameWeek->id,
+                                'week_number' => $pick->gameWeek->week_number,
+                                'name' => $pick->gameWeek->name,
+                            ],
+                            'result' => $pick->result,
+                            'points' => $pick->points_earned,
+                            'home_away' => $pick->home_away,
+                            'picked_at' => $pick->picked_at,
+                        ];
+                    })
+                ];
+            })
+            ->values(); // Convert to indexed array to preserve order
 
         // Get gameweeks within tournament range that have hidden picks (selection deadline not passed)
         $tournamentStart = $tournament->start_game_week;

@@ -300,7 +300,7 @@ const timeUntilNextSelection = computed(() => {
             </div>
 
             <!-- All Participants' Picks -->
-            <div v-if="Object.keys(allParticipantPicks).length > 0" class="bg-white rounded-xl border border-green-200 shadow-lg">
+            <div v-if="allParticipantPicks.length > 0" class="bg-white rounded-xl border border-green-200 shadow-lg">
                 <div class="p-6 border-b border-green-200">
                     <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                         <i class="fas fa-users text-blue-500"></i>
@@ -327,15 +327,15 @@ const timeUntilNextSelection = computed(() => {
                 </div>
                 
                 <div class="max-h-[34rem] overflow-y-auto">
-                    <div v-for="(picks, gameweekId) in allParticipantPicks" :key="gameweekId" class="border-b border-gray-100 last:border-b-0">
+                    <div v-for="gameweekGroup in allParticipantPicks" :key="gameweekGroup.gameweek_id" class="border-b border-gray-100 last:border-b-0">
                         <div class="p-4 bg-gray-50 border-b border-gray-200">
                             <h4 class="font-semibold text-gray-900">
-                                {{ picks[0]?.gameweek?.name || `Gameweek ${picks[0]?.gameweek?.week_number}` }}
+                                {{ gameweekGroup.picks[0]?.gameweek?.name || `Gameweek ${gameweekGroup.picks[0]?.gameweek?.week_number}` }}
                             </h4>
                         </div>
                         <div class="p-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <div v-for="pick in picks" :key="pick.id" 
+                                <div v-for="pick in gameweekGroup.picks" :key="pick.id" 
                                      class="flex flex-col gap-2 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                      <div class="flex items-center space-x-3">
                                         <!-- User Avatar -->
