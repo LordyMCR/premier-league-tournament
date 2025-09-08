@@ -35,6 +35,10 @@ Artisan::command('test:historical-data', function () {
 // Full update once daily at 1am (teams, gameweeks, games) - 3 API calls
 Schedule::command('football:update')->dailyAt('01:00')->withoutOverlapping();
 
+// Auto-assignment of missing picks - run BEFORE smart updates to avoid race conditions
+// Run every 30 minutes to catch deadline expirations faster
+Schedule::command('picks:auto-assign')->everyThirtyMinutes()->withoutOverlapping();
+
 // Smart results updates - only runs when games actually need checking
 // This analyzes the database to determine if updates are needed, saving API calls
 Schedule::command('football:smart-update')->hourly()->withoutOverlapping(); // Checks every hour but only runs when needed
@@ -50,7 +54,6 @@ Schedule::command('squad:update-stats')->dailyAt('02:00')->withoutOverlapping();
 // Schedule squad data fetching (daily to get latest squad info and injury updates)
 Schedule::command('squad:fetch')->dailyAt('03:00')->withoutOverlapping();
 
-// Schedule auto-assignment of missing picks
-// Run every hour to catch any recently passed deadlines
-Schedule::command('picks:auto-assign')->hourly()->withoutOverlapping();
+// Schedule automatic pick scoring after auto-assignments (daily cleanup)
+Schedule::command('tournament:recalculate-points')->dailyAt('04:00')->withoutOverlapping();
 

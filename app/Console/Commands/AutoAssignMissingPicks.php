@@ -40,9 +40,9 @@ class AutoAssignMissingPicks extends Command
             }
         } else {
             // Get the most recent gameweek where selection deadline has passed
+            // Look back up to 7 days to catch any missed assignments (increased from 24 hours)
             $gameweek = GameWeek::where('selection_deadline', '<', now())
-                               ->where('selection_deadline', '>', now()->subHours(24)) // Only within last 24 hours
-                               ->where('is_completed', false)
+                               ->where('selection_deadline', '>', now()->subDays(7)) // Extended window
                                ->orderBy('selection_deadline', 'desc')
                                ->first();
             
@@ -87,6 +87,12 @@ class AutoAssignMissingPicks extends Command
         }
 
         $this->info("Auto-assignment complete. Total assignments: {$totalAssignments}");
+        
+        // If we made assignments, recalculate points to score them immediately
+        if ($totalAssignments > 0) {
+            $this->info('Recalculating tournament points to score new assignments...');
+            $this->call('tournament:recalculate-points');
+        }
         
         // Log the results
         if ($totalAssignments > 0) {
