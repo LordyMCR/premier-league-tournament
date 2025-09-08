@@ -114,21 +114,21 @@ class AutoAssignMissingPicks extends Command
         $assignedCount = 0;
 
         foreach ($participants as $participant) {
+            // First check if user already has picks for this gameweek
+            $existingPicksCount = Pick::where('tournament_id', $tournament->id)
+                                    ->where('user_id', $participant->user_id)
+                                    ->where('game_week_id', $gameweek->id)
+                                    ->count();
+
+            if ($existingPicksCount > 0) {
+                // User has already made picks for this gameweek
+                continue;
+            }
+
             // Get available teams for this user, considering the tournament mode and gameweek
             $availableTeams = Pick::getAvailableTeamsForUser($participant->user_id, $tournament->id, $gameweek->id);
 
             if ($availableTeams->isEmpty()) {
-                // Check existing picks to provide better feedback
-                $existingPicksCount = Pick::where('tournament_id', $tournament->id)
-                                        ->where('user_id', $participant->user_id)
-                                        ->where('game_week_id', $gameweek->id)
-                                        ->count();
-
-                if ($existingPicksCount > 0) {
-                    // User has already made picks for this gameweek
-                    continue;
-                }
-
                 $this->warn("    No available teams for user {$participant->user->name} - they may have picked all teams or no games this week");
                 continue;
             }
