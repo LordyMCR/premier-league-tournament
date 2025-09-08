@@ -290,6 +290,7 @@ class TournamentController extends Controller
                 return $pick->gameWeek && $pick->gameWeek->isSelectionDeadlinePassed();
             })
             ->groupBy('game_week_id')
+            ->sortKeysDesc() // Sort the grouped keys in descending order
             ->map(function ($picks) {
                 return $picks->map(function ($pick) {
                     return [
