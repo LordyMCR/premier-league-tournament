@@ -277,7 +277,7 @@ class TournamentController extends Controller
         // Hide other users' picks for gameweeks where selection deadline hasn't passed yet
         $allParticipantPicks = Pick::where('tournament_id', $tournament->id)
             ->with(['user', 'team', 'gameWeek'])
-            ->orderBy('game_week_id')
+            ->orderBy('game_week_id', 'desc')
             ->orderBy('picked_at')
             ->get()
             ->filter(function ($pick) use ($user, $isParticipant) {

@@ -108,7 +108,9 @@ class Pick extends Model
         return static::where('user_id', $userId)
                      ->where('tournament_id', $tournamentId)
                      ->with(['team', 'gameWeek'])
-                     ->orderBy('picked_at')
+                     ->join('game_weeks', 'picks.game_week_id', '=', 'game_weeks.id')
+                     ->orderBy('game_weeks.week_number', 'desc')
+                     ->select('picks.*')
                      ->get();
     }
 
