@@ -57,11 +57,12 @@ class Pick extends Model
     }
 
     /**
-     * Get the game this pick is associated with (if applicable)
+     * Get the tournament participant for this pick
      */
-    public function game()
+    public function tournamentParticipant()
     {
-        return $this->belongsTo(Game::class);
+        return $this->belongsTo(TournamentParticipant::class, 'user_id', 'user_id')
+            ->where('tournament_id', $this->tournament_id);
     }
 
     /**

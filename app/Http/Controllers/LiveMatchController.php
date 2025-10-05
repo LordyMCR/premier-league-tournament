@@ -65,25 +65,45 @@ class LiveMatchController extends Controller
         // Get all tournaments user participates in
         $userTournamentIds = $user->tournaments()->pluck('tournaments.id');
 
-        // Get picks for games that are currently live
-        $livePicks = Pick::whereIn('tournament_id', $userTournamentIds)
+        // Get user's picks with their gameweek and team
+        $picks = Pick::whereIn('tournament_id', $userTournamentIds)
             ->where('user_id', $user->id)
-            ->whereHas('game.liveEvent', function($query) {
-                $query->live();
-            })
-            ->with(['game.liveEvent', 'game.homeTeam', 'game.awayTeam', 'team', 'tournament'])
+            ->with(['gameWeek', 'team', 'tournament'])
             ->get();
 
+        // Find picks where the team has a live match in that gameweek
+        $livePicks = $picks->filter(function($pick) {
+            // Find games in this gameweek where the picked team is playing
+            $game = \App\Models\Game::where('game_week_id', $pick->game_week_id)
+                ->where(function($query) use ($pick) {
+                    $query->where('home_team_id', $pick->team_id)
+                          ->orWhere('away_team_id', $pick->team_id);
+                })
+                ->whereHas('liveEvent', function($query) {
+                    $query->live();
+                })
+                ->with(['liveEvent', 'homeTeam', 'awayTeam'])
+                ->first();
+            
+            if ($game) {
+                // Attach the game to the pick for easy access in mapping
+                $pick->matchGame = $game;
+                return true;
+            }
+            return false;
+        });
+
         return $livePicks->map(function($pick) {
-            $liveEvent = $pick->game->liveEvent;
-            $result = $this->calculateCurrentResult($pick->team_id, $liveEvent, $pick->game);
+            $game = $pick->matchGame;
+            $liveEvent = $game->liveEvent;
+            $result = $this->calculateCurrentResult($pick->team_id, $liveEvent, $game);
             
             return [
                 'pick_id' => $pick->id,
                 'tournament_name' => $pick->tournament->name,
                 'team_picked' => $pick->team->short_name,
                 'team_logo' => $pick->team->logo_url,
-                'match' => "{$pick->game->homeTeam->short_name} vs {$pick->game->awayTeam->short_name}",
+                'match' => "{$game->homeTeam->short_name} vs {$game->awayTeam->short_name}",
                 'score' => "{$liveEvent->home_score} - {$liveEvent->away_score}",
                 'minute' => $liveEvent->minute,
                 'current_result' => $result['status'], // 'winning', 'drawing', 'losing'
