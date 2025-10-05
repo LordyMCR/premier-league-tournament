@@ -6,7 +6,9 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
 use App\Models\Pick;
 use App\Models\TournamentParticipant;
 use App\Observers\PickObserver;
@@ -50,5 +52,16 @@ class AppServiceProvider extends ServiceProvider
                 'error' => $e->getMessage(),
             ]);
         }
+
+        // Share favorite tournament with all views
+        Inertia::share([
+            'favoriteTournament' => function () {
+                if (Auth::check()) {
+                    $user = Auth::user();
+                    return $user->favoriteTournament();
+                }
+                return null;
+            },
+        ]);
     }
 }

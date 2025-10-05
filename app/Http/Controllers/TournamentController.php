@@ -338,9 +338,19 @@ class TournamentController extends Controller
             ->select('id', 'week_number', 'name', 'selection_deadline')
             ->get();
 
+        // Check if this tournament is the user's favorite
+        $isFavorite = false;
+        if ($isParticipant) {
+            $participation = $tournament->participantRecords()
+                                        ->where('user_id', $user->id)
+                                        ->first();
+            $isFavorite = $participation ? $participation->is_favorite : false;
+        }
+
         return Inertia::render('Tournaments/Show', [
             'tournament' => $tournament,
             'isParticipant' => $isParticipant,
+            'isFavorite' => $isFavorite,
             'leaderboard' => $leaderboard,
             'currentGameweek' => $currentGameweek,
             'selectionGameweek' => $selectionGameweek,
@@ -425,5 +435,28 @@ class TournamentController extends Controller
 
         return redirect()->route('tournaments.index')
             ->with('success', 'Tournament deleted successfully.');
+    }
+
+    /**
+     * Toggle favorite status for a tournament
+     */
+    public function toggleFavorite(Tournament $tournament)
+    {
+        $user = Auth::user();
+        
+        // Check if user is a participant
+        $participation = $tournament->participantRecords()
+                                    ->where('user_id', $user->id)
+                                    ->first();
+        
+        if (!$participation) {
+            abort(403, 'You must be a participant to favorite this tournament.');
+        }
+
+        $participation->toggleFavorite();
+
+        return back()->with('success', $participation->is_favorite 
+            ? 'Tournament set as favorite!' 
+            : 'Tournament removed from favorites.');
     }
 }

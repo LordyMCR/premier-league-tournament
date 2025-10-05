@@ -39,34 +39,42 @@ const logout = () => {
                 </div>
 
                 <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-6" v-if="page.props.auth.user">
+                <div class="hidden md:flex items-center space-x-4" v-if="page.props.auth.user">
                     <!-- Quick Actions -->
+                    <Link
+                        v-if="page.props.favoriteTournament"
+                        :href="route('tournaments.show', page.props.favoriteTournament.id)"
+                        class="text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                    >
+                        <i class="fas fa-star mr-2"></i>
+                        My Tournament
+                    </Link>
                     <Link
                         :href="route('tournaments.index')"
                         class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
                         <i class="fas fa-trophy mr-2"></i>
-                        My Tournaments
+                        All Tournaments
                     </Link>
                     <Link
                         :href="route('schedule.index')"
                         class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
-                        <i class="fas fa-calendar mr-2"></i>
+                        <i class="fas fa-calendar-alt mr-2"></i>
                         Fixtures
                     </Link>
                     <Link
                         :href="route('schedule.standings')"
                         class="text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50"
                     >
-                        <i class="fas fa-trophy mr-2"></i>
+                        <i class="fas fa-table mr-2"></i>
                         Standings
                     </Link>
                     <Link
                         :href="route('tournaments.create')"
                         class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                     >
-                        <i class="fas fa-plus mr-2"></i>
+                        <i class="fas fa-plus-circle mr-2"></i>
                         Create Tournament
                     </Link>
                     
@@ -164,45 +172,65 @@ const logout = () => {
             <div v-show="showMobileMenu" class="md:hidden py-4 border-t border-green-200">
                 <div class="space-y-2" v-if="page.props.auth.user">
                     <Link
-                        :href="route('tournaments.index')"
-                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        v-if="page.props.favoriteTournament"
+                        :href="route('tournaments.show', page.props.favoriteTournament.id)"
+                        class="flex items-center bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-medium"
+                        @click="showMobileMenu = false"
                     >
-                        <i class="fas fa-trophy mr-2 w-4 text-center"></i>
-                        My Tournaments
+                        <i class="fas fa-star w-5 mr-3 text-center"></i>
+                        My Tournament
+                    </Link>
+                    <Link
+                        :href="route('tournaments.index')"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        @click="showMobileMenu = false"
+                    >
+                        <i class="fas fa-trophy w-5 mr-3 text-center"></i>
+                        All Tournaments
                     </Link>
                     <Link
                         :href="route('schedule.index')"
-                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        @click="showMobileMenu = false"
                     >
-                        <i class="fas fa-calendar mr-2 w-4 text-center"></i>
+                        <i class="fas fa-calendar-alt w-5 mr-3 text-center"></i>
                         Fixtures
                     </Link>
                     <Link
                         :href="route('schedule.standings')"
-                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        @click="showMobileMenu = false"
                     >
-                        <i class="fas fa-trophy mr-2 w-4 text-center"></i>
+                        <i class="fas fa-table w-5 mr-3 text-center"></i>
                         Standings
                     </Link>
+                    
+                    <div class="border-t border-green-200 my-2"></div>
+                    
                     <Link
                         :href="route('tournaments.create')"
-                        class="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                        class="flex items-center bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-medium"
+                        @click="showMobileMenu = false"
                     >
-                        <i class="fas fa-plus mr-2 w-4 text-center"></i>
+                        <i class="fas fa-plus-circle w-5 mr-3 text-center"></i>
                         Create Tournament
                     </Link>
+                    
+                    <div class="border-t border-green-200 my-2"></div>
+                    
                     <Link
                         :href="route('profile.show', { user: page.props.auth.user.id })"
-                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        class="flex items-center text-gray-700 hover:text-green-600 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-green-50"
+                        @click="showMobileMenu = false"
                     >
-                        <i class="fas fa-user mr-2 w-4 text-center"></i>
+                        <i class="fas fa-user w-5 mr-3 text-center"></i>
                         Profile
                     </Link>
                     <button 
                         @click="logout"
-                        class="flex items-center w-full text-left text-red-600 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-red-50"
+                        class="flex items-center w-full text-left text-red-600 hover:text-red-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-red-50"
                     >
-                        <i class="fas fa-sign-out-alt mr-2 w-4 text-center"></i>
+                        <i class="fas fa-sign-out-alt w-5 mr-3 text-center"></i>
                         Logout
                     </button>
                 </div>

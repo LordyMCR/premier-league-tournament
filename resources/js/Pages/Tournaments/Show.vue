@@ -1,11 +1,12 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     tournament: Object,
     isParticipant: Boolean,
+    isFavorite: Boolean,
     leaderboard: Array,
     currentGameweek: Object,
     selectionGameweek: Object,
@@ -15,6 +16,13 @@ const props = defineProps({
     allParticipantPicks: Object,
     gameweeksWithHiddenPicks: Array,
 });
+
+const joinCodeVisible = ref(false);
+const codeCopied = ref(false);
+
+const toggleJoinCodeVisibility = () => {
+    joinCodeVisible.value = !joinCodeVisible.value;
+};
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -26,8 +34,10 @@ const formatDate = (dateString) => {
 
 const copyJoinCode = () => {
     navigator.clipboard.writeText(props.tournament.join_code).then(() => {
-        // TODO: Show success message
-        console.log('Join code copied to clipboard');
+        codeCopied.value = true;
+        setTimeout(() => {
+            codeCopied.value = false;
+        }, 2000);
     });
 };
 
@@ -60,80 +70,67 @@ const timeUntilNextSelection = computed(() => {
 
     <TournamentLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">
-                        {{ tournament.name }}
-                    </h2>
-                    <p class="text-gray-600 mt-2">
-                        {{ tournament.description || 'Premier League prediction tournament' }}
-                    </p>
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-start gap-3 lg:items-center lg:gap-4">
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+                            {{ tournament.name }}
+                        </h2>
+                        <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base break-words">
+                            {{ tournament.description || 'Premier League prediction tournament' }}
+                        </p>
+                    </div>
+                    <!-- Favorite Star Button -->
+                    <button v-if="isParticipant"
+                            @click="$inertia.post(route('tournaments.toggle-favorite', tournament.id))"
+                            class="p-2 rounded-lg transition-all hover:bg-gray-100 flex-shrink-0"
+                            :title="isFavorite ? 'Remove from favorites' : 'Set as favorite'">
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                             :class="isFavorite ? 'fill-yellow-400 stroke-yellow-500' : 'fill-none stroke-gray-400'"
+                             class="w-5 h-5 sm:w-6 sm:h-6 transition-colors hover:stroke-yellow-500"
+                             viewBox="0 0 24 24" 
+                             stroke-width="2" 
+                             stroke-linecap="round" 
+                             stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </button>
                 </div>
-                <div class="text-right">
-                    <div class="bg-green-50 rounded-lg px-4 py-2 border border-green-200 shadow-md">
-                        <p class="text-gray-600 text-sm">Join Code</p>
-                        <p class="text-gray-900 font-mono text-lg">{{ tournament.join_code }}</p>
+                <div class="w-full lg:w-auto lg:text-right">
+                    <div class="bg-white rounded-lg px-4 py-3 sm:px-5 border border-gray-200 shadow-sm">
+                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Join Code</p>
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <button 
+                                @click="toggleJoinCodeVisibility"
+                                class="group flex items-center gap-2 transition-all min-w-0 flex-1 sm:flex-initial"
+                                :title="joinCodeVisible ? 'Hide code' : 'Show code'">
+                                <span class="text-gray-900 font-mono text-lg sm:text-xl font-semibold tracking-wider select-none truncate"
+                                      :class="{ 'blur-[6px]': !joinCodeVisible }">
+                                    {{ tournament.join_code }}
+                                </span>
+                                <i class="fas transition-all flex-shrink-0"
+                                   :class="joinCodeVisible ? 'fa-eye-slash text-gray-400 group-hover:text-gray-600' : 'fa-eye text-green-600 group-hover:text-green-700'"></i>
+                            </button>
+                            <div class="h-6 w-px bg-gray-200 flex-shrink-0"></div>
+                            <button 
+                                @click="copyJoinCode"
+                                class="relative p-1.5 rounded transition-all flex-shrink-0"
+                                :class="codeCopied ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'"
+                                :title="codeCopied ? 'Copied!' : 'Copy to clipboard'">
+                                <i class="fas text-sm transition-all" 
+                                   :class="codeCopied ? 'fa-check' : 'fa-copy'"></i>
+                            </button>
+                        </div>
+                        <p v-if="codeCopied" 
+                           class="text-green-600 text-xs font-medium mt-2 animate-fade-in">
+                            ✓ Copied to clipboard
+                        </p>
                     </div>
                 </div>
             </div>
         </template>
 
         <div class="max-w-6xl mx-auto space-y-8">
-            <!-- Tournament Info Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <!-- Status -->
-                <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
-                            <i class="fas fa-info-circle text-white text-lg"></i>
-                        </div>
-                        <div>
-                            <p class="text-gray-500 text-sm">Status</p>
-                            <p class="text-gray-900 font-semibold capitalize">{{ tournament.status }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Participants -->
-                <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
-                            <i class="fas fa-users text-white text-lg"></i>
-                        </div>
-                        <div>
-                            <p class="text-gray-500 text-sm">Participants</p>
-                            <p class="text-gray-900 font-semibold">{{ tournament.participants_count }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current Gameweek -->
-                <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
-                            <i class="fas fa-calendar text-white text-lg"></i>
-                        </div>
-                        <div>
-                            <p class="text-gray-500 text-sm">Current Gameweek</p>
-                            <p class="text-gray-900 font-semibold">{{ currentGameweek?.week_number || 'N/A' }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Created -->
-                <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
-                            <i class="fas fa-clock text-white text-lg"></i>
-                        </div>
-                        <div>
-                            <p class="text-gray-500 text-sm">Created</p>
-                            <p class="text-gray-900 font-semibold">{{ formatDate(tournament.created_at) }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Action Buttons -->
             <div class="flex gap-4" v-if="!isParticipant">
                 <button @click="copyJoinCode" 
@@ -497,6 +494,61 @@ const timeUntilNextSelection = computed(() => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Info Cards - Compact mobile layout -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-8">
+            <!-- Status -->
+            <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-green-200 shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md mb-2 sm:mb-0">
+                        <i class="fas fa-info-circle text-white text-sm sm:text-base lg:text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-gray-500 text-xs sm:text-sm">Status</p>
+                        <p class="text-gray-900 font-semibold capitalize text-sm sm:text-base truncate">{{ tournament.status }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Participants -->
+            <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-green-200 shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md mb-2 sm:mb-0">
+                        <i class="fas fa-users text-white text-sm sm:text-base lg:text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-gray-500 text-xs sm:text-sm">Participants</p>
+                        <p class="text-gray-900 font-semibold text-sm sm:text-base">{{ tournament.participants_count }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Gameweek -->
+            <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-green-200 shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md mb-2 sm:mb-0">
+                        <i class="fas fa-calendar text-white text-sm sm:text-base lg:text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-gray-500 text-xs sm:text-sm">Gameweek</p>
+                        <p class="text-gray-900 font-semibold text-sm sm:text-base">{{ currentGameweek?.week_number || 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Created -->
+            <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-green-200 shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md mb-2 sm:mb-0">
+                        <i class="fas fa-clock text-white text-sm sm:text-base lg:text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-gray-500 text-xs sm:text-sm">Created</p>
+                        <p class="text-gray-900 font-semibold text-xs sm:text-sm lg:text-base truncate">{{ formatDate(tournament.created_at) }}</p>
+                    </div>
                 </div>
             </div>
         </div>

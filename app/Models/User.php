@@ -157,6 +157,25 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's favorite tournament
+     */
+    public function favoriteTournament()
+    {
+        $participation = $this->tournamentParticipations()
+                              ->where('is_favorite', true)
+                              ->with('tournament')
+                              ->first();
+        
+        if ($participation && $participation->tournament) {
+            $tournament = $participation->tournament;
+            $tournament->participants_count = $tournament->participants()->count();
+            return $tournament;
+        }
+        
+        return null;
+    }
+
+    /**
      * Get all picks made by this user
      */
     public function picks()

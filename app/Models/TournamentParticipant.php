@@ -14,10 +14,12 @@ class TournamentParticipant extends Model
         'user_id',
         'joined_at',
         'total_points',
+        'is_favorite',
     ];
 
     protected $casts = [
         'joined_at' => 'datetime',
+        'is_favorite' => 'boolean',
     ];
 
     /**
@@ -53,5 +55,39 @@ class TournamentParticipant extends Model
         $totalPoints = $this->picks()->whereNotNull('points_earned')->sum('points_earned');
         $this->update(['total_points' => $totalPoints]);
         return $totalPoints;
+    }
+
+    /**
+     * Set this tournament as favorite for the user (and unset others)
+     */
+    public function setAsFavorite()
+    {
+        // Remove favorite status from all other tournaments for this user
+        static::where('user_id', $this->user_id)
+              ->where('id', '!=', $this->id)
+              ->update(['is_favorite' => false]);
+        
+        // Set this one as favorite
+        $this->update(['is_favorite' => true]);
+    }
+
+    /**
+     * Remove favorite status from this tournament
+     */
+    public function removeAsFavorite()
+    {
+        $this->update(['is_favorite' => false]);
+    }
+
+    /**
+     * Toggle favorite status
+     */
+    public function toggleFavorite()
+    {
+        if ($this->is_favorite) {
+            $this->removeAsFavorite();
+        } else {
+            $this->setAsFavorite();
+        }
     }
 }

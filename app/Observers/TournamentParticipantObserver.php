@@ -12,6 +12,12 @@ class TournamentParticipantObserver
      */
     public function created(TournamentParticipant $tournamentParticipant): void
     {
+        // If this is the user's first tournament, set it as favorite
+        $userTournamentCount = TournamentParticipant::where('user_id', $tournamentParticipant->user_id)->count();
+        if ($userTournamentCount === 1) {
+            $tournamentParticipant->update(['is_favorite' => true]);
+        }
+
         $this->recalculateUserStats($tournamentParticipant);
     }
 
