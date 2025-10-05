@@ -32,14 +32,21 @@
                          class="bg-gray-50 rounded-lg p-4 border border-green-200">
                         <div class="flex items-center justify-center space-x-4">
                             <!-- Home Team -->
-                            <div class="flex items-center space-x-2 min-w-0 flex-1 justify-end">
-                                <span class="text-gray-900 font-medium text-right truncate">
+                            <div class="flex items-center space-x-2 min-w-0 flex-1 justify-end relative">
+                                <span class="text-gray-900 font-medium text-right truncate"
+                                      :class="{ 'opacity-40': isTeamAlreadyPicked(game.home_team.id, 'home') }">
                                     <span class="sm:hidden">{{ game.home_team.short_name || game.home_team.name }}</span>
                                     <span class="hidden sm:inline">{{ game.home_team.name }}</span>
                                 </span>
-                                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                                    <img :src="game.home_team.logo_url" :alt="game.home_team.name" class="w-full h-full object-contain"
+                                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center relative">
+                                    <img :src="game.home_team.logo_url" :alt="game.home_team.name" 
+                                         class="w-full h-full object-contain"
+                                         :class="{ 'opacity-40 grayscale': isTeamAlreadyPicked(game.home_team.id, 'home') }"
                                          @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.home_team.short_name)}&background=${encodeURIComponent(game.home_team.primary_color || '#22C55E')}&color=fff&size=32`" />
+                                    <span v-if="isTeamAlreadyPicked(game.home_team.id, 'home')" 
+                                          class="absolute -top-1 -right-1 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                        ✓
+                                    </span>
                                 </div>
                             </div>
                             
@@ -49,12 +56,19 @@
                             </div>
                             
                             <!-- Away Team -->
-                            <div class="flex items-center space-x-2 min-w-0 flex-1">
-                                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                                    <img :src="game.away_team.logo_url" :alt="game.away_team.name" class="w-full h-full object-contain"
+                            <div class="flex items-center space-x-2 min-w-0 flex-1 relative">
+                                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center relative">
+                                    <img :src="game.away_team.logo_url" :alt="game.away_team.name" 
+                                         class="w-full h-full object-contain"
+                                         :class="{ 'opacity-40 grayscale': isTeamAlreadyPicked(game.away_team.id, 'away') }"
                                          @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(game.away_team.short_name)}&background=${encodeURIComponent(game.away_team.primary_color || '#22C55E')}&color=fff&size=32`" />
+                                    <span v-if="isTeamAlreadyPicked(game.away_team.id, 'away')" 
+                                          class="absolute -top-1 -left-1 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                        ✓
+                                    </span>
                                 </div>
-                                <span class="text-gray-900 font-medium text-left truncate">
+                                <span class="text-gray-900 font-medium text-left truncate"
+                                      :class="{ 'opacity-40': isTeamAlreadyPicked(game.away_team.id, 'away') }">
                                     <span class="sm:hidden">{{ game.away_team.short_name || game.away_team.name }}</span>
                                     <span class="hidden sm:inline">{{ game.away_team.name }}</span>
                                 </span>
@@ -81,6 +95,7 @@
                                 name="team_id"
                                 :value="team.id"
                                 v-model="form.team_id"
+                                @change="scrollToBottom"
                                 :disabled="team.isDisabled"
                                 class="sr-only"
                             />
@@ -140,19 +155,39 @@
                                         name="team_id"
                                         :value="team.id"
                                         v-model="form.team_id"
-                                        @change="form.home_away = ''"
+                                        @change="onTeamSelected"
+                                        :disabled="team.isDisabled"
                                         class="sr-only"
                                     />
-                                    <label :for="`team-${team.id}`" class="block cursor-pointer">
-                                        <div class="bg-gray-50 border-2 border-green-200 rounded-lg p-4 text-center hover:bg-green-50 hover:border-green-300 transition-all"
-                                             :class="{ 'bg-green-100 border-green-400 ring-2 ring-green-300': form.team_id == team.id }">
-                                            <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
-                                                <img :src="team.logo_url" :alt="team.name" class="w-full h-full object-contain"
-                                                     @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=64`" />
+                                    <label :for="`team-${team.id}`" 
+                                           class="block h-full"
+                                           :class="team.isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'">
+                                        <div class="border-2 rounded-lg p-4 text-center transition-all h-full flex flex-col justify-between min-h-[140px]"
+                                             :class="{ 
+                                                 'bg-green-100 border-green-400 ring-2 ring-green-300': form.team_id == team.id && !team.isDisabled,
+                                                 'bg-gray-50 border-green-200 hover:bg-green-50 hover:border-green-300': !team.isDisabled && form.team_id != team.id,
+                                                 'bg-gray-100 border-gray-300 opacity-60': team.isDisabled
+                                             }">
+                                            <div class="flex-1 flex flex-col justify-center">
+                                                <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                                                    <img :src="team.logo_url" :alt="team.name" class="w-full h-full object-contain"
+                                                         @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=64`" />
+                                                </div>
+                                                <div class="font-medium text-sm"
+                                                     :class="team.isDisabled ? 'text-gray-500' : 'text-gray-900'">
+                                                    {{ team.name }}
+                                                </div>
                                             </div>
-                                            <div class="font-medium text-gray-900 text-sm">{{ team.name }}</div>
-                                            <div v-if="fixtureMap[team.id]" class="mt-1 text-xs text-gray-600">
-                                                vs <span class="font-medium text-gray-700">{{ fixtureMap[team.id].opponent.short_name || fixtureMap[team.id].opponent.name }}</span>
+                                            <div class="mt-auto">
+                                                <div v-if="fixtureMap[team.id]" class="text-xs"
+                                                     :class="team.isDisabled ? 'text-gray-400' : 'text-gray-600'">
+                                                    vs <span class="font-medium" :class="team.isDisabled ? 'text-gray-500' : 'text-gray-700'">{{ fixtureMap[team.id].opponent.short_name || fixtureMap[team.id].opponent.name }}</span>
+                                                </div>
+                                                <div v-if="team.isDisabled" class="text-xs text-red-600 mt-1">
+                                                    Already picked
+                                                </div>
+                                                <!-- Spacer for teams without fixture info or disabled state -->
+                                                <div v-else-if="!fixtureMap[team.id]" class="text-xs h-4"></div>
                                             </div>
                                         </div>
                                     </label>
@@ -249,29 +284,6 @@
                     </div>
                 </form>
             </div>
-
-            <!-- Teams Already Used -->
-            <div v-if="usedTeams.length > 0" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
-                <h4 class="text-md font-medium text-gray-900 mb-3">Teams Already Used</h4>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    <div v-for="team in usedTeams" :key="`${team.id}-${team.home_away || 'once'}`" 
-                         class="bg-gray-100 rounded-lg p-3 text-center opacity-60">
-                         <div class="w-8 h-8 flex items-center justify-center mx-auto mb-1">
-                            <img :src="team.logo_url" 
-                                 :alt="team.name" 
-                                 class="w-full h-full object-contain"
-                                 @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.short_name)}&background=${encodeURIComponent(team.primary_color || '#22C55E')}&color=fff&size=32`" />
-                        </div>
-                        <div class="text-gray-600 text-xs">{{ team.name }}</div>
-                        <div v-if="allowsHomeAwayPicks && team.home_away" class="text-[10px] text-gray-500 mt-1">
-                            {{ team.home_away === 'home' ? '🏠 Home' : '✈️ Away' }}
-                        </div>
-                        <div v-if="team.game_week" class="text-[10px] text-gray-400 mt-1">
-                            {{ team.game_week }}
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </TournamentLayout>
 </template>
@@ -308,13 +320,9 @@ if (props.existingPick && props.existingPick.team_id) {
     }
 }
 
-// For once_only tournaments, we need to show all teams but mark which are disabled
+// For both tournament types, we need to show all teams but mark which are disabled
 const allTeamsForDisplay = computed(() => {
-    if (props.allowsHomeAwayPicks) {
-        return [...(props.availableTeams || [])].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    }
-    
-    // For once_only tournaments, use availableTeams (which now contains all teams) and determine disabled status
+    // actuallyAvailableTeams contains teams that can be selected (considering picks already made)
     const actuallyAvailableTeamIds = new Set((props.actuallyAvailableTeams || []).map(team => team.id));
     
     return (props.availableTeams || []).map(team => ({
@@ -451,6 +459,30 @@ const gameWeekDateRange = computed(() => {
         return `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
     }
 });
+
+// Check if a team has already been picked (for fixtures display)
+const isTeamAlreadyPicked = (teamId, homeAway) => {
+    // For tournaments without home/away picks, just check if team ID matches any used team
+    if (!props.allowsHomeAwayPicks) {
+        return props.usedTeams.some(team => team.id == teamId);
+    }
+    
+    // For tournaments with home/away picks, check both team ID and home/away status
+    return props.usedTeams.some(team => team.id == teamId && team.home_away === homeAway);
+};
+
+// Auto-scroll to bottom when team is selected
+const scrollToBottom = () => {
+    setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
+};
+
+// Handle team selection for home/away tournaments
+const onTeamSelected = () => {
+    form.home_away = ''; // Reset home/away selection
+    scrollToBottom();
+};
 
 const submit = () => {
     form.post(

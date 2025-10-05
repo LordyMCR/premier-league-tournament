@@ -20,21 +20,8 @@ const formatDate = (dateString) => {
 };
 
 const formatDateTime = (dateString) => {
-    if (!dateString) return 'TBD';
-    
-    const date = new Date(dateString);
-    const isMobile = window.innerWidth < 640;
-    
-    if (isMobile) {
-        return date.toLocaleDateString('en-GB', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else {
-        return date.toLocaleDateString('en-GB', {
+    if (dateString) {
+        return new Date(dateString).toLocaleDateString('en-GB', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -45,22 +32,36 @@ const formatDateTime = (dateString) => {
 };
 
 const getMatchStatus = () => {
+    // If explicitly finished, show Full Time
     if (props.game.status === 'FINISHED') {
         return {
             text: 'Full Time',
             class: 'bg-gray-500'
         };
-    } else if (props.game.status === 'LIVE') {
-        return {
-            text: 'Live',
-            class: 'bg-red-500 animate-pulse'
-        };
-    } else {
-        return {
-            text: formatDateTime(props.game.kick_off_time),
-            class: 'bg-blue-500'
-        };
     }
+    
+    // Calculate if game should be LIVE based on kick-off time
+    if (props.game.kick_off_time) {
+        const now = new Date();
+        const kickOff = new Date(props.game.kick_off_time);
+        const timeSinceKickOff = now - kickOff; // milliseconds
+        const minutesSinceKickOff = timeSinceKickOff / 1000 / 60;
+        
+        // Game is LIVE if it kicked off between 0 and 120 minutes ago (2 hours max match duration)
+        // and it's not marked as FINISHED
+        if (minutesSinceKickOff >= 0 && minutesSinceKickOff <= 120) {
+            return {
+                text: 'Live',
+                class: 'bg-red-500 animate-pulse'
+            };
+        }
+    }
+    
+    // Default to showing kick-off time
+    return {
+        text: formatDateTime(props.game.kick_off_time),
+        class: 'bg-blue-500'
+    };
 };
 
 const getFormResult = (form) => {

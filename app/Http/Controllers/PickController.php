@@ -58,11 +58,14 @@ class PickController extends Controller
         // Get available teams (considering home/away logic if applicable)
         if ($tournament->allowsHomeAwayPicks()) {
             $availableTeams = Pick::getAvailableTeamsForGameWeek($user->id, $tournament->id, $gameWeek->id);
-            $allTeamsForDisplay = $availableTeams; // For home/away, just use available teams
+            // For home/away tournaments, get ALL teams for display purposes
+            $allTeamsForDisplay = \App\Models\Team::all();
+            $actuallyAvailableTeams = $availableTeams; // Track which are actually available
         } else {
             $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id, $gameWeek->id);
             // For once_only tournaments, get all teams for display purposes
             $allTeamsForDisplay = \App\Models\Team::all();
+            $actuallyAvailableTeams = $availableTeams; // Track which are actually available
         }
         
         // Get teams already used by this user in this tournament
@@ -105,8 +108,8 @@ class PickController extends Controller
         return Inertia::render('Tournaments/SelectTeam', [
             'tournament' => $tournament,
             'gameWeek' => $gameWeek,
-            'availableTeams' => $tournament->allowsHomeAwayPicks() ? $availableTeams : $allTeamsForDisplay,
-            'actuallyAvailableTeams' => $availableTeams, // For determining disabled state in once_only
+            'availableTeams' => $allTeamsForDisplay, // Always show all teams
+            'actuallyAvailableTeams' => $actuallyAvailableTeams, // For determining disabled state
             'usedTeams' => $usedTeams,
             'gameWeekGames' => $gameWeekGames,
             'allowsHomeAwayPicks' => $tournament->allowsHomeAwayPicks(),

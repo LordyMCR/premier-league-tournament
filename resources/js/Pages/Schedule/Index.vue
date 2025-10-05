@@ -63,16 +63,32 @@ const formatScore = (game) => {
 };
 
 const getGameStatusBadge = (game) => {
-    switch (game.status) {
-        case 'FINISHED':
-            return { class: 'bg-green-100 text-green-700', text: 'FT' };
-        case 'SCHEDULED':
-            return { class: 'bg-blue-100 text-blue-700', text: 'KO' };
-        case 'LIVE':
-            return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
-        default:
-            return { class: 'bg-gray-100 text-gray-700', text: game.status };
+    // If explicitly finished, show FT
+    if (game.status === 'FINISHED') {
+        return { class: 'bg-green-100 text-green-700', text: 'FT' };
     }
+    
+    // Calculate if game should be LIVE based on kick-off time
+    if (game.kick_off_time) {
+        const now = new Date();
+        const kickOff = new Date(game.kick_off_time);
+        const timeSinceKickOff = now - kickOff; // milliseconds
+        const minutesSinceKickOff = timeSinceKickOff / 1000 / 60;
+        
+        // Game is LIVE if it kicked off between 0 and 120 minutes ago (2 hours max match duration)
+        // and it's not marked as FINISHED
+        if (minutesSinceKickOff >= 0 && minutesSinceKickOff <= 120) {
+            return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
+        }
+    }
+    
+    // Default to scheduled/upcoming
+    if (game.status === 'SCHEDULED' || game.status === 'TIMED') {
+        return { class: 'bg-blue-100 text-blue-700', text: 'KO' };
+    }
+    
+    // Fallback to whatever status is in the database
+    return { class: 'bg-gray-100 text-gray-700', text: game.status };
 };
 
 const filteredGameweeks = computed(() => {

@@ -39,16 +39,32 @@ const formatScore = (game) => {
 };
 
 const getGameStatusBadge = (game) => {
-    switch (game.status) {
-        case 'FINISHED':
-            return { class: 'bg-green-500 text-white', text: 'FT' };
-        case 'SCHEDULED':
-            return { class: 'bg-blue-500 text-white', text: 'Scheduled' };
-        case 'LIVE':
-            return { class: 'bg-red-500 text-white animate-pulse', text: 'LIVE' };
-        default:
-            return { class: 'bg-gray-500 text-white', text: game.status };
+    // If explicitly finished, show FT
+    if (game.status === 'FINISHED') {
+        return { class: 'bg-green-500 text-white', text: 'FT' };
     }
+    
+    // Calculate if game should be LIVE based on kick-off time
+    if (game.kick_off_time) {
+        const now = new Date();
+        const kickOff = new Date(game.kick_off_time);
+        const timeSinceKickOff = now - kickOff; // milliseconds
+        const minutesSinceKickOff = timeSinceKickOff / 1000 / 60;
+        
+        // Game is LIVE if it kicked off between 0 and 120 minutes ago (2 hours max match duration)
+        // and it's not marked as FINISHED
+        if (minutesSinceKickOff >= 0 && minutesSinceKickOff <= 120) {
+            return { class: 'bg-red-500 text-white animate-pulse', text: 'LIVE' };
+        }
+    }
+    
+    // Default to scheduled/upcoming
+    if (game.status === 'SCHEDULED' || game.status === 'TIMED') {
+        return { class: 'bg-blue-500 text-white', text: 'Scheduled' };
+    }
+    
+    // Fallback to whatever status is in the database
+    return { class: 'bg-gray-500 text-white', text: game.status };
 };
 
 const viewMatch = (game) => {

@@ -243,9 +243,9 @@ const timeUntilNextSelection = computed(() => {
                             <span v-else-if="index === 2" class="text-xl">🥉</span>
                             <span v-else class="w-5 text-center text-gray-500 text-sm font-medium">{{ index + 1 }}</span>
                             <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border-2 border-green-200 flex-shrink-0">
-                                <img :src="participant.user.avatar_url" :alt="participant.user.name" class="w-full h-full object-cover" @error="$event.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(participant.user.name)}&background=22C55E&color=fff&size=32`" />
+                                <img :src="participant.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(participant.user?.name || 'User')}&background=22C55E&color=fff&size=32`" :alt="participant.user?.name || 'User'" class="w-full h-full object-cover" />
                             </div>
-                            <span class="text-sm text-gray-900 font-medium truncate max-w-[10rem]">{{ participant.user.name }}</span>
+                            <span class="text-sm text-gray-900 font-medium truncate max-w-[10rem]">{{ participant.user?.name || 'Unknown User' }}</span>
                         </div>
                         <span class="text-green-600 font-bold flex-shrink-0">{{ participant.points }}</span>
                     </div>
