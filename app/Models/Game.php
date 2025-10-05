@@ -43,6 +43,11 @@ class Game extends Model
         return $this->belongsTo(Team::class, 'away_team_id');
     }
 
+    public function liveEvent()
+    {
+        return $this->hasOne(LiveMatchEvent::class);
+    }
+
     // Helper methods
     public function isFinished(): bool
     {

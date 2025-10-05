@@ -229,6 +229,10 @@ Route::middleware(['auth', 'user.approval'])->group(function () {
     Route::get('/schedule/team/{team}', [ScheduleController::class, 'team'])->name('schedule.team');
     Route::get('/schedule/match/{game}', [ScheduleController::class, 'match'])->name('schedule.match');
     Route::patch('/picks/{pick}/result', [PickController::class, 'updateResult'])->name('picks.update-result');
+    
+    // Live Match routes
+    Route::get('/api/live-matches', [App\Http\Controllers\LiveMatchController::class, 'index'])->name('api.live-matches');
+    Route::get('/api/live-matches/{game}', [App\Http\Controllers\LiveMatchController::class, 'show'])->name('api.live-matches.show');
 });
 
 require __DIR__.'/auth.php';

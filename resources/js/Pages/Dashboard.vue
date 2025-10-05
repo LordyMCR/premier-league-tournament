@@ -1,5 +1,6 @@
 <script setup>
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import LiveMatchTracker from '@/Components/LiveMatchTracker.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -85,6 +86,11 @@ const getFormClass = (result) => {
                         </Link>
                     </div>
                 </div>
+            </div>
+
+            <!-- Live Match Tracker -->
+            <div class="bg-white rounded-xl p-6 lg:p-8 border border-gray-200 shadow-md">
+                <LiveMatchTracker />
             </div>
 
             <!-- Your Stats - Enhanced with visual elements -->

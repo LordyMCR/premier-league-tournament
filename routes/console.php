@@ -39,9 +39,22 @@ Schedule::command('football:update')->dailyAt('01:00')->withoutOverlapping();
 // Run every 30 minutes to catch deadline expirations faster
 Schedule::command('picks:auto-assign')->everyThirtyMinutes()->withoutOverlapping();
 
-// Smart results updates - only runs when games actually need checking
-// This analyzes the database to determine if updates are needed, saving API calls
-Schedule::command('football:smart-update')->everyTenMinutes()->withoutOverlapping(); // Checks every 10 minutes for live game updates
+// DEPRECATED: Old smart updates command - replaced by matches:update-live
+// Commented out to avoid duplicate API calls (would exceed free tier limits)
+// Schedule::command('football:smart-update')->everyTenMinutes()->withoutOverlapping();
+
+// Live match tracking - SMART DATABASE-DRIVEN scheduling
+// Automatically detects match windows by checking games table
+// Only runs 1 hour before earliest kickoff through 3 hours after latest kickoff
+// Updates every 15 minutes during active windows (4 calls/hour)
+// Example: If matches are 3pm-5:30pm, runs 2pm-8:30pm only
+// Typical match day: 4 calls/hour × ~8 hours = ~32 calls + 5 daily = 37 calls/day
+// Maximum (Boxing Day): 4 calls/hour × ~11 hours = ~44 calls + 5 daily = 49 calls/day
+// FREE TIER SAFE: Well within 100 calls/day limit with 50%+ safety margin
+Schedule::command('matches:update-live')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();
 
 // Manual scheduling analysis (run this to see upcoming fixtures and plan updates)
 Artisan::command('football:analyze-schedule', function () {
