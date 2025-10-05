@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import LiveMatchTracker from '@/Components/LiveMatchTracker.vue';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -225,6 +226,11 @@ const resetFilters = () => {
                     </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Live Match Tracker -->
+        <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-8">
+            <LiveMatchTracker />
         </div>
 
         <!-- Gameweeks Grid -->

@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import TournamentLiveMatches from '@/Components/TournamentLiveMatches.vue';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
@@ -222,6 +223,9 @@ const timeUntilNextSelection = computed(() => {
                     </div>
                 </div>
             </div>
+
+            <!-- Tournament Live Matches -->
+            <TournamentLiveMatches v-if="isParticipant && currentGameweek" :tournament-id="tournament.id" />
 
             <!-- Leaderboard -->
             <div class="bg-white rounded-xl border border-green-200 shadow-lg">

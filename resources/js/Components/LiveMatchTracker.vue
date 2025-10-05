@@ -35,11 +35,12 @@
         </div>
 
         <!-- No Live Matches -->
-        <div v-else-if="!hasLiveMatches" class="text-center py-8 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div class="text-gray-600 dark:text-gray-300 mb-2">
-                ⚽ No matches currently live
+        <div v-else-if="!hasLiveMatches" class="text-center py-12 px-4 bg-gradient-to-br from-gray-100 to-gray-50 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600">
+            <div class="text-4xl mb-4">⚽</div>
+            <div class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No matches currently live
             </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
+            <div class="text-sm text-gray-600 dark:text-gray-300">
                 Check back during match days
             </div>
         </div>
