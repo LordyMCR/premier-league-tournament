@@ -167,9 +167,10 @@ defineProps({
                                       class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-all text-sm font-medium text-center">
                                     View
                                 </Link>
-                                <button class="flex-1 bg-white border border-green-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-green-50 transition-all text-sm font-medium">
+                                <Link :href="route('tournaments.manage', tournament.id)"
+                                      class="flex-1 bg-white border border-green-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-green-50 transition-all text-sm font-medium text-center">
                                     Manage
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     </div>

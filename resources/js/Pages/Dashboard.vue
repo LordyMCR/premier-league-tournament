@@ -156,15 +156,21 @@ const getFormClass = (result) => {
                                 </span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2 flex-1">
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
                                     <img v-if="fixture.home_crest" :src="fixture.home_crest" :alt="fixture.home" 
                                          class="w-5 h-5 lg:w-6 lg:h-6 object-contain flex-shrink-0" />
                                     <i v-else class="fas fa-shield-alt text-gray-400 text-sm"></i>
-                                    <span class="text-sm font-semibold text-gray-900">{{ fixture.home }}</span>
+                                    <span class="text-sm font-semibold text-gray-900 truncate">
+                                        <span class="hidden sm:inline">{{ fixture.home }}</span>
+                                        <span class="sm:hidden">{{ fixture.home_short || fixture.home }}</span>
+                                    </span>
                                 </div>
                                 <span class="text-xs font-bold text-gray-400 px-2">vs</span>
-                                <div class="flex items-center gap-2 flex-1 justify-end">
-                                    <span class="text-sm font-semibold text-gray-900">{{ fixture.away }}</span>
+                                <div class="flex items-center gap-2 flex-1 justify-end min-w-0">
+                                    <span class="text-sm font-semibold text-gray-900 truncate">
+                                        <span class="hidden sm:inline">{{ fixture.away }}</span>
+                                        <span class="sm:hidden">{{ fixture.away_short || fixture.away }}</span>
+                                    </span>
                                     <img v-if="fixture.away_crest" :src="fixture.away_crest" :alt="fixture.away" 
                                          class="w-5 h-5 lg:w-6 lg:h-6 object-contain flex-shrink-0" />
                                     <i v-else class="fas fa-shield-alt text-gray-400 text-sm"></i>
@@ -202,7 +208,10 @@ const getFormClass = (result) => {
                                 <img v-if="team.team_crest" :src="team.team_crest" :alt="team.team" 
                                      class="w-6 h-6 lg:w-7 lg:h-7 object-contain flex-shrink-0" />
                                 <i v-else class="fas fa-shield-alt text-gray-400 text-sm flex-shrink-0"></i>
-                                <span class="font-semibold text-gray-900 text-sm lg:text-base truncate">{{ team.team }}</span>
+                                <span class="font-semibold text-gray-900 text-sm lg:text-base truncate">
+                                    <span class="hidden sm:inline">{{ team.team }}</span>
+                                    <span class="sm:hidden">{{ team.team_short || team.team }}</span>
+                                </span>
                             </div>
                             <div class="flex items-center gap-3 lg:gap-4 flex-shrink-0">
                                 <span class="text-xs lg:text-sm text-gray-600 font-medium w-8 text-center">{{ team.played }}</span>

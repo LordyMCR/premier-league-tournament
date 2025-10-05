@@ -38,8 +38,10 @@ Route::get('/dashboard', function () {
         ->get()
         ->map(fn($game) => [
             'home' => $game->homeTeam->name,
+            'home_short' => $game->homeTeam->short_name,
             'home_crest' => $game->homeTeam->logo_url,
             'away' => $game->awayTeam->name,
+            'away_short' => $game->awayTeam->short_name,
             'away_crest' => $game->awayTeam->logo_url,
             'when' => Carbon::parse($game->kick_off_time)->diffForHumans(),
         ]);
@@ -208,8 +210,11 @@ Route::middleware(['auth', 'user.approval'])->group(function () {
     Route::get('/tournaments/join', [TournamentController::class, 'joinForm'])->name('tournaments.join-form');
     Route::post('/tournaments/join', [TournamentController::class, 'join'])->name('tournaments.join');
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
+    Route::get('/tournaments/{tournament}/manage', [TournamentController::class, 'manage'])->name('tournaments.manage');
+    Route::put('/tournaments/{tournament}', [TournamentController::class, 'update'])->name('tournaments.update');
     Route::get('/tournaments/{tournament}/leaderboard', [TournamentController::class, 'leaderboard'])->name('tournaments.leaderboard');
     Route::post('/tournaments/{tournament}/toggle-favorite', [TournamentController::class, 'toggleFavorite'])->name('tournaments.toggle-favorite');
+    Route::delete('/tournaments/{tournament}/participants/{participant}', [TournamentController::class, 'removeParticipant'])->name('tournaments.participants.remove');
     Route::delete('/tournaments/{tournament}', [TournamentController::class, 'destroy'])->name('tournaments.destroy');
     
     // Pick routes

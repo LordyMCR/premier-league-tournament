@@ -438,6 +438,85 @@ class TournamentController extends Controller
     }
 
     /**
+     * Show tournament management page (only for creator)
+     */
+    public function manage(Tournament $tournament)
+    {
+        if ($tournament->creator_id !== Auth::id()) {
+            abort(403, 'Only the tournament creator can manage this tournament.');
+        }
+
+        $participants = $tournament->participantRecords()
+            ->with('user')
+            ->orderBy('total_points', 'desc')
+            ->get();
+
+        return Inertia::render('Tournaments/Manage', [
+            'tournament' => $tournament,
+            'participants' => $participants,
+        ]);
+    }
+
+    /**
+     * Update tournament settings (only creator can update)
+     */
+    public function update(Request $request, Tournament $tournament)
+    {
+        if ($tournament->creator_id !== Auth::id()) {
+            abort(403, 'Only the tournament creator can update this tournament.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'max_participants' => 'required|integer|min:2|max:1000',
+            'is_private' => 'required|boolean',
+            'status' => 'required|in:pending,active,completed',
+        ]);
+
+        // Check that max_participants is not less than current participant count
+        $currentParticipants = $tournament->participants()->count();
+        if ($validated['max_participants'] < $currentParticipants) {
+            return back()->withErrors([
+                'max_participants' => "Cannot set max participants below current participant count ({$currentParticipants})."
+            ]);
+        }
+
+        $tournament->update($validated);
+
+        return back()->with('success', 'Tournament settings updated successfully.');
+    }
+
+    /**
+     * Remove a participant from the tournament (only creator can remove)
+     */
+    public function removeParticipant(Tournament $tournament, $participantId)
+    {
+        if ($tournament->creator_id !== Auth::id()) {
+            abort(403, 'Only the tournament creator can remove participants.');
+        }
+
+        $participant = $tournament->participantRecords()
+            ->where('id', $participantId)
+            ->firstOrFail();
+
+        // Don't allow removing the creator
+        if ($participant->user_id === $tournament->creator_id) {
+            return back()->withErrors(['error' => 'Cannot remove the tournament creator.']);
+        }
+
+        // Delete all picks for this participant in this tournament
+        Pick::where('tournament_id', $tournament->id)
+            ->where('user_id', $participant->user_id)
+            ->delete();
+
+        // Remove participant record
+        $participant->delete();
+
+        return back()->with('success', 'Participant removed successfully.');
+    }
+
+    /**
      * Toggle favorite status for a tournament
      */
     public function toggleFavorite(Tournament $tournament)
