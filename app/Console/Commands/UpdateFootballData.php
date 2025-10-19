@@ -251,8 +251,9 @@ class UpdateFootballData extends Command
                 }
 
                 // Check if result has changed or kick-off time has been updated
+                // BUT don't reset finished games back to scheduled
                 $hasNewResult = (
-                    $game->status !== $gameData['status'] ||
+                    ($game->status !== $gameData['status'] && !($game->status === 'FINISHED' && $gameData['status'] === 'SCHEDULED')) ||
                     $game->home_score !== $gameData['home_score'] ||
                     $game->away_score !== $gameData['away_score'] ||
                     $game->kick_off_time->ne($gameData['kick_off_time'])
