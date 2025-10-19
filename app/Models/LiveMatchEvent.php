@@ -43,15 +43,19 @@ class LiveMatchEvent extends Model
     public function scopeLive($query)
     {
         return $query->where(function($q) {
-            $q->whereIn('status', ['LIVE', 'IN_PLAY', 'PAUSED'])
-              ->orWhere(function($subQ) {
-                  // Also consider matches as live if they're past kickoff time and not finished
-                  $subQ->where('status', 'TIMED')
+            $q->where(function($statusQ) {
+                // Live statuses that are not stale
+                $statusQ->whereIn('status', ['LIVE', 'IN_PLAY', 'PAUSED'])
+                        ->where('last_updated', '>', now()->subMinutes(30)); // Not older than 30 minutes
+            })
+            ->orWhere(function($timedQ) {
+                // Also consider matches as live if they're past kickoff time and not finished
+                $timedQ->where('status', 'TIMED')
                        ->whereHas('game', function($gameQuery) {
                            $gameQuery->where('kick_off_time', '<', now())
                                     ->where('status', '!=', 'FINISHED');
                        });
-              });
+            });
         });
     }
 

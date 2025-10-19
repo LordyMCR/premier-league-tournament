@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Game;
+use App\Models\GameWeek;
 use App\Models\LiveMatchEvent;
+use App\Models\Pick;
 use App\Services\ApiKeyManager;
 use App\Services\FootballDataApiKeyManager;
 use Carbon\Carbon;
@@ -59,6 +61,9 @@ class UpdateLiveMatches extends Command
             } else {
                 $this->info('📅 No live matches detected');
             }
+            
+            // Process finished matches and update pick results
+            $this->processFinishedMatches();
             
             // Clean up old finished matches
             $this->cleanupOldMatches();
@@ -129,6 +134,19 @@ class UpdateLiveMatches extends Command
         $homeScore = $apiMatch['score']['fullTime']['home'] ?? 0;
         $awayScore = $apiMatch['score']['fullTime']['away'] ?? 0;
         $status = $apiMatch['status'];
+        
+        // CRITICAL: Don't update games that are already properly finished
+        // This prevents finished games from being reset to 0-0 or showing as live again
+        if ($game->status === 'FINISHED' && $game->home_score !== null && $game->away_score !== null) {
+            // Only update if the API shows a different final score (shouldn't happen but just in case)
+            if ($status === 'FINISHED' && $homeScore === $game->home_score && $awayScore === $game->away_score) {
+                $this->line("✅ {$game->homeTeam->short_name} {$homeScore} - {$awayScore} {$game->awayTeam->short_name} [FINISHED] (already processed)");
+                return false; // Don't count as updated since it's already correct
+            } else if ($status !== 'FINISHED') {
+                $this->warn("⚠️  Skipping update for finished game {$game->homeTeam->short_name} vs {$game->awayTeam->short_name} - API shows {$status} but game is FINISHED");
+                return false;
+            }
+        }
         
         // Validate data freshness - reject stale data for live matches
         if (in_array($status, ['IN_PLAY', 'LIVE', 'PAUSED'])) {
@@ -291,8 +309,9 @@ class UpdateLiveMatches extends Command
 
         $this->info("🔄 Using Football-Data.org with {$keyManager->getTotalKeys()} available keys...");
 
+        // Only fetch matches from today and yesterday (to catch matches that finished late)
         $data = $keyManager->makeRequest('https://api.football-data.org/v4/competitions/PL/matches', [
-            'dateFrom' => now()->startOfDay()->toDateString(),
+            'dateFrom' => now()->subDay()->startOfDay()->toDateString(),
             'dateTo' => now()->endOfDay()->toDateString(),
         ]);
 
@@ -306,6 +325,11 @@ class UpdateLiveMatches extends Command
         $liveCount = 0;
 
         foreach ($matches as $apiMatch) {
+            // Only process matches that are relevant (live, starting soon, or recently finished)
+            if (!$this->shouldProcessMatch($apiMatch)) {
+                continue;
+            }
+            
             $updated = $this->updateMatchCache($apiMatch);
             if ($updated) {
                 $updatedCount++;
@@ -325,6 +349,39 @@ class UpdateLiveMatches extends Command
 
         $this->info("✅ Updated {$updatedCount} matches ({$liveCount} live) using Football-Data.org");
         return $liveCount;
+    }
+
+    /**
+     * Determine if a match should be processed (live, starting soon, or recently finished)
+     */
+    private function shouldProcessMatch(array $apiMatch): bool
+    {
+        $status = $apiMatch['status'];
+        $kickoff = isset($apiMatch['utcDate']) ? \Carbon\Carbon::parse($apiMatch['utcDate']) : null;
+        
+        if (!$kickoff) {
+            return false;
+        }
+        
+        $now = now();
+        
+        // Always process live matches
+        if (in_array($status, ['LIVE', 'IN_PLAY', 'PAUSED'])) {
+            return true;
+        }
+        
+        // Process finished matches that finished within the last 4 hours
+        if ($status === 'FINISHED') {
+            $finishTime = $kickoff->copy()->addMinutes(120); // Assume 2 hour match duration
+            return $now->diffInHours($finishTime) <= 4;
+        }
+        
+        // Process matches starting within the next 2 hours
+        if ($status === 'TIMED') {
+            return $kickoff->diffInHours($now, false) <= 2; // Within 2 hours (before or after)
+        }
+        
+        return false;
     }
 
     /**
@@ -374,6 +431,134 @@ class UpdateLiveMatches extends Command
                 'away' => $match['statistics']['away'] ?? []
             ]
         ];
+    }
+
+    /**
+     * Process finished matches and update pick results
+     */
+    private function processFinishedMatches(): void
+    {
+        $this->info('🔄 Checking for finished matches to process...');
+        
+        // Find games that have just finished (status = FINISHED and have scores)
+        $finishedGames = Game::where('status', 'FINISHED')
+            ->whereNotNull('home_score')
+            ->whereNotNull('away_score')
+            ->with(['homeTeam', 'awayTeam', 'gameWeek'])
+            ->get();
+
+        if ($finishedGames->isEmpty()) {
+            $this->info('✅ No finished matches found');
+            return;
+        }
+
+        $this->info("🎯 Found {$finishedGames->count()} finished match(es)...");
+
+        $processedCount = 0;
+        foreach ($finishedGames as $game) {
+            $this->line("📊 Processing: {$game->homeTeam->name} {$game->home_score} - {$game->away_score} {$game->awayTeam->name}");
+            
+            // Calculate pick results for this finished game
+            $picksProcessed = $this->calculatePickResults($game);
+            if ($picksProcessed > 0) {
+                $processedCount++;
+            }
+        }
+
+        if ($processedCount > 0) {
+            $this->info("✅ Processed picks for {$processedCount} finished match(es)");
+        } else {
+            $this->info("ℹ️  No picks needed processing for finished matches");
+        }
+
+        // Update gameweek completion status
+        $this->updateGameweekCompletion();
+    }
+
+    /**
+     * Calculate pick results for a finished game
+     */
+    private function calculatePickResults(Game $game): int
+    {
+        $result = $game->getResult();
+        
+        if (!$result) {
+            $this->warn("  ⚠️  Cannot determine result for game {$game->id}");
+            return 0;
+        }
+        
+        // Get all picks for teams in this game for this gameweek that haven't been scored yet
+        $homeTeamPicks = Pick::where('game_week_id', $game->game_week_id)
+            ->where('team_id', $game->home_team_id)
+            ->whereNull('points_earned')
+            ->with(['user', 'tournament'])
+            ->get();
+            
+        $awayTeamPicks = Pick::where('game_week_id', $game->game_week_id)
+            ->where('team_id', $game->away_team_id)
+            ->whereNull('points_earned')
+            ->with(['user', 'tournament'])
+            ->get();
+
+        $picksProcessed = 0;
+
+        // Process home team picks
+        foreach ($homeTeamPicks as $pick) {
+            $pickResult = match($result) {
+                'HOME_WIN' => 'win',
+                'AWAY_WIN' => 'loss',
+                'DRAW' => 'draw',
+                default => null
+            };
+
+            if ($pickResult) {
+                $points = $pick->setResult($pickResult);
+                $picksProcessed++;
+                $this->line("  → {$pick->user->name}: {$game->homeTeam->name} - {$pickResult} ({$points} pts)");
+            }
+        }
+
+        // Process away team picks
+        foreach ($awayTeamPicks as $pick) {
+            $pickResult = match($result) {
+                'AWAY_WIN' => 'win',
+                'HOME_WIN' => 'loss', 
+                'DRAW' => 'draw',
+                default => null
+            };
+
+            if ($pickResult) {
+                $points = $pick->setResult($pickResult);
+                $picksProcessed++;
+                $this->line("  → {$pick->user->name}: {$game->awayTeam->name} - {$pickResult} ({$points} pts)");
+            }
+        }
+
+        if ($picksProcessed > 0) {
+            $this->info("  ✅ Processed {$picksProcessed} picks for this game");
+        }
+
+        return $picksProcessed;
+    }
+
+    /**
+     * Update gameweek completion status
+     */
+    private function updateGameweekCompletion(): void
+    {
+        $gameweeks = GameWeek::where('is_completed', false)->get();
+        
+        foreach ($gameweeks as $gameweek) {
+            $totalGames = $gameweek->games()->count();
+            $finishedGames = $gameweek->games()
+                ->whereIn('status', ['FINISHED', 'CANCELLED', 'POSTPONED'])
+                ->count();
+                
+            if ($totalGames > 0 && $finishedGames === $totalGames) {
+                $gameweek->markAsCompleted();
+                $this->info("🏁 Marked {$gameweek->name} as completed ({$finishedGames}/{$totalGames} games finished)");
+            }
+        }
     }
 
     /**
