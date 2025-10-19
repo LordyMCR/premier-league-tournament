@@ -134,7 +134,7 @@ class UpdateLiveMatches extends Command
         if (in_array($status, ['IN_PLAY', 'LIVE', 'PAUSED'])) {
             $lastUpdated = isset($apiMatch['lastUpdated']) ? \Carbon\Carbon::parse($apiMatch['lastUpdated']) : null;
             
-            if ($lastUpdated && $lastUpdated->diffInMinutes(now()) > 10) {
+            if ($lastUpdated && $lastUpdated->diffInMinutes(now()) > 30) {
                 $this->warn("⚠️  Rejecting stale data for live match {$game->homeTeam->short_name} vs {$game->awayTeam->short_name}. Last updated: {$lastUpdated}");
                 return false;
             }

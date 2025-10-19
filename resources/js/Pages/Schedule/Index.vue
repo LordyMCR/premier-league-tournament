@@ -83,6 +83,11 @@ const getGameStatusBadge = (game) => {
         }
     }
     
+    // Handle specific live statuses from database
+    if (game.status === 'IN_PLAY' || game.status === 'LIVE' || game.status === 'PAUSED') {
+        return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
+    }
+    
     // Default to scheduled/upcoming
     if (game.status === 'SCHEDULED' || game.status === 'TIMED') {
         return { class: 'bg-blue-100 text-blue-700', text: 'KO' };

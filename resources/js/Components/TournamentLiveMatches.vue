@@ -75,7 +75,8 @@
                             />
                             <div class="min-w-0">
                                 <div class="font-semibold text-gray-900 dark:text-white text-xs md:text-sm truncate">
-                                    {{ match.home_team?.short_name || getShortTeamName(match.home_team?.name) }}
+                                    <span class="md:hidden">{{ match.home_team?.short_name || getShortTeamName(match.home_team?.name) }}</span>
+                                    <span class="hidden md:inline">{{ match.home_team?.name || 'Unknown' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -121,7 +122,8 @@
                         <div class="flex items-center gap-2 md:gap-3 flex-1 justify-end min-w-0">
                             <div class="min-w-0 text-right">
                                 <div class="font-semibold text-gray-900 dark:text-white text-xs md:text-sm truncate">
-                                    {{ match.away_team?.short_name || getShortTeamName(match.away_team?.name) }}
+                                    <span class="md:hidden">{{ match.away_team?.short_name || getShortTeamName(match.away_team?.name) }}</span>
+                                    <span class="hidden md:inline">{{ match.away_team?.name || 'Unknown' }}</span>
                                 </div>
                             </div>
                             <img 

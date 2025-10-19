@@ -76,8 +76,8 @@ class FootballDataApiKeyManager
                         $bestTimestamp = $responseTimestamp;
                     }
                     
-                    // Reject data that's more than 15 minutes old
-                    if ($responseTimestamp && $responseTimestamp->diffInMinutes(now()) > 15) {
+                    // Reject data that's more than 30 minutes old (increased from 15 to handle delayed API updates)
+                    if ($responseTimestamp && $responseTimestamp->diffInMinutes(now()) > 30) {
                         Log::warning("FootballDataApiKeyManager: Rejecting stale data from key ending in " . substr($apiKey, -5) . ". Age: {$minutesOld} minutes");
                         continue;
                     }
