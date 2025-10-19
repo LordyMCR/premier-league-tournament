@@ -46,13 +46,13 @@ Schedule::command('picks:auto-assign')->everyThirtyMinutes()->withoutOverlapping
 // Live match tracking - SMART DATABASE-DRIVEN scheduling
 // Automatically detects match windows by checking games table
 // Only runs 1 hour before earliest kickoff through 3 hours after latest kickoff
-// Updates every 15 minutes during active windows (4 calls/hour)
+// Updates every 10 minutes during active windows (6 calls/hour)
 // Example: If matches are 3pm-5:30pm, runs 2pm-8:30pm only
-// Typical match day: 4 calls/hour × ~8 hours = ~32 calls + 5 daily = 37 calls/day
-// Maximum (Boxing Day): 4 calls/hour × ~11 hours = ~44 calls + 5 daily = 49 calls/day
+// Typical match day: 6 calls/hour × ~8 hours = ~48 calls + 5 daily = 53 calls/day
+// Maximum (Boxing Day): 6 calls/hour × ~11 hours = ~66 calls + 5 daily = 71 calls/day
 // FREE TIER SAFE: Well within 100 calls/day limit with 50%+ safety margin
 Schedule::command('matches:update-live')
-    ->everyFifteenMinutes()
+    ->everyTenMinutes()
     ->withoutOverlapping()
     ->runInBackground();
 
