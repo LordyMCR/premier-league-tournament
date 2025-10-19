@@ -46,6 +46,11 @@ return [
 
     'football_data' => [
         'api_key' => env('FOOTBALL_DATA_API_KEY'),
+        'spare_keys' => [
+            env('FOOTBALL_DATA_API_KEY_SPARE_1'),
+            env('FOOTBALL_DATA_API_KEY_SPARE_2'),
+            env('FOOTBALL_DATA_API_KEY_SPARE_3'),
+        ],
     ],
 
     'news_api' => [
@@ -54,6 +59,11 @@ return [
 
     'football_api' => [
         'api_key' => env('FOOTBALL_API_KEY'), // APIFootball.com (free)
+        'spare_keys' => [
+            env('FOOTBALL_API_KEY_SPARE_1'),
+            env('FOOTBALL_API_KEY_SPARE_2'),
+            env('FOOTBALL_API_KEY_SPARE_3'),
+        ],
     ],
 
     'sports_db' => [

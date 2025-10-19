@@ -42,7 +42,17 @@ class LiveMatchEvent extends Model
      */
     public function scopeLive($query)
     {
-        return $query->whereIn('status', ['LIVE', 'IN_PLAY', 'PAUSED']);
+        return $query->where(function($q) {
+            $q->whereIn('status', ['LIVE', 'IN_PLAY', 'PAUSED'])
+              ->orWhere(function($subQ) {
+                  // Also consider matches as live if they're past kickoff time and not finished
+                  $subQ->where('status', 'TIMED')
+                       ->whereHas('game', function($gameQuery) {
+                           $gameQuery->where('kick_off_time', '<', now())
+                                    ->where('status', '!=', 'FINISHED');
+                       });
+              });
+        });
     }
 
     /**

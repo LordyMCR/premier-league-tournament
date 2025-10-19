@@ -16,8 +16,10 @@ class TournamentLiveController extends Controller
      */
     public function getLivePicks(Tournament $tournament)
     {
-        // Get current gameweek
-        $currentGameweek = GameWeek::where('is_current', true)->first();
+        // Get current gameweek by date
+        $currentGameweek = GameWeek::where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
         
         if (!$currentGameweek) {
             return response()->json([
@@ -27,19 +29,25 @@ class TournamentLiveController extends Controller
         }
         
         // Get all picks for this tournament's participants for the current gameweek
-        $picks = Pick::where('gameweek_id', $currentGameweek->id)
-            ->whereHas('tournamentParticipant', function ($query) use ($tournament) {
-                $query->where('tournament_id', $tournament->id);
-            })
-            ->with(['user:id,name', 'team:id,name,short_name', 'game:id,home_team_id,away_team_id'])
+        $picks = Pick::where('game_week_id', $currentGameweek->id)
+            ->where('tournament_id', $tournament->id)
+            ->with(['user:id,name', 'team:id,name,short_name'])
             ->get()
             ->map(function ($pick) {
+                // Find the game for this pick
+                $game = \App\Models\Game::where('game_week_id', $pick->game_week_id)
+                    ->where(function($q) use ($pick) {
+                        $q->where('home_team_id', $pick->team_id)
+                          ->orWhere('away_team_id', $pick->team_id);
+                    })
+                    ->first();
+                
                 return [
                     'user_id' => $pick->user_id,
                     'user_name' => $pick->user->name,
                     'team_id' => $pick->team_id,
-                    'team_name' => $pick->team->name,
-                    'game_id' => $pick->game_id,
+                    'team_name' => $pick->team->short_name,
+                    'game_id' => $game ? $game->id : null,
                 ];
             });
         

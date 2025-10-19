@@ -1,25 +1,34 @@
 <template>
     <div class="space-y-4">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <h3 class="text-xl font-bold !text-gray-900">
                     Live Matches
                 </h3>
                 <span 
                     v-if="hasLiveMatches" 
-                    class="flex items-center gap-1.5 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-medium"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold shadow-lg"
                 >
                     <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                     </span>
                     LIVE
                 </span>
             </div>
             
-            <div v-if="lastUpdated" class="text-xs text-gray-500 dark:text-gray-400">
-                Updated {{ formatTimeAgo(lastUpdated) }}
+            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                <span v-if="isUpdating" class="inline-flex items-center gap-1">
+                    <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating...
+                </span>
+                <span v-else-if="lastUpdated">
+                    Updated {{ timeAgo }}
+                </span>
             </div>
         </div>
 
@@ -35,13 +44,13 @@
         </div>
 
         <!-- No Live Matches -->
-        <div v-else-if="!hasLiveMatches" class="text-center py-12 px-4 bg-gradient-to-br from-gray-100 to-gray-50 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600">
-            <div class="text-4xl mb-4">⚽</div>
-            <div class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <div v-else-if="!hasLiveMatches" class="text-center py-16 px-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-gray-200 dark:border-gray-600 shadow-lg">
+            <div class="text-6xl mb-6 opacity-60">⚽</div>
+            <div class="text-xl font-bold text-gray-900 dark:text-white mb-3">
                 No matches currently live
             </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">
-                Check back during match days
+            <div class="text-base text-gray-600 dark:text-gray-300">
+                Check back during match days for live updates
             </div>
         </div>
 
@@ -50,11 +59,11 @@
             <div 
                 v-for="match in liveMatches" 
                 :key="match.id"
-                class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+                class="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
             >
                 <!-- Match Status Banner -->
                 <div 
-                    class="absolute top-0 left-0 right-0 h-1"
+                    class="absolute top-0 left-0 right-0 h-2"
                     :class="{
                         'bg-red-500': match.status === 'LIVE' || match.status === 'IN_PLAY',
                         'bg-yellow-500': match.status === 'PAUSED',
@@ -62,45 +71,55 @@
                     }"
                 ></div>
 
-                <div class="p-4">
+                <div class="p-4 md:p-6">
                     <!-- Match Info -->
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between">
                         <!-- Home Team -->
-                        <div class="flex items-center gap-2 flex-1">
+                        <div class="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                             <img 
                                 v-if="match.home_team?.logo_url" 
                                 :src="match.home_team.logo_url" 
                                 :alt="match.home_team.name"
-                                class="w-8 h-8 object-contain"
+                                class="w-8 h-8 md:w-10 md:h-10 object-contain flex-shrink-0"
                             />
-                            <span class="font-medium text-gray-900 dark:text-white truncate">
-                                {{ getShortTeamName(match.home_team?.name) }}
-                            </span>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-gray-900 dark:text-white text-xs md:text-sm truncate">
+                                    {{ match.home_team?.short_name || getShortTeamName(match.home_team?.name) }}
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Score & Status -->
-                        <div class="px-4 flex flex-col items-center gap-1 min-w-[80px]">
-                            <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ match.live_event?.home_score ?? match.home_score ?? 0 }}
-                                <span class="text-gray-400 mx-1">-</span>
-                                {{ match.live_event?.away_score ?? match.away_score ?? 0 }}
+                        <div class="px-2 md:px-6 flex flex-col items-center gap-1 md:gap-2 min-w-[80px] md:min-w-[100px]">
+                            <!-- Score -->
+                            <div class="flex items-center gap-1 md:gap-3">
+                                <div class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-2 md:px-4 py-1 md:py-2 rounded-lg">
+                                    {{ match.live_event?.home_score ?? match.home_score ?? 0 }}
+                                </div>
+                                <div class="text-gray-400 text-lg md:text-xl font-medium">-</div>
+                                <div class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-2 md:px-4 py-1 md:py-2 rounded-lg">
+                                    {{ match.live_event?.away_score ?? match.away_score ?? 0 }}
+                                </div>
                             </div>
-                            <div class="text-xs font-medium">
+                            
+                            <!-- Match Status -->
+                            <div class="flex items-center gap-2">
                                 <span 
                                     v-if="match.status === 'LIVE' || match.status === 'IN_PLAY'"
-                                    class="text-red-600 dark:text-red-400"
+                                    class="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-semibold"
                                 >
-                                    {{ match.live_event?.minute }}'
+                                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                    {{ match.live_event?.minute || 'LIVE' }}'
                                 </span>
                                 <span 
                                     v-else-if="match.status === 'PAUSED'"
-                                    class="text-yellow-600 dark:text-yellow-400"
+                                    class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-semibold"
                                 >
                                     HT
                                 </span>
                                 <span 
                                     v-else-if="match.status === 'FINISHED'"
-                                    class="text-green-600 dark:text-green-400"
+                                    class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-semibold"
                                 >
                                     FT
                                 </span>
@@ -108,15 +127,17 @@
                         </div>
 
                         <!-- Away Team -->
-                        <div class="flex items-center gap-2 flex-1 justify-end">
-                            <span class="font-medium text-gray-900 dark:text-white truncate">
-                                {{ getShortTeamName(match.away_team?.name) }}
-                            </span>
+                        <div class="flex items-center gap-2 md:gap-3 flex-1 justify-end min-w-0">
+                            <div class="min-w-0 text-right">
+                                <div class="font-semibold text-gray-900 dark:text-white text-xs md:text-sm truncate">
+                                    {{ match.away_team?.short_name || getShortTeamName(match.away_team?.name) }}
+                                </div>
+                            </div>
                             <img 
                                 v-if="match.away_team?.logo_url" 
                                 :src="match.away_team.logo_url" 
                                 :alt="match.away_team.name"
-                                class="w-8 h-8 object-contain"
+                                class="w-8 h-8 md:w-10 md:h-10 object-contain flex-shrink-0"
                             />
                         </div>
                     </div>
@@ -180,31 +201,31 @@
         </div>
 
         <!-- Summary Stats -->
-        <div v-if="stats && hasLiveMatches" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div v-if="!hideStats && stats && hasLiveMatches" class="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                        {{ stats.total_picks }}
+                    <div class="text-lg md:text-2xl font-bold !text-gray-900">
+                        {{ stats.user_picks_live }}
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Your Active Picks</div>
+                    <div class="text-xs !text-gray-600">Your Active Picks</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <div class="text-lg md:text-2xl font-bold !text-green-600">
                         {{ stats.winning_picks }}
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Winning</div>
+                    <div class="text-xs !text-gray-600">Winning</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    <div class="text-lg md:text-2xl font-bold !text-yellow-600">
                         {{ stats.drawing_picks }}
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Drawing</div>
+                    <div class="text-xs !text-gray-600">Drawing</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <div class="text-lg md:text-2xl font-bold !text-gray-900">
                         {{ stats.projected_points }}
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Projected Points</div>
+                    <div class="text-xs !text-gray-600">Projected Points</div>
                 </div>
             </div>
         </div>
@@ -215,25 +236,46 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
+const props = defineProps({
+    hideStats: {
+        type: Boolean,
+        default: false
+    }
+});
+
 const liveMatches = ref([]);
 const userPicksStatus = ref([]);
 const stats = ref(null);
 const lastUpdated = ref(null);
 const loading = ref(true);
+const isUpdating = ref(false);
+const timeAgo = ref('0s ago');
 let pollingInterval = null;
+let timeUpdateInterval = null;
 
 const hasLiveMatches = computed(() => {
     return liveMatches.value && liveMatches.value.length > 0;
 });
 
+// Update time ago display
+function updateTimeAgo() {
+    if (lastUpdated.value) {
+        timeAgo.value = formatTimeAgo(lastUpdated.value);
+    }
+}
+
 // Fetch live match data
 async function fetchLiveMatches() {
+    if (isUpdating.value) return; // Prevent concurrent requests
+    
     try {
+        isUpdating.value = true;
         const response = await axios.get('/api/live-matches');
         liveMatches.value = response.data.live_matches || [];
         userPicksStatus.value = response.data.user_picks || [];
         stats.value = response.data.stats || null;
         lastUpdated.value = new Date();
+        timeAgo.value = '0s ago'; // Reset to 0 when new data arrives
         loading.value = false;
         
         // Map user picks to matches for easy display
@@ -248,6 +290,8 @@ async function fetchLiveMatches() {
     } catch (error) {
         console.error('Error fetching live matches:', error);
         loading.value = false;
+    } finally {
+        isUpdating.value = false;
     }
 }
 
@@ -272,13 +316,13 @@ function getShortTeamName(name) {
     return shortNames[name] || name;
 }
 
-// Format time ago
+// Format time ago with counting system
 function formatTimeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
     
-    if (seconds < 60) return 'just now';
-    if (seconds < 120) return '1 min ago';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 120) return '1m ago';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -307,16 +351,35 @@ function getRecentEvents(events) {
 onMounted(() => {
     fetchLiveMatches();
     
-    // Poll every 60 seconds
-    pollingInterval = setInterval(() => {
-        fetchLiveMatches();
-    }, 60000);
+    // Start time update interval (every second)
+    timeUpdateInterval = setInterval(() => {
+        updateTimeAgo();
+    }, 1000);
+    
+    // Smart polling: more frequent during live matches
+    const startPolling = () => {
+        if (pollingInterval) clearInterval(pollingInterval);
+        
+        // Poll every 2 minutes for both live and non-live matches to reduce API usage
+        const interval = 120000; // 2 minutes
+        
+        pollingInterval = setInterval(() => {
+            fetchLiveMatches();
+            // Restart polling with potentially different interval
+            startPolling();
+        }, interval);
+    };
+    
+    startPolling();
 });
 
 // Cleanup
 onUnmounted(() => {
     if (pollingInterval) {
         clearInterval(pollingInterval);
+    }
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
     }
 });
 </script>

@@ -24,15 +24,26 @@ class LiveMatchController extends Controller
             ->get()
             ->map(function($event) {
                 return [
+                    'id' => $event->game_id,
                     'game_id' => $event->game_id,
-                    'home_team' => $event->game->homeTeam->short_name,
-                    'home_team_full' => $event->game->homeTeam->name,
-                    'away_team' => $event->game->awayTeam->short_name,
-                    'away_team_full' => $event->game->awayTeam->name,
-                    'home_crest' => $event->game->homeTeam->logo_url,
-                    'away_crest' => $event->game->awayTeam->logo_url,
+                    'home_team' => [
+                        'name' => $event->game->homeTeam->name,
+                        'short_name' => $event->game->homeTeam->short_name,
+                        'logo_url' => $event->game->homeTeam->logo_url,
+                    ],
+                    'away_team' => [
+                        'name' => $event->game->awayTeam->name,
+                        'short_name' => $event->game->awayTeam->short_name,
+                        'logo_url' => $event->game->awayTeam->logo_url,
+                    ],
                     'home_score' => $event->home_score,
                     'away_score' => $event->away_score,
+                    'live_event' => [
+                        'home_score' => $event->home_score,
+                        'away_score' => $event->away_score,
+                        'minute' => $event->minute,
+                        'status' => $event->status,
+                    ],
                     'minute' => $event->minute,
                     'status' => $event->status,
                     'gameweek' => $event->game->gameWeek->week_number,
@@ -43,11 +54,33 @@ class LiveMatchController extends Controller
         // Get user's active picks that are currently live
         $userPicksStatus = $this->getUserLivePicksStatus($user);
 
-        // Get stats: how many live matches, how many user is involved in
+        // Aggregate stats used by the frontend summary widgets
+        $winning = 0;
+        $drawing = 0;
+        $losing = 0;
+        $projectedPoints = 0;
+
+        foreach ($userPicksStatus as $pick) {
+            if (($pick['current_result'] ?? null) === 'winning') {
+                $winning++;
+                $projectedPoints += 3;
+            } elseif (($pick['current_result'] ?? null) === 'drawing') {
+                $drawing++;
+                $projectedPoints += 1;
+            } elseif (($pick['current_result'] ?? null) === 'losing') {
+                $losing++;
+            }
+        }
+
         $stats = [
             'total_live_matches' => $liveMatches->count(),
-            'user_picks_live' => $userPicksStatus->count(),
+            'user_picks_live' => count($userPicksStatus),
             'has_live_data' => $liveMatches->count() > 0,
+            // New fields consumed by the component
+            'winning_picks' => $winning,
+            'drawing_picks' => $drawing,
+            'losing_picks' => $losing,
+            'projected_points' => $projectedPoints,
         ];
 
         return response()->json([
@@ -58,15 +91,20 @@ class LiveMatchController extends Controller
     }
 
     /**
-     * Get the user's picks that are currently live
+     * Get the user's picks that are currently live (from their favorite tournament)
      */
     private function getUserLivePicksStatus($user)
     {
-        // Get all tournaments user participates in
-        $userTournamentIds = $user->tournaments()->pluck('tournaments.id');
+        // Get user's favorite tournament
+        $favoriteTournament = $user->favoriteTournament();
+        
+        if (!$favoriteTournament) {
+            // No favorite tournament, return empty collection
+            return collect();
+        }
 
-        // Get user's picks with their gameweek and team
-        $picks = Pick::whereIn('tournament_id', $userTournamentIds)
+        // Get user's picks from their favorite tournament only
+        $picks = Pick::where('tournament_id', $favoriteTournament->id)
             ->where('user_id', $user->id)
             ->with(['gameWeek', 'team', 'tournament'])
             ->get();
@@ -110,7 +148,7 @@ class LiveMatchController extends Controller
                 'projected_points' => $result['points'],
                 'status_color' => $result['color'],
             ];
-        });
+        })->values()->toArray(); // Convert to array to ensure JSON array format
     }
 
     /**

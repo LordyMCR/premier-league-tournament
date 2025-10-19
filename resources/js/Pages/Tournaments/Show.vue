@@ -225,7 +225,9 @@ const timeUntilNextSelection = computed(() => {
             </div>
 
             <!-- Tournament Live Matches -->
-            <TournamentLiveMatches v-if="isParticipant && currentGameweek" :tournament-id="tournament.id" />
+            <div v-if="isParticipant && currentGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+                <TournamentLiveMatches :tournament-id="tournament.id" />
+            </div>
 
             <!-- Leaderboard -->
             <div class="bg-white rounded-xl border border-green-200 shadow-lg">

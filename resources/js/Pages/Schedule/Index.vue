@@ -230,7 +230,7 @@ const resetFilters = () => {
 
         <!-- Live Match Tracker -->
         <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-8">
-            <LiveMatchTracker />
+            <LiveMatchTracker :hide-stats="true" />
         </div>
 
         <!-- Gameweeks Grid -->

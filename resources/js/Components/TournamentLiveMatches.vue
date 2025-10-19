@@ -1,25 +1,25 @@
 <template>
     <div class="space-y-3">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-                <h4 class="text-base font-semibold text-gray-900 dark:text-white">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <h4 class="text-xl font-bold !text-gray-900">
                     Live Matches
                 </h4>
                 <span 
                     v-if="hasLiveMatches" 
-                    class="flex items-center gap-1.5 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-medium"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold shadow-lg"
                 >
                     <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                     </span>
                     LIVE
                 </span>
             </div>
             
-            <div v-if="lastUpdated" class="text-xs text-gray-500 dark:text-gray-400">
-                {{ formatTimeAgo(lastUpdated) }}
+            <div v-if="lastUpdated" class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                Updated {{ timeAgo }}
             </div>
         </div>
 
@@ -45,16 +45,16 @@
             </div>
         </div>
 
-        <!-- Relevant Live Matches (Compact Tournament View) -->
-        <div v-else class="space-y-2">
+        <!-- Live Matches Grid -->
+        <div v-else class="space-y-3">
             <div 
-                v-for="match in relevantMatches" 
+                v-for="match in liveMatches" 
                 :key="match.id"
-                class="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-sm transition-shadow"
+                class="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
             >
                 <!-- Match Status Banner -->
                 <div 
-                    class="h-0.5"
+                    class="absolute top-0 left-0 right-0 h-2"
                     :class="{
                         'bg-red-500': match.status === 'LIVE' || match.status === 'IN_PLAY',
                         'bg-yellow-500': match.status === 'PAUSED',
@@ -62,45 +62,55 @@
                     }"
                 ></div>
 
-                <div class="p-3">
-                    <!-- Match Info (Compact) -->
-                    <div class="flex items-center justify-between mb-2">
+                <div class="p-4 md:p-6">
+                    <!-- Match Info -->
+                    <div class="flex items-center justify-between">
                         <!-- Home Team -->
-                        <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                        <div class="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                             <img 
                                 v-if="match.home_team?.logo_url" 
                                 :src="match.home_team.logo_url" 
                                 :alt="match.home_team.name"
-                                class="w-5 h-5 object-contain flex-shrink-0"
+                                class="w-8 h-8 md:w-10 md:h-10 object-contain flex-shrink-0"
                             />
-                            <span class="text-xs font-medium text-gray-900 dark:text-white truncate">
-                                {{ getShortTeamName(match.home_team?.name) }}
-                            </span>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-gray-900 dark:text-white text-xs md:text-sm truncate">
+                                    {{ match.home_team?.short_name || getShortTeamName(match.home_team?.name) }}
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Score & Status (Compact) -->
-                        <div class="px-2 flex flex-col items-center gap-0.5 min-w-[60px]">
-                            <div class="text-base font-bold text-gray-900 dark:text-white">
-                                {{ match.live_event?.home_score ?? match.home_score ?? 0 }}
-                                <span class="text-gray-400 mx-0.5">-</span>
-                                {{ match.live_event?.away_score ?? match.away_score ?? 0 }}
+                        <!-- Score & Status -->
+                        <div class="px-2 md:px-6 flex flex-col items-center gap-1 md:gap-2 min-w-[80px] md:min-w-[100px]">
+                            <!-- Score -->
+                            <div class="flex items-center gap-1 md:gap-3">
+                                <div class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-2 md:px-4 py-1 md:py-2 rounded-lg">
+                                    {{ match.live_event?.home_score ?? match.home_score ?? 0 }}
+                                </div>
+                                <div class="text-gray-400 text-lg md:text-xl font-medium">-</div>
+                                <div class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-2 md:px-4 py-1 md:py-2 rounded-lg">
+                                    {{ match.live_event?.away_score ?? match.away_score ?? 0 }}
+                                </div>
                             </div>
-                            <div class="text-xs font-medium">
+                            
+                            <!-- Match Status -->
+                            <div class="flex items-center gap-2">
                                 <span 
                                     v-if="match.status === 'LIVE' || match.status === 'IN_PLAY'"
-                                    class="text-red-600 dark:text-red-400"
+                                    class="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-semibold"
                                 >
-                                    {{ match.live_event?.minute }}'
+                                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                    {{ match.live_event?.minute || 'LIVE' }}'
                                 </span>
                                 <span 
                                     v-else-if="match.status === 'PAUSED'"
-                                    class="text-yellow-600 dark:text-yellow-400"
+                                    class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-semibold"
                                 >
                                     HT
                                 </span>
                                 <span 
                                     v-else-if="match.status === 'FINISHED'"
-                                    class="text-green-600 dark:text-green-400"
+                                    class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-semibold"
                                 >
                                     FT
                                 </span>
@@ -108,15 +118,17 @@
                         </div>
 
                         <!-- Away Team -->
-                        <div class="flex items-center gap-1.5 flex-1 justify-end min-w-0">
-                            <span class="text-xs font-medium text-gray-900 dark:text-white truncate">
-                                {{ getShortTeamName(match.away_team?.name) }}
-                            </span>
+                        <div class="flex items-center gap-2 md:gap-3 flex-1 justify-end min-w-0">
+                            <div class="min-w-0 text-right">
+                                <div class="font-semibold text-gray-900 dark:text-white text-xs md:text-sm truncate">
+                                    {{ match.away_team?.short_name || getShortTeamName(match.away_team?.name) }}
+                                </div>
+                            </div>
                             <img 
                                 v-if="match.away_team?.logo_url" 
                                 :src="match.away_team.logo_url" 
                                 :alt="match.away_team.name"
-                                class="w-5 h-5 object-contain flex-shrink-0"
+                                class="w-8 h-8 md:w-10 md:h-10 object-contain flex-shrink-0"
                             />
                         </div>
                     </div>
@@ -151,24 +163,30 @@
 
             <!-- Summary Stats (if user has picks) -->
             <div v-if="tournamentStats.total_picks > 0" class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-center">
                     <div>
-                        <div class="text-sm font-bold text-green-600 dark:text-green-400">
+                        <div class="text-lg md:text-xl font-bold !text-gray-900">
+                            {{ tournamentStats.total_picks }}
+                        </div>
+                        <div class="text-xs !text-gray-600">Your Active Picks</div>
+                    </div>
+                    <div>
+                        <div class="text-lg md:text-xl font-bold !text-green-600">
                             {{ tournamentStats.winning_picks }}
                         </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Winning</div>
+                        <div class="text-xs !text-gray-600">Winning</div>
                     </div>
                     <div>
-                        <div class="text-sm font-bold text-yellow-600 dark:text-yellow-400">
+                        <div class="text-lg md:text-xl font-bold !text-yellow-600">
                             {{ tournamentStats.drawing_picks }}
                         </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Drawing</div>
+                        <div class="text-xs !text-gray-600">Drawing</div>
                     </div>
                     <div>
-                        <div class="text-sm font-bold text-gray-900 dark:text-white">
+                        <div class="text-lg md:text-xl font-bold !text-gray-900">
                             {{ tournamentStats.projected_points }}
                         </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Proj. Pts</div>
+                        <div class="text-xs !text-gray-600">Proj. Pts</div>
                     </div>
                 </div>
             </div>
@@ -191,11 +209,20 @@ const liveMatches = ref([]);
 const allTournamentPicks = ref([]); // All picks for this tournament's current gameweek
 const lastUpdated = ref(null);
 const loading = ref(true);
+const timeAgo = ref('0s ago');
 let pollingInterval = null;
+let timeUpdateInterval = null;
 
 const hasLiveMatches = computed(() => {
-    return relevantMatches.value && relevantMatches.value.length > 0;
+    return liveMatches.value && liveMatches.value.length > 0;
 });
+
+// Update time ago display
+function updateTimeAgo() {
+    if (lastUpdated.value) {
+        timeAgo.value = formatTimeAgo(lastUpdated.value);
+    }
+}
 
 // Filter to show only matches where tournament participants have picks
 const relevantMatches = computed(() => {
@@ -265,6 +292,7 @@ async function fetchData() {
         allTournamentPicks.value = picksResponse.data.picks || [];
         
         lastUpdated.value = new Date();
+        timeAgo.value = '0s ago'; // Reset to 0 when new data arrives
         loading.value = false;
     } catch (error) {
         console.error('Error fetching tournament live data:', error);
@@ -321,13 +349,13 @@ function getShortTeamName(name) {
     return shortNames[name] || name;
 }
 
-// Format time ago
+// Format time ago with counting system
 function formatTimeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
     
-    if (seconds < 60) return 'just now';
-    if (seconds < 120) return '1 min ago';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 120) return '1m ago';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -336,16 +364,24 @@ function formatTimeAgo(date) {
 onMounted(() => {
     fetchData();
     
-    // Poll every 60 seconds
+    // Start time update interval (every second)
+    timeUpdateInterval = setInterval(() => {
+        updateTimeAgo();
+    }, 1000);
+    
+    // Poll every 2 minutes to reduce API usage
     pollingInterval = setInterval(() => {
         fetchData();
-    }, 60000);
+    }, 120000);
 });
 
 // Cleanup
 onUnmounted(() => {
     if (pollingInterval) {
         clearInterval(pollingInterval);
+    }
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
     }
 });
 </script>
