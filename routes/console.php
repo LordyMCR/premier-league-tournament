@@ -4,6 +4,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Console\Commands\ImportHistoricalData;
+use App\Services\FootballDataService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -11,7 +12,8 @@ Artisan::command('inspire', function () {
 
 // Historical data import command
 Artisan::command('import:historical-data', function () {
-    $command = new ImportHistoricalData();
+    $footballService = app(FootballDataService::class);
+    $command = new ImportHistoricalData($footballService);
     $command->handle();
 })->purpose('Import 10 seasons of Premier League historical data');
 
