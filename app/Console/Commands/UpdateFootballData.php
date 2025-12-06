@@ -83,7 +83,7 @@ class UpdateFootballData extends Command
         $this->info('Updating Premier League teams...');
 
         if (!$force && Team::count() > 0) {
-            if (!$this->confirm('Teams data already exists. Do you want to continue?')) {
+            if (!$this->confirm('Teams data already exists. Do you want to continue?', true)) {
                 $this->info('Teams update skipped.');
                 return;
             }
@@ -120,7 +120,7 @@ class UpdateFootballData extends Command
         $this->info('Updating Premier League gameweeks...');
 
         if (!$force && GameWeek::count() > 0) {
-            if (!$this->confirm('Gameweeks data already exists. Do you want to continue?')) {
+            if (!$this->confirm('Gameweeks data already exists. Do you want to continue?', true)) {
                 $this->info('Gameweeks update skipped.');
                 return;
             }
@@ -157,7 +157,7 @@ class UpdateFootballData extends Command
         $this->info('Updating Premier League games...');
 
         if (!$force && Game::count() > 0) {
-            if (!$this->confirm('Games data already exists. Do you want to continue?')) {
+            if (!$this->confirm('Games data already exists. Do you want to continue?', true)) {
                 $this->info('Games update skipped.');
                 return;
             }

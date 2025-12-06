@@ -51,20 +51,31 @@ class AdminController extends Controller
         }
 
         try {
-            // Capture output
-            Artisan::call($command, $arguments);
+            // Set up environment for non-interactive command execution
+            $exitCode = Artisan::call($command, array_merge($arguments, [
+                '--no-interaction' => true,
+            ]));
+            
             $output = Artisan::output();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Command executed successfully.',
-                'output' => $output,
-            ]);
+            if ($exitCode === 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Command executed successfully.',
+                    'output' => $output,
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Command returned non-zero exit code: ' . $exitCode,
+                    'output' => $output,
+                ], 500);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Command execution failed: ' . $e->getMessage(),
-                'output' => null,
+                'output' => $e->getTraceAsString(),
             ], 500);
         }
     }
