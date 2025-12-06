@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import axios from 'axios';
@@ -9,6 +9,9 @@ const selectedCommand = ref(null);
 const isExecuting = ref(false);
 const commandOutput = ref(null);
 const showOutput = ref(false);
+const commandHistory = ref([]);
+const liveLog = ref('');
+const logContainer = ref(null);
 
 onMounted(async () => {
     try {
@@ -18,6 +21,19 @@ onMounted(async () => {
         console.error('Failed to load commands:', error);
     }
 });
+
+const addToLog = (message, type = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '▶️';
+    liveLog.value += `[${timestamp}] ${prefix} ${message}\n`;
+    
+    // Auto-scroll to bottom
+    nextTick(() => {
+        if (logContainer.value) {
+            logContainer.value.scrollTop = logContainer.value.scrollHeight;
+        }
+    });
+};
 
 const executeCommand = async (commandName) => {
     if (isExecuting.value) return;
@@ -31,23 +47,64 @@ const executeCommand = async (commandName) => {
     commandOutput.value = null;
     showOutput.value = false;
     
+    addToLog(`Executing command: ${commandName}`, 'info');
+    
+    const startTime = Date.now();
+    
     try {
         const response = await axios.post(route('admin.execute-command'), {
             command: commandName,
         });
+        
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
         
         commandOutput.value = {
             success: true,
             message: response.data.message,
             output: response.data.output,
         };
+        
+        // Add to history
+        commandHistory.value.unshift({
+            command: commandName,
+            timestamp: new Date().toLocaleString(),
+            duration: `${duration}s`,
+            success: true,
+            output: response.data.output,
+        });
+        
+        // Keep only last 10 commands in history
+        if (commandHistory.value.length > 10) {
+            commandHistory.value = commandHistory.value.slice(0, 10);
+        }
+        
+        addToLog(`Command completed successfully in ${duration}s`, 'success');
+        
+        // Log the output
+        if (response.data.output) {
+            addToLog('Output:\n' + response.data.output, 'info');
+        }
+        
         showOutput.value = true;
     } catch (error) {
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+        
         commandOutput.value = {
             success: false,
             message: error.response?.data?.message || 'Command execution failed',
             output: error.response?.data?.output || null,
         };
+        
+        // Add to history
+        commandHistory.value.unshift({
+            command: commandName,
+            timestamp: new Date().toLocaleString(),
+            duration: `${duration}s`,
+            success: false,
+            output: error.response?.data?.message,
+        });
+        
+        addToLog(`Command failed: ${error.response?.data?.message || 'Unknown error'}`, 'error');
         showOutput.value = true;
     } finally {
         isExecuting.value = false;
@@ -58,6 +115,29 @@ const executeCommand = async (commandName) => {
 const closeOutput = () => {
     showOutput.value = false;
     commandOutput.value = null;
+};
+
+const clearLog = () => {
+    if (confirm('Clear the live log?')) {
+        liveLog.value = '';
+        addToLog('Log cleared', 'info');
+    }
+};
+
+const clearHistory = () => {
+    if (confirm('Clear command history?')) {
+        commandHistory.value = [];
+        addToLog('Command history cleared', 'info');
+    }
+};
+
+const viewHistoryOutput = (historyItem) => {
+    commandOutput.value = {
+        success: historyItem.success,
+        message: historyItem.success ? 'Command completed' : 'Command failed',
+        output: historyItem.output,
+    };
+    showOutput.value = true;
 };
 
 // Group commands by category
@@ -107,6 +187,71 @@ onMounted(() => {
                     <p class="text-sm text-yellow-700">
                         <strong>Warning:</strong> These commands affect the production database. Use with caution.
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Log Panel -->
+        <div class="mb-6 bg-gray-900 rounded-xl shadow-lg border border-green-200 overflow-hidden">
+            <div class="bg-gray-800 px-4 py-3 flex items-center justify-between border-b border-gray-700">
+                <div class="flex items-center">
+                    <i class="fas fa-terminal text-green-400 mr-2"></i>
+                    <h3 class="text-white font-semibold">Live Command Log</h3>
+                </div>
+                <button 
+                    @click="clearLog"
+                    class="text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+                >
+                    <i class="fas fa-trash-alt mr-1"></i>
+                    Clear
+                </button>
+            </div>
+            <div 
+                ref="logContainer"
+                class="p-4 font-mono text-sm text-green-400 h-64 overflow-y-auto bg-gray-900"
+            >
+                <pre v-if="liveLog" class="whitespace-pre-wrap">{{ liveLog }}</pre>
+                <div v-else class="text-gray-500 italic">No commands executed yet...</div>
+            </div>
+        </div>
+
+        <!-- Command History -->
+        <div v-if="commandHistory.length > 0" class="mb-6 bg-white rounded-xl shadow-lg border border-green-200 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 flex items-center justify-between border-b border-green-200">
+                <div class="flex items-center">
+                    <i class="fas fa-history text-green-600 mr-2"></i>
+                    <h3 class="text-gray-900 font-semibold">Command History</h3>
+                </div>
+                <button 
+                    @click="clearHistory"
+                    class="text-xs px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                >
+                    <i class="fas fa-trash-alt mr-1"></i>
+                    Clear History
+                </button>
+            </div>
+            <div class="divide-y divide-gray-200">
+                <div 
+                    v-for="(item, index) in commandHistory" 
+                    :key="index"
+                    class="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                    @click="viewHistoryOutput(item)"
+                >
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span :class="[
+                                'w-8 h-8 rounded-full flex items-center justify-center',
+                                item.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                            ]">
+                                <i :class="item.success ? 'fas fa-check' : 'fas fa-times'"></i>
+                            </span>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ item.command }}</p>
+                                <p class="text-xs text-gray-500">{{ item.timestamp }} • Duration: {{ item.duration }}</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
                 </div>
             </div>
         </div>
