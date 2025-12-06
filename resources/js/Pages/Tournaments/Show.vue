@@ -70,14 +70,15 @@ const timeUntilNextSelection = computed(() => {
     <Head :title="`${tournament.name} - PL Tournament`" />
 
     <TournamentLayout>
-        <template #header>
+        <!-- Tournament Header -->
+        <div class="bg-white rounded-xl shadow-lg border border-green-200 p-6 mb-8">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-start gap-3 lg:items-center lg:gap-4">
                     <div class="flex-1 min-w-0">
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
                             {{ tournament.name }}
-                        </h2>
-                        <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base break-words">
+                        </h1>
+                        <p class="text-gray-600 mt-2 text-sm sm:text-base break-words">
                             {{ tournament.description || 'Premier League prediction tournament' }}
                         </p>
                     </div>
@@ -98,7 +99,7 @@ const timeUntilNextSelection = computed(() => {
                     </button>
                 </div>
                 <div class="w-full lg:w-auto lg:text-right">
-                    <div class="bg-white rounded-lg px-4 py-3 sm:px-5 border border-gray-200 shadow-sm">
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 sm:px-5 border border-gray-200">
                         <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Join Code</p>
                         <div class="flex items-center gap-2 sm:gap-3">
                             <button 
@@ -129,25 +130,24 @@ const timeUntilNextSelection = computed(() => {
                     </div>
                 </div>
             </div>
-        </template>
+        </div>
 
-        <div class="max-w-6xl mx-auto space-y-8">
-            <!-- Action Buttons -->
-            <div class="flex gap-4" v-if="!isParticipant">
-                <button @click="copyJoinCode" 
-                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
-                    <i class="fas fa-copy mr-2"></i>
-                    Copy Join Code
-                </button>
-                <Link :href="route('tournaments.join-form')" 
-                      class="bg-white border border-green-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all hover:bg-green-50">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
-                    Join Tournament
-                </Link>
-            </div>
+        <!-- Action Buttons -->
+        <div class="flex gap-4 mb-6" v-if="!isParticipant">
+            <button @click="copyJoinCode" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
+                <i class="fas fa-copy mr-2"></i>
+                Copy Join Code
+            </button>
+            <Link :href="route('tournaments.join-form')" 
+                  class="bg-white border border-green-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all hover:bg-green-50">
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                Join Tournament
+            </Link>
+        </div>
 
-            <!-- Selection Window Open -->
-            <div v-if="isParticipant && selectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+        <!-- Selection Window Open -->
+        <div v-if="isParticipant && selectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Selection Window Open</h3>
                 <div class="flex items-center justify-between">
                     <div>
@@ -502,7 +502,6 @@ const timeUntilNextSelection = computed(() => {
                     </table>
                 </div>
             </div>
-        </div>
 
         <!-- Tournament Info Cards - Compact mobile layout -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-8">
