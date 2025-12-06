@@ -451,9 +451,44 @@ class TournamentController extends Controller
             ->orderBy('total_points', 'desc')
             ->get();
 
+        // Get tournament gameweeks and stats
+        $gameweeks = $tournament->gameWeeks()
+            ->orderBy('week_number')
+            ->get()
+            ->map(function ($gw) {
+                return [
+                    'id' => $gw->id,
+                    'week_number' => $gw->week_number,
+                    'name' => $gw->name,
+                    'start_date' => $gw->start_date ? $gw->start_date->format('M d, Y') : null,
+                    'end_date' => $gw->end_date ? $gw->end_date->format('M d, Y') : null,
+                    'is_completed' => $gw->is_completed,
+                    'games_count' => $gw->games()->count(),
+                    'finished_games_count' => $gw->games()->where('status', 'FINISHED')->count(),
+                ];
+            });
+
+        // Tournament timeline stats
+        $firstGameweek = $tournament->gameWeeks()->orderBy('week_number')->first();
+        $lastGameweek = $tournament->gameWeeks()->orderBy('week_number', 'desc')->first();
+        $currentGameweek = $tournament->gameWeeks()->where('is_completed', false)->orderBy('week_number')->first();
+        
+        $tournamentStats = [
+            'total_gameweeks' => $tournament->gameWeeks()->count(),
+            'completed_gameweeks' => $tournament->gameWeeks()->where('is_completed', true)->count(),
+            'start_date' => $firstGameweek && $firstGameweek->start_date ? $firstGameweek->start_date->format('M d, Y') : null,
+            'end_date' => $lastGameweek && $lastGameweek->end_date ? $lastGameweek->end_date->format('M d, Y') : null,
+            'current_gameweek' => $currentGameweek ? $currentGameweek->week_number : null,
+            'total_picks' => $tournament->picks()->count(),
+            'completed_picks' => $tournament->picks()->whereNotNull('points_earned')->count(),
+            'total_points_awarded' => $tournament->picks()->sum('points_earned'),
+        ];
+
         return Inertia::render('Tournaments/Manage', [
             'tournament' => $tournament,
             'participants' => $participants,
+            'gameweeks' => $gameweeks,
+            'tournamentStats' => $tournamentStats,
         ]);
     }
 

@@ -6,6 +6,8 @@ import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 const props = defineProps({
     tournament: Object,
     participants: Array,
+    gameweeks: Array,
+    tournamentStats: Object,
 });
 
 const editMode = ref(false);
@@ -70,6 +72,193 @@ const removeParticipant = () => {
                         <i class="fas fa-arrow-left mr-2"></i>
                         Back to Tournament
                     </Link>
+                </div>
+            </div>
+
+            <!-- Tournament Overview Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Total Gameweeks -->
+                <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Total Gameweeks</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ tournamentStats.total_gameweeks }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ tournamentStats.completed_gameweeks }} completed
+                            </p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-calendar-week text-green-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Participants -->
+                <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Participants</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ participants.length }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                of {{ tournament.max_participants }} max
+                            </p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-users text-blue-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Picks -->
+                <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Total Picks</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ tournamentStats.total_picks }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ tournamentStats.completed_picks }} completed
+                            </p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-hand-pointer text-purple-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Points -->
+                <div class="bg-white rounded-xl shadow-sm border border-green-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 font-medium">Points Awarded</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ tournamentStats.total_points_awarded }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Total across all picks
+                            </p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-trophy text-yellow-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tournament Timeline -->
+            <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-clock text-green-600 mr-3 text-xl"></i>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Tournament Timeline</h2>
+                        <p class="text-gray-600 text-sm mt-1">Duration and progress</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium mb-2">Start Date</p>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ tournamentStats.start_date || 'Not set' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium mb-2">Current Gameweek</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ tournamentStats.current_gameweek ? `Gameweek ${tournamentStats.current_gameweek}` : 'Completed' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-gray-600 font-medium mb-2">End Date</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p class="text-lg font-semibold text-gray-900">
+                                {{ tournamentStats.end_date || 'Not set' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-sm font-medium text-gray-700">Tournament Progress</p>
+                        <p class="text-sm font-medium text-green-600">
+                            {{ Math.round((tournamentStats.completed_gameweeks / tournamentStats.total_gameweeks) * 100) }}%
+                        </p>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div 
+                            class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
+                            :style="{ width: `${(tournamentStats.completed_gameweeks / tournamentStats.total_gameweeks) * 100}%` }"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gameweeks Overview -->
+            <div v-if="gameweeks.length > 0" class="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-list-ol text-green-600 mr-3 text-xl"></i>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Gameweeks</h2>
+                            <p class="text-gray-600 text-sm mt-1">{{ gameweeks.length }} gameweeks in tournament</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200">
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Gameweek</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Period</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Games</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr v-for="gw in gameweeks" :key="gw.id" class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <span :class="[
+                                            'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3',
+                                            gw.is_completed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                        ]">
+                                            {{ gw.week_number }}
+                                        </span>
+                                        <span class="text-sm font-medium text-gray-900">{{ gw.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                    <div v-if="gw.start_date && gw.end_date">
+                                        {{ gw.start_date }} - {{ gw.end_date }}
+                                    </div>
+                                    <div v-else class="text-gray-400 italic">Dates not set</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <div class="text-sm text-gray-900">
+                                        <span class="font-semibold">{{ gw.finished_games_count }}</span>
+                                        <span class="text-gray-500">/{{ gw.games_count }}</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500">games finished</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <span :class="[
+                                        'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                        gw.is_completed 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-blue-100 text-blue-800'
+                                    ]">
+                                        {{ gw.is_completed ? 'Completed' : 'In Progress' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
