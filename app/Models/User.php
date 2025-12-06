@@ -41,6 +41,7 @@ class User extends Authenticatable
         'is_approved',
         'approved_at',
         'approval_token',
+        'is_admin',
     ];
 
     /**
@@ -81,6 +82,7 @@ class User extends Authenticatable
             'last_active_at' => 'datetime',
             'is_approved' => 'boolean',
             'approved_at' => 'datetime',
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -451,5 +453,23 @@ class User extends Authenticatable
 
         // Send disapproval notification
         $this->notify(new \App\Notifications\UserDisapproved());
+    }
+
+    // Admin Methods
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin === true;
+    }
+
+    /**
+     * Scope a query to only include admins
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->where('is_admin', true);
     }
 }

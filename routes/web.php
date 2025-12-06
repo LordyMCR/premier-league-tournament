@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\PickController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -315,4 +316,11 @@ Route::get('/test-s3', function () {
             ]
         ], 500);
     }
+});
+
+// Admin Routes
+Route::middleware(['auth', 'user.approval', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('index');
+    Route::post('/execute-command', [AdminController::class, 'executeCommand'])->name('execute-command');
+    Route::get('/command-status', [AdminController::class, 'commandStatus'])->name('command-status');
 });

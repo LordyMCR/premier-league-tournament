@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'user.approval' => \App\Http\Middleware\CheckUserApproval::class,
+            'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
 
         //

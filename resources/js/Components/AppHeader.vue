@@ -125,6 +125,15 @@ const logout = () => {
                                 Settings
                             </Link>
                             
+                            <Link 
+                                v-if="page.props.auth.user.is_admin"
+                                :href="route('admin.index')"
+                                class="flex items-center px-4 py-3 text-sm text-purple-700 hover:text-purple-800 hover:bg-purple-50 cursor-pointer transition-colors duration-200"
+                            >
+                                <i class="fas fa-shield-alt mr-3 text-purple-500"></i>
+                                Admin Panel
+                            </Link>
+                            
                             <div class="border-t border-green-200 my-2"></div>
                             
                             <button 
@@ -225,6 +234,15 @@ const logout = () => {
                     >
                         <i class="fas fa-user w-5 mr-3 text-center"></i>
                         Profile
+                    </Link>
+                    <Link
+                        v-if="page.props.auth.user.is_admin"
+                        :href="route('admin.index')"
+                        class="flex items-center text-purple-700 hover:text-purple-800 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-purple-50"
+                        @click="showMobileMenu = false"
+                    >
+                        <i class="fas fa-shield-alt w-5 mr-3 text-center"></i>
+                        Admin Panel
                     </Link>
                     <button 
                         @click="logout"
