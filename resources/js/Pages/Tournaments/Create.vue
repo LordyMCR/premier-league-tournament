@@ -6,7 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 
 const props = defineProps({
     currentGameWeek: Object,
@@ -43,7 +43,45 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('tournaments.store'));
+    // Ensure start_game_week and end_game_week are set for non-custom modes
+    if (form.tournament_mode !== 'custom') {
+        if (!form.start_game_week || !form.end_game_week) {
+            updateStartGameWeek();
+        }
+    }
+    
+    // Validate that required fields are set
+    if (!form.start_game_week || !form.end_game_week) {
+        console.error('Missing game week values:', {
+            mode: form.tournament_mode,
+            start: form.start_game_week,
+            end: form.end_game_week,
+            props: {
+                nextGameWeekNumber: props.nextGameWeekNumber,
+                fullSeasonEnd: props.fullSeasonEnd,
+                halfSeasonEnd: props.halfSeasonEnd,
+            }
+        });
+        alert('Please select start and end game weeks.');
+        return;
+    }
+    
+    console.log('Submitting tournament form:', {
+        name: form.name,
+        tournament_mode: form.tournament_mode,
+        start_game_week: form.start_game_week,
+        end_game_week: form.end_game_week,
+        max_participants: form.max_participants,
+    });
+    
+    form.post(route('tournaments.store'), {
+        onError: (errors) => {
+            console.error('Form submission errors:', errors);
+        },
+        onSuccess: () => {
+            console.log('Tournament created successfully');
+        },
+    });
 };
 
 // Calculate total game weeks based on mode
@@ -110,12 +148,30 @@ const updateStartGameWeek = () => {
         form.start_game_week = nextAvailableGameweek;
         form.end_game_week = null;
     }
+    
+    // Convert to numbers to ensure they're sent as integers
+    if (form.start_game_week !== null) {
+        form.start_game_week = Number(form.start_game_week);
+    }
+    if (form.end_game_week !== null) {
+        form.end_game_week = Number(form.end_game_week);
+    }
 };
 
 // Initialize form with default values for full season
 onMounted(() => {
-    updateStartGameWeek();
+    // Wait a tick to ensure props are loaded
+    setTimeout(() => {
+        updateStartGameWeek();
+    }, 0);
 });
+
+// Watch for prop changes and update form values
+watch(() => [props.nextGameWeekNumber, props.fullSeasonEnd, props.halfSeasonEnd], () => {
+    if (form.tournament_mode !== 'custom') {
+        updateStartGameWeek();
+    }
+}, { immediate: false });
 </script>
 
 <template>

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TournamentController extends Controller
 {
@@ -70,25 +71,41 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
+        // Log incoming request for debugging
+        Log::info('Tournament creation request received', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+        ]);
+
         $user = Auth::user();
         
         // Check if user can create more tournaments (restrictions)
         if (!$user->canCreateTournament()) {
+            Log::warning('Tournament creation blocked: user limit reached', ['user_id' => Auth::id()]);
             return back()->withErrors(['tournament' => 'You have reached the maximum number of tournaments (3) you can create. Contact support@pl-tournament.com to request additional tournament slots.']);
         }
 
         $currentGameWeek = GameWeek::getCurrentGameWeek();
         $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
         
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'max_participants' => 'required|integer|min:2|max:100',
-            'is_private' => 'boolean',
-            'tournament_mode' => 'required|in:full_season,half_season,custom',
-            'start_game_week' => 'required|integer|min:1',
-            'end_game_week' => 'required|integer|min:1',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string|max:1000',
+                'max_participants' => 'required|integer|min:2|max:100',
+                'is_private' => 'boolean',
+                'tournament_mode' => 'required|in:full_season,half_season,custom',
+                'start_game_week' => 'required|integer|min:1',
+                'end_game_week' => 'required|integer|min:1',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Tournament creation validation failed', [
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+            throw $e;
+        }
 
         // Calculate dynamic ranges
         $fullSeasonEnd = min(38, $nextGameWeekNumber + 37); // From current to end of season
@@ -123,25 +140,50 @@ class TournamentController extends Controller
 
         $totalGameWeeks = $validated['end_game_week'] - $validated['start_game_week'] + 1;
 
-        $tournament = Tournament::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'creator_id' => Auth::id(),
-            // Tournaments become playable immediately after creation
-            'status' => 'active',
-            'start_game_week' => $validated['start_game_week'],
-            'total_game_weeks' => $totalGameWeeks,
-            'current_game_week' => $validated['start_game_week'],
-            'max_participants' => $validated['max_participants'],
-            'is_private' => (bool)($validated['is_private'] ?? false),
-            'tournament_mode' => $validated['tournament_mode'],
-        ]);
+        try {
+            $tournament = Tournament::create([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'creator_id' => Auth::id(),
+                // Tournaments become playable immediately after creation
+                'status' => 'active',
+                'start_game_week' => $validated['start_game_week'],
+                'total_game_weeks' => $totalGameWeeks,
+                'current_game_week' => $validated['start_game_week'],
+                'max_participants' => $validated['max_participants'],
+                'is_private' => (bool)($validated['is_private'] ?? false),
+                'tournament_mode' => $validated['tournament_mode'],
+            ]);
 
-        // Automatically add creator as participant
-        $tournament->addParticipant(Auth::id());
+            Log::info('Tournament created successfully', [
+                'tournament_id' => $tournament->id,
+                'user_id' => Auth::id(),
+                'name' => $tournament->name,
+            ]);
 
-        return redirect()->route('tournaments.show', $tournament)
-            ->with('success', 'Tournament created successfully! Share the join code: ' . $tournament->join_code);
+            // Automatically add creator as participant
+            $participantAdded = $tournament->addParticipant(Auth::id());
+            
+            if (!$participantAdded) {
+                Log::warning('Failed to add creator as participant', [
+                    'tournament_id' => $tournament->id,
+                    'user_id' => Auth::id(),
+                ]);
+            }
+
+            return redirect()->route('tournaments.show', $tournament)
+                ->with('success', 'Tournament created successfully! Share the join code: ' . $tournament->join_code);
+                
+        } catch (\Exception $e) {
+            Log::error('Failed to create tournament', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'validated_data' => $validated,
+            ]);
+            
+            return back()->withErrors(['tournament' => 'Failed to create tournament: ' . $e->getMessage()]);
+        }
     }
 
     /**
