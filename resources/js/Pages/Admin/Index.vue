@@ -14,7 +14,7 @@ const liveLog = ref('');
 const logContainer = ref(null);
 
 // User Management
-const activeUserTab = ref('pending'); // 'pending', 'approved', 'all'
+const activeUserTab = ref('pending'); // 'pending', 'approved', 'denied', 'all'
 const users = ref([]);
 const userSearch = ref('');
 const userLoading = ref(false);
@@ -225,6 +225,21 @@ const disapproveUser = async (userId) => {
     }
 };
 
+const denyUser = async (userId) => {
+    const user = users.value.find(u => u.id === userId);
+    if (!window.confirm(`Are you sure you want to deny ${user?.name || 'this user'}? They will receive a denial email and will not be able to access the system.`)) {
+        return;
+    }
+    
+    try {
+        const response = await axios.post(route('admin.users.deny', userId));
+        addToLog(response.data.message, 'success');
+        loadUsers(userCurrentPage.value);
+    } catch (error) {
+        addToLog('Failed to deny user: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    }
+};
+
 const removeUser = async (userId) => {
     const user = users.value.find(u => u.id === userId);
     if (!window.confirm(`Are you sure you want to remove ${user?.name || 'this user'}? This will:\n\n- Soft delete their account\n- Remove them from all tournaments\n- Delete all their picks\n\nThis action cannot be undone.`)) {
@@ -362,7 +377,7 @@ const removeUser = async (userId) => {
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
                         <button
                             @click="switchUserTab('pending')"
                             :class="[
@@ -384,6 +399,17 @@ const removeUser = async (userId) => {
                             ]"
                         >
                             Approved
+                        </button>
+                        <button
+                            @click="switchUserTab('denied')"
+                            :class="[
+                                'px-4 py-2 rounded-lg font-medium transition-colors',
+                                activeUserTab === 'denied'
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            ]"
+                        >
+                            Denied
                         </button>
                         <button
                             @click="switchUserTab('all')"
@@ -443,10 +469,13 @@ const removeUser = async (userId) => {
                                     <span v-else-if="user.is_approved" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                         Approved
                                     </span>
+                                    <span v-else-if="user.denied_at" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Denied
+                                    </span>
                                     <span v-else class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                         Pending
                                     </span>
-                                    <span v-if="user.deleted_at" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    <span v-if="user.deleted_at" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                                         Deleted
                                     </span>
                                 </div>
@@ -460,8 +489,8 @@ const removeUser = async (userId) => {
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div v-if="!user.deleted_at && !user.is_admin" class="flex justify-end gap-2">
-                                    <!-- Pending users: Show Approve and Disapprove buttons -->
-                                    <template v-if="!user.is_approved">
+                                    <!-- Pending users (not approved, not denied): Show Approve and Deny buttons -->
+                                    <template v-if="!user.is_approved && !user.denied_at">
                                         <button
                                             @click="approveUser(user.id)"
                                             class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
@@ -470,7 +499,7 @@ const removeUser = async (userId) => {
                                             Approve
                                         </button>
                                         <button
-                                            @click="disapproveUser(user.id)"
+                                            @click="denyUser(user.id)"
                                             class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-xs"
                                         >
                                             <i class="fas fa-times mr-1"></i>
@@ -479,7 +508,7 @@ const removeUser = async (userId) => {
                                     </template>
                                     
                                     <!-- Approved users: Show only Remove button -->
-                                    <template v-else>
+                                    <template v-else-if="user.is_approved">
                                         <button
                                             @click="removeUser(user.id)"
                                             class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs"
@@ -487,6 +516,11 @@ const removeUser = async (userId) => {
                                             <i class="fas fa-trash mr-1"></i>
                                             Remove
                                         </button>
+                                    </template>
+                                    
+                                    <!-- Denied users: No actions (they're already denied) -->
+                                    <template v-else-if="user.denied_at">
+                                        <span class="text-gray-400 text-xs">Denied</span>
                                     </template>
                                 </div>
                                 <span v-else-if="user.deleted_at" class="text-gray-400 text-xs">Deleted</span>

@@ -41,6 +41,7 @@ class User extends Authenticatable
         'last_active_at',
         'is_approved',
         'approved_at',
+        'denied_at',
         'approval_token',
         'is_admin',
     ];
@@ -83,6 +84,7 @@ class User extends Authenticatable
             'last_active_at' => 'datetime',
             'is_approved' => 'boolean',
             'approved_at' => 'datetime',
+            'denied_at' => 'datetime',
             'is_admin' => 'boolean',
         ];
     }
@@ -435,6 +437,7 @@ class User extends Authenticatable
         $this->update([
             'is_approved' => true,
             'approved_at' => now(),
+            'denied_at' => null, // Clear denied status if approving a previously denied user
             'approval_token' => null,
         ]);
 
@@ -454,6 +457,21 @@ class User extends Authenticatable
 
         // Send disapproval notification
         $this->notify(new \App\Notifications\UserDisapproved());
+    }
+
+    /**
+     * Deny a pending user (for users who haven't been approved yet)
+     */
+    public function deny()
+    {
+        $this->update([
+            'is_approved' => false,
+            'denied_at' => now(),
+            'approved_at' => null,
+        ]);
+
+        // Send denial notification
+        $this->notify(new \App\Notifications\UserDenied());
     }
 
     // Admin Methods

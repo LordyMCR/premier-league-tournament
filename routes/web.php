@@ -328,5 +328,6 @@ Route::middleware(['auth', 'user.approval', 'admin'])->prefix('admin')->name('ad
     Route::get('/users', [AdminController::class, 'getUsers'])->name('users');
     Route::post('/users/{user}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
     Route::post('/users/{user}/disapprove', [AdminController::class, 'disapproveUser'])->name('users.disapprove');
+    Route::post('/users/{user}/deny', [AdminController::class, 'denyUser'])->name('users.deny');
     Route::delete('/users/{user}', [AdminController::class, 'removeUser'])->name('users.remove');
 });

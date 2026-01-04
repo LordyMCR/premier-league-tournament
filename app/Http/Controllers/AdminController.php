@@ -27,7 +27,7 @@ class AdminController extends Controller
      */
     public function getUsers(Request $request)
     {
-        $type = $request->get('type', 'all'); // 'all', 'approved', 'pending'
+        $type = $request->get('type', 'all'); // 'all', 'approved', 'pending', 'denied'
         $search = $request->get('search', '');
 
         $query = User::query()->withTrashed(); // Include soft-deleted users for admin view
@@ -35,7 +35,10 @@ class AdminController extends Controller
         if ($type === 'approved') {
             $query->where('is_approved', true);
         } elseif ($type === 'pending') {
-            $query->where('is_approved', false);
+            $query->where('is_approved', false)
+                  ->whereNull('denied_at'); // Pending users are not approved and not denied
+        } elseif ($type === 'denied') {
+            $query->whereNotNull('denied_at'); // Denied users
         }
 
         if ($search) {
@@ -54,6 +57,7 @@ class AdminController extends Controller
                     'email' => $user->email,
                     'is_approved' => $user->is_approved,
                     'approved_at' => $user->approved_at?->format('Y-m-d H:i:s'),
+                    'denied_at' => $user->denied_at?->format('Y-m-d H:i:s'),
                     'is_admin' => $user->is_admin,
                     'created_at' => $user->created_at->format('Y-m-d H:i:s'),
                     'deleted_at' => $user->deleted_at?->format('Y-m-d H:i:s'),
@@ -88,7 +92,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Disapprove a user
+     * Disapprove a user (for approved users only)
      */
     public function disapproveUser(Request $request, $userId)
     {
@@ -110,11 +114,49 @@ class AdminController extends Controller
     }
 
     /**
+     * Deny a pending user (for users who haven't been approved yet)
+     */
+    public function denyUser(Request $request, $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        if ($user->is_approved) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot deny an approved user. Use remove instead.',
+            ], 400);
+        }
+
+        if ($user->denied_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User has already been denied.',
+            ], 400);
+        }
+
+        $user->deny();
+
+        return response()->json([
+            'success' => true,
+            'message' => "User {$user->email} has been denied. Denial email notification has been sent.",
+        ]);
+    }
+
+    /**
      * Remove a user (soft delete and remove from tournaments)
+     * Only allowed for approved users
      */
     public function removeUser(Request $request, $userId)
     {
         $user = User::findOrFail($userId);
+
+        // Only allow removing approved users
+        if (!$user->is_approved) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Can only remove approved users. Use deny for pending users.',
+            ], 400);
+        }
 
         // Don't allow removing yourself
         if ($user->id === auth()->id()) {
