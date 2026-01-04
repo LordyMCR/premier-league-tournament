@@ -196,7 +196,7 @@ watch(() => [props.nextGameWeekNumber, props.fullSeasonEnd, props.halfSeasonEnd]
             </div>
         </template>
 
-        <div class="max-w-4xl mx-auto">
+        <div>
             <!-- General Error Display -->
             <div v-if="form.errors.tournament || form.errors.tournament_mode" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                 <div class="flex items-start">
