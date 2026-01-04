@@ -55,6 +55,16 @@ const removeParticipant = () => {
         },
     });
 };
+
+const deleteTournament = () => {
+    if (window.confirm('Are you sure you want to delete this tournament? This action cannot be undone and will remove all participant data, picks, and history.')) {
+        useForm({}).delete(route('tournaments.destroy', props.tournament.id), {
+            onSuccess: () => {
+                // Redirect will happen automatically via Inertia
+            },
+        });
+    }
+};
 </script>
 
 <template>
@@ -513,9 +523,7 @@ const removeParticipant = () => {
                         <p class="text-red-700 text-xs sm:text-sm mt-1">Irreversible and destructive actions</p>
                     </div>
                     <button 
-                        @click="$inertia.delete(route('tournaments.destroy', tournament.id), { 
-                            onBefore: () => confirm('Are you sure you want to delete this tournament? This action cannot be undone and will remove all participant data, picks, and history.') 
-                        })"
+                        @click="deleteTournament"
                         class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all font-medium text-sm w-full sm:w-auto">
                         <i class="fas fa-trash mr-2"></i>
                         Delete Tournament
