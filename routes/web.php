@@ -323,4 +323,10 @@ Route::middleware(['auth', 'user.approval', 'admin'])->prefix('admin')->name('ad
     Route::get('/', [AdminController::class, 'index'])->name('index');
     Route::post('/execute-command', [AdminController::class, 'executeCommand'])->name('execute-command');
     Route::get('/command-status', [AdminController::class, 'commandStatus'])->name('command-status');
+    
+    // User Management Routes
+    Route::get('/users', [AdminController::class, 'getUsers'])->name('users');
+    Route::post('/users/{user}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
+    Route::post('/users/{user}/disapprove', [AdminController::class, 'disapproveUser'])->name('users.disapprove');
+    Route::delete('/users/{user}', [AdminController::class, 'removeUser'])->name('users.remove');
 });

@@ -13,6 +13,14 @@ const commandHistory = ref([]);
 const liveLog = ref('');
 const logContainer = ref(null);
 
+// User Management
+const activeUserTab = ref('pending'); // 'pending', 'approved', 'all'
+const users = ref([]);
+const userSearch = ref('');
+const userLoading = ref(false);
+const userCurrentPage = ref(1);
+const userTotalPages = ref(1);
+
 onMounted(async () => {
     try {
         const response = await axios.get(route('admin.command-status'));
@@ -38,7 +46,7 @@ const addToLog = (message, type = 'info') => {
 const executeCommand = async (commandName) => {
     if (isExecuting.value) return;
     
-    if (!confirm(`Are you sure you want to execute: ${commandName}?`)) {
+    if (!window.confirm(`Are you sure you want to execute: ${commandName}?`)) {
         return;
     }
     
@@ -118,14 +126,14 @@ const closeOutput = () => {
 };
 
 const clearLog = () => {
-    if (confirm('Clear the live log?')) {
+    if (window.confirm('Clear the live log?')) {
         liveLog.value = '';
         addToLog('Log cleared', 'info');
     }
 };
 
 const clearHistory = () => {
-    if (confirm('Clear command history?')) {
+    if (window.confirm('Clear command history?')) {
         commandHistory.value = [];
         addToLog('Command history cleared', 'info');
     }
@@ -153,7 +161,84 @@ onMounted(() => {
             return acc;
         }, {});
     });
+    loadUsers();
 });
+
+// User Management Functions
+const loadUsers = async (page = 1) => {
+    userLoading.value = true;
+    try {
+        const response = await axios.get(route('admin.users'), {
+            params: {
+                type: activeUserTab.value,
+                search: userSearch.value,
+                page: page,
+            }
+        });
+        users.value = response.data.data;
+        userCurrentPage.value = response.data.current_page;
+        userTotalPages.value = response.data.last_page;
+    } catch (error) {
+        console.error('Failed to load users:', error);
+        addToLog('Failed to load users: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    } finally {
+        userLoading.value = false;
+    }
+};
+
+const switchUserTab = (tab) => {
+    activeUserTab.value = tab;
+    userCurrentPage.value = 1;
+    loadUsers(1);
+};
+
+const searchUsers = () => {
+    userCurrentPage.value = 1;
+    loadUsers(1);
+};
+
+const approveUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to approve this user?')) {
+        return;
+    }
+    
+    try {
+        const response = await axios.post(route('admin.users.approve', userId));
+        addToLog(response.data.message, 'success');
+        loadUsers(userCurrentPage.value);
+    } catch (error) {
+        addToLog('Failed to approve user: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    }
+};
+
+const disapproveUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to disapprove this user? They will be logged out and unable to access the system.')) {
+        return;
+    }
+    
+    try {
+        const response = await axios.post(route('admin.users.disapprove', userId));
+        addToLog(response.data.message, 'success');
+        loadUsers(userCurrentPage.value);
+    } catch (error) {
+        addToLog('Failed to disapprove user: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    }
+};
+
+const removeUser = async (userId) => {
+    const user = users.value.find(u => u.id === userId);
+    if (!window.confirm(`Are you sure you want to remove ${user?.name || 'this user'}? This will:\n\n- Soft delete their account\n- Remove them from all tournaments\n- Delete all their picks\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await axios.delete(route('admin.users.remove', userId));
+        addToLog(response.data.message, 'success');
+        loadUsers(userCurrentPage.value);
+    } catch (error) {
+        addToLog('Failed to remove user: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    }
+};
 </script>
 
 <template>
@@ -252,6 +337,191 @@ onMounted(() => {
                         </div>
                         <i class="fas fa-chevron-right text-gray-400"></i>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div class="mb-6 bg-white rounded-xl shadow-lg border border-green-200 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-green-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-users text-green-600 mr-2"></i>
+                        User Management
+                    </h3>
+                </div>
+                
+                <!-- Search and Tabs -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <input
+                            v-model="userSearch"
+                            @keyup.enter="searchUsers"
+                            type="text"
+                            placeholder="Search by name or email..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            @click="switchUserTab('pending')"
+                            :class="[
+                                'px-4 py-2 rounded-lg font-medium transition-colors',
+                                activeUserTab === 'pending'
+                                    ? 'bg-yellow-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            ]"
+                        >
+                            Pending
+                        </button>
+                        <button
+                            @click="switchUserTab('approved')"
+                            :class="[
+                                'px-4 py-2 rounded-lg font-medium transition-colors',
+                                activeUserTab === 'approved'
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            ]"
+                        >
+                            Approved
+                        </button>
+                        <button
+                            @click="switchUserTab('all')"
+                            :class="[
+                                'px-4 py-2 rounded-lg font-medium transition-colors',
+                                activeUserTab === 'all'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            ]"
+                        >
+                            All Users
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div v-if="userLoading" class="p-8 text-center text-gray-500">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Loading users...</p>
+            </div>
+            <div v-else-if="users.length === 0" class="p-8 text-center text-gray-500">
+                <i class="fas fa-users text-3xl mb-2"></i>
+                <p>No users found.</p>
+            </div>
+            <div v-else class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tournaments</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center text-white font-medium">
+                                            {{ user.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-col gap-1">
+                                    <span v-if="user.is_admin" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                        Admin
+                                    </span>
+                                    <span v-else-if="user.is_approved" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Approved
+                                    </span>
+                                    <span v-else class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Pending
+                                    </span>
+                                    <span v-if="user.deleted_at" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Deleted
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>Participating: {{ user.tournaments_count }}</div>
+                                <div>Created: {{ user.created_tournaments_count }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.created_at }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div v-if="!user.deleted_at" class="flex justify-end gap-2">
+                                    <button
+                                        v-if="!user.is_approved && !user.is_admin"
+                                        @click="approveUser(user.id)"
+                                        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
+                                    >
+                                        <i class="fas fa-check mr-1"></i>
+                                        Approve
+                                    </button>
+                                    <button
+                                        v-if="user.is_approved && !user.is_admin"
+                                        @click="disapproveUser(user.id)"
+                                        class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-xs"
+                                    >
+                                        <i class="fas fa-times mr-1"></i>
+                                        Disapprove
+                                    </button>
+                                    <button
+                                        v-if="!user.is_admin"
+                                        @click="removeUser(user.id)"
+                                        class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs"
+                                    >
+                                        <i class="fas fa-trash mr-1"></i>
+                                        Remove
+                                    </button>
+                                </div>
+                                <span v-else class="text-gray-400 text-xs">Deleted</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="userTotalPages > 1" class="bg-gray-50 px-6 py-4 border-t border-green-200 flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Page {{ userCurrentPage }} of {{ userTotalPages }}
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        @click="loadUsers(userCurrentPage - 1)"
+                        :disabled="userCurrentPage === 1"
+                        :class="[
+                            'px-4 py-2 rounded-lg font-medium transition-colors',
+                            userCurrentPage === 1
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                        ]"
+                    >
+                        Previous
+                    </button>
+                    <button
+                        @click="loadUsers(userCurrentPage + 1)"
+                        :disabled="userCurrentPage === userTotalPages"
+                        :class="[
+                            'px-4 py-2 rounded-lg font-medium transition-colors',
+                            userCurrentPage === userTotalPages
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                        ]"
+                    >
+                        Next
+                    </button>
                 </div>
             </div>
         </div>

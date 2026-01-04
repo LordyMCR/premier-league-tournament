@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Models\User;
+use App\Models\TournamentParticipant;
+use App\Models\Pick;
 
 class AdminController extends Controller
 {
@@ -15,6 +19,142 @@ class AdminController extends Controller
     {
         return Inertia::render('Admin/Index', [
             'user' => auth()->user(),
+        ]);
+    }
+
+    /**
+     * Get users list (approved, pending, or all)
+     */
+    public function getUsers(Request $request)
+    {
+        $type = $request->get('type', 'all'); // 'all', 'approved', 'pending'
+        $search = $request->get('search', '');
+
+        $query = User::query()->withTrashed(); // Include soft-deleted users for admin view
+
+        if ($type === 'approved') {
+            $query->where('is_approved', true);
+        } elseif ($type === 'pending') {
+            $query->where('is_approved', false);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+            $users = $query->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->through(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_approved' => $user->is_approved,
+                    'approved_at' => $user->approved_at?->format('Y-m-d H:i:s'),
+                    'is_admin' => $user->is_admin,
+                    'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                    'deleted_at' => $user->deleted_at?->format('Y-m-d H:i:s'),
+                    'tournaments_count' => $user->tournaments()->count(),
+                    'created_tournaments_count' => $user->createdTournaments()->count(),
+                ];
+            });
+
+        return response()->json($users);
+    }
+
+    /**
+     * Approve a user
+     */
+    public function approveUser(Request $request, $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        if ($user->is_approved) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is already approved.',
+            ], 400);
+        }
+
+        $user->approve();
+
+        return response()->json([
+            'success' => true,
+            'message' => "User {$user->email} has been approved successfully.",
+        ]);
+    }
+
+    /**
+     * Disapprove a user
+     */
+    public function disapproveUser(Request $request, $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        if (!$user->is_approved) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is already not approved.',
+            ], 400);
+        }
+
+        $user->disapprove();
+
+        return response()->json([
+            'success' => true,
+            'message' => "User {$user->email} approval has been revoked.",
+        ]);
+    }
+
+    /**
+     * Remove a user (soft delete and remove from tournaments)
+     */
+    public function removeUser(Request $request, $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        // Don't allow removing yourself
+        if ($user->id === auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot remove your own account.',
+            ], 400);
+        }
+
+        // Don't allow removing other admins
+        if ($user->is_admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot remove admin users.',
+            ], 400);
+        }
+
+        DB::transaction(function () use ($user) {
+            // Get all tournaments the user is in
+            $participations = TournamentParticipant::where('user_id', $user->id)->get();
+
+            foreach ($participations as $participation) {
+                // Delete all picks for this user in this tournament
+                Pick::where('tournament_id', $participation->tournament_id)
+                    ->where('user_id', $user->id)
+                    ->delete();
+
+                // Remove participant record
+                $participation->delete();
+            }
+
+            // If user created tournaments, we need to handle that
+            // For now, we'll just soft delete the user
+            // The tournaments will remain but the creator_id will point to a deleted user
+            $user->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "User {$user->email} has been removed successfully.",
         ]);
     }
 
