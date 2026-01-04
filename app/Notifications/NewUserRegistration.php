@@ -39,22 +39,17 @@ class NewUserRegistration extends Notification
     {
         return (new MailMessage)
             ->subject('New User Registration - Approval Required')
-            ->greeting('New User Registration Alert')
+            ->greeting('New User Registration')
             ->line('A new user has registered on PL Tournament and requires approval.')
+            ->line('')
             ->line('**User Details:**')
             ->line('• **Name:** ' . $this->user->name)
             ->line('• **Email:** ' . $this->user->email)
             ->line('• **Registered:** ' . $this->user->created_at->format('F j, Y \a\t g:i A'))
-            ->line('• **Approval Token:** ' . $this->user->approval_token)
             ->line('')
-            ->line('**Actions Required:**')
-            ->line('To approve this user, run the following command:')
-            ->line('`php artisan user:approve approve ' . $this->user->email . '`')
+            ->action('Manage Users in Admin Panel', route('admin.index'))
+            ->line('You can approve, disapprove, or remove this user from the Admin Panel.')
             ->line('')
-            ->line('To disapprove this user, run:')
-            ->line('`php artisan user:approve disapprove ' . $this->user->email . '`')
-            ->line('')
-            ->action('View User in Database', config('app.url'))
             ->line('This is an automated notification from your PL Tournament application.');
     }
 

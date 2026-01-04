@@ -459,33 +459,38 @@ const removeUser = async (userId) => {
                                 {{ user.created_at }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div v-if="!user.deleted_at" class="flex justify-end gap-2">
-                                    <button
-                                        v-if="!user.is_approved && !user.is_admin"
-                                        @click="approveUser(user.id)"
-                                        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
-                                    >
-                                        <i class="fas fa-check mr-1"></i>
-                                        Approve
-                                    </button>
-                                    <button
-                                        v-if="user.is_approved && !user.is_admin"
-                                        @click="disapproveUser(user.id)"
-                                        class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-xs"
-                                    >
-                                        <i class="fas fa-times mr-1"></i>
-                                        Disapprove
-                                    </button>
-                                    <button
-                                        v-if="!user.is_admin"
-                                        @click="removeUser(user.id)"
-                                        class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs"
-                                    >
-                                        <i class="fas fa-trash mr-1"></i>
-                                        Remove
-                                    </button>
+                                <div v-if="!user.deleted_at && !user.is_admin" class="flex justify-end gap-2">
+                                    <!-- Pending users: Show Approve and Disapprove buttons -->
+                                    <template v-if="!user.is_approved">
+                                        <button
+                                            @click="approveUser(user.id)"
+                                            class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
+                                        >
+                                            <i class="fas fa-check mr-1"></i>
+                                            Approve
+                                        </button>
+                                        <button
+                                            @click="disapproveUser(user.id)"
+                                            class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-xs"
+                                        >
+                                            <i class="fas fa-times mr-1"></i>
+                                            Deny
+                                        </button>
+                                    </template>
+                                    
+                                    <!-- Approved users: Show only Remove button -->
+                                    <template v-else>
+                                        <button
+                                            @click="removeUser(user.id)"
+                                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs"
+                                        >
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Remove
+                                        </button>
+                                    </template>
                                 </div>
-                                <span v-else class="text-gray-400 text-xs">Deleted</span>
+                                <span v-else-if="user.deleted_at" class="text-gray-400 text-xs">Deleted</span>
+                                <span v-else-if="user.is_admin" class="text-gray-400 text-xs">Admin</span>
                             </td>
                         </tr>
                     </tbody>
