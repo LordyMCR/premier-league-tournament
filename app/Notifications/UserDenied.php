@@ -44,7 +44,7 @@ class UserDenied extends Notification
             ->line('• Incomplete registration information')
             ->line('• Other administrative reasons')
             ->line('If you believe this is an error or would like to discuss your application, please feel free to contact us.')
-            ->action('Contact Support', 'mailto:' . config('app.admin_email', 'support@pl-tournament.com'))
+            ->action('Contact Support', 'mailto:support@pl-tournament.com')
             ->line('We appreciate your understanding and interest in our platform.')
             ->salutation('Best regards, The PL Tournament Team');
     }
