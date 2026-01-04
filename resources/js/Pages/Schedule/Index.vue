@@ -64,23 +64,9 @@ const formatScore = (game) => {
 };
 
 const getGameStatusBadge = (game) => {
-    // If explicitly finished, show FT
+    // Always trust the database status first - if it says FINISHED, show FT
     if (game.status === 'FINISHED') {
         return { class: 'bg-green-100 text-green-700', text: 'FT' };
-    }
-    
-    // Calculate if game should be LIVE based on kick-off time
-    if (game.kick_off_time) {
-        const now = new Date();
-        const kickOff = new Date(game.kick_off_time);
-        const timeSinceKickOff = now - kickOff; // milliseconds
-        const minutesSinceKickOff = timeSinceKickOff / 1000 / 60;
-        
-        // Game is LIVE if it kicked off between 0 and 120 minutes ago (2 hours max match duration)
-        // and it's not marked as FINISHED
-        if (minutesSinceKickOff >= 0 && minutesSinceKickOff <= 120) {
-            return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
-        }
     }
     
     // Handle specific live statuses from database
@@ -88,9 +74,37 @@ const getGameStatusBadge = (game) => {
         return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
     }
     
-    // Default to scheduled/upcoming
+    // For SCHEDULED/TIMED games, use time-based logic to determine if they should be LIVE
     if (game.status === 'SCHEDULED' || game.status === 'TIMED') {
+        if (game.kick_off_time) {
+            const now = new Date();
+            const kickOff = new Date(game.kick_off_time);
+            const timeSinceKickOff = now - kickOff; // milliseconds
+            const minutesSinceKickOff = timeSinceKickOff / 1000 / 60;
+            
+            // Game is LIVE if it kicked off between 0 and 120 minutes ago (2 hours max match duration)
+            if (minutesSinceKickOff >= 0 && minutesSinceKickOff <= 120) {
+                return { class: 'bg-red-100 text-red-700 animate-pulse', text: 'LIVE' };
+            }
+            
+            // If game kicked off more than 120 minutes ago but status is still SCHEDULED,
+            // it might be finished but not updated - show as FT
+            if (minutesSinceKickOff > 120) {
+                return { class: 'bg-green-100 text-green-700', text: 'FT' };
+            }
+        }
+        
+        // Future game - show kick-off time
         return { class: 'bg-blue-100 text-blue-700', text: 'KO' };
+    }
+    
+    // Handle other statuses (POSTPONED, CANCELLED, etc.)
+    if (game.status === 'POSTPONED') {
+        return { class: 'bg-yellow-100 text-yellow-700', text: 'PP' };
+    }
+    
+    if (game.status === 'CANCELLED') {
+        return { class: 'bg-gray-100 text-gray-700', text: 'CAN' };
     }
     
     // Fallback to whatever status is in the database

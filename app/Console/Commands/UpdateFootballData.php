@@ -256,6 +256,9 @@ class UpdateFootballData extends Command
 
         $updatedCount = 0;
         $newResultsCount = 0;
+        $checkedCount = 0;
+        $finishedCount = 0;
+        $scheduledCount = 0;
 
         foreach ($gamesData as $gameData) {
             try {
@@ -265,26 +268,45 @@ class UpdateFootballData extends Command
                     continue;
                 }
 
+                $checkedCount++;
+                
+                // Track game statuses
+                if ($gameData['status'] === 'FINISHED') {
+                    $finishedCount++;
+                } elseif ($gameData['status'] === 'SCHEDULED') {
+                    $scheduledCount++;
+                }
+
                 // Check if result has changed or kick-off time has been updated
+                // Important: Always allow score updates even for FINISHED games (late goals, VAR corrections, etc.)
                 // BUT don't reset finished games back to scheduled
-                $hasNewResult = (
-                    ($game->status !== $gameData['status'] && !($game->status === 'FINISHED' && $gameData['status'] === 'SCHEDULED')) ||
-                    $game->home_score !== $gameData['home_score'] ||
-                    $game->away_score !== $gameData['away_score'] ||
-                    $game->kick_off_time->ne($gameData['kick_off_time'])
-                );
+                $statusChanged = ($game->status !== $gameData['status'] && !($game->status === 'FINISHED' && $gameData['status'] === 'SCHEDULED'));
+                $scoreChanged = ($game->home_score !== $gameData['home_score'] || $game->away_score !== $gameData['away_score']);
+                $kickOffChanged = $game->kick_off_time->ne($gameData['kick_off_time']);
+                
+                $hasNewResult = $statusChanged || $scoreChanged || $kickOffChanged;
 
                 if ($hasNewResult) {
                     $oldStatus = $game->status;
                     $oldKickOff = $game->kick_off_time;
                     
-                    // Update game
-                    $game->update([
+                    // Update game - always update scores even if game is already FINISHED
+                    // (allows for late goals, VAR corrections, etc.)
+                    $updateData = [
                         'home_score' => $gameData['home_score'],
                         'away_score' => $gameData['away_score'],
-                        'status' => $gameData['status'],
                         'kick_off_time' => $gameData['kick_off_time'],
-                    ]);
+                    ];
+                    
+                    // Only update status if it changed (and not trying to reset FINISHED -> SCHEDULED)
+                    if ($statusChanged) {
+                        $updateData['status'] = $gameData['status'];
+                    } else {
+                        // If status didn't change but we're updating, preserve current status
+                        $updateData['status'] = $game->status;
+                    }
+                    
+                    $game->update($updateData);
 
                     // Show what was updated
                     $updates = [];
@@ -320,7 +342,15 @@ class UpdateFootballData extends Command
         // Update gameweek completion status
         $this->updateGameweekCompletion();
 
-        $this->info("Results update complete! Updated: {$updatedCount} games, Processed results: {$newResultsCount}");
+        $this->info("Results update complete!");
+        $this->line("  • Checked: {$checkedCount} games");
+        $this->line("  • Updated: {$updatedCount} games");
+        $this->line("  • New results processed: {$newResultsCount} games");
+        $this->line("  • Current status: {$finishedCount} finished, {$scheduledCount} scheduled");
+        
+        if ($updatedCount === 0 && $newResultsCount === 0) {
+            $this->comment('  → All games are up to date. No changes detected.');
+        }
     }
 
     /**
