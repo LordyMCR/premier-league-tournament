@@ -197,6 +197,17 @@ watch(() => [props.nextGameWeekNumber, props.fullSeasonEnd, props.halfSeasonEnd]
         </template>
 
         <div class="max-w-4xl mx-auto">
+            <!-- General Error Display -->
+            <div v-if="form.errors.tournament || form.errors.tournament_mode" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-600 mt-1 mr-3"></i>
+                    <div>
+                        <p v-if="form.errors.tournament" class="text-red-800 font-medium">{{ form.errors.tournament }}</p>
+                        <p v-if="form.errors.tournament_mode" class="text-red-800 font-medium">{{ form.errors.tournament_mode }}</p>
+                    </div>
+                </div>
+            </div>
+            
             <form @submit.prevent="submit" class="space-y-8">
                 <!-- Tournament Details -->
                 <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
@@ -260,6 +271,7 @@ watch(() => [props.nextGameWeekNumber, props.fullSeasonEnd, props.halfSeasonEnd]
                         <!-- Tournament Mode Selection -->
                         <div>
                             <InputLabel value="Tournament Duration" />
+                            <InputError class="mt-2" :message="form.errors.tournament_mode" />
                             <div class="mt-3 space-y-3">
                                 <label class="flex items-start">
                                     <input

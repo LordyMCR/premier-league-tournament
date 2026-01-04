@@ -92,6 +92,9 @@ class TournamentController extends Controller
         $currentGameWeek = GameWeek::getCurrentGameWeek();
         $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
         
+        error_log('Current Game Week: ' . ($currentGameWeek ? $currentGameWeek->week_number : 'null'));
+        error_log('Next Game Week Number: ' . $nextGameWeekNumber);
+        
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -102,9 +105,13 @@ class TournamentController extends Controller
                 'start_game_week' => 'required|integer|min:1',
                 'end_game_week' => 'required|integer|min:1',
             ]);
+            
+            error_log('=== VALIDATION PASSED ===');
+            error_log('Validated Data: ' . json_encode($validated));
         } catch (\Illuminate\Validation\ValidationException $e) {
             error_log('=== VALIDATION FAILED ===');
             error_log('Errors: ' . json_encode($e->errors()));
+            error_log('Request Data: ' . json_encode($request->all()));
             
             Log::error('Tournament creation validation failed', [
                 'user_id' => Auth::id(),
@@ -118,32 +125,48 @@ class TournamentController extends Controller
         $fullSeasonEnd = min(38, $nextGameWeekNumber + 37); // From current to end of season
         $halfSeasonEnd = min($nextGameWeekNumber + 18, 38); // From current + 18 weeks
 
+        error_log('Full Season End: ' . $fullSeasonEnd);
+        error_log('Half Season End: ' . $halfSeasonEnd);
+        error_log('Validating game week ranges for mode: ' . $validated['tournament_mode']);
+
         // Validate game week ranges based on mode
         if ($validated['tournament_mode'] === 'full_season') {
+            error_log('Checking full_season: start=' . $validated['start_game_week'] . ' (expected ' . $nextGameWeekNumber . '), end=' . $validated['end_game_week'] . ' (expected ' . $fullSeasonEnd . ')');
             if ($validated['start_game_week'] !== $nextGameWeekNumber || $validated['end_game_week'] !== $fullSeasonEnd) {
+                error_log('=== FULL SEASON VALIDATION FAILED ===');
                 return back()->withErrors(['tournament_mode' => "Full season must be from gameweek {$nextGameWeekNumber} to {$fullSeasonEnd}."]);
             }
         } elseif ($validated['tournament_mode'] === 'half_season') {
+            error_log('Checking half_season: start=' . $validated['start_game_week'] . ' (expected ' . $nextGameWeekNumber . '), end=' . $validated['end_game_week'] . ' (expected ' . $halfSeasonEnd . ')');
             if ($validated['start_game_week'] !== $nextGameWeekNumber || $validated['end_game_week'] !== $halfSeasonEnd) {
+                error_log('=== HALF SEASON VALIDATION FAILED ===');
                 return back()->withErrors(['tournament_mode' => "Half season must be from gameweek {$nextGameWeekNumber} to {$halfSeasonEnd}."]);
             }
         } else { // custom mode
+            error_log('Checking custom mode: start=' . $validated['start_game_week'] . ', end=' . $validated['end_game_week']);
             if ($validated['start_game_week'] >= $validated['end_game_week']) {
+                error_log('=== CUSTOM MODE VALIDATION FAILED: end must be after start ===');
                 return back()->withErrors(['end_game_week' => 'End game week must be after start game week.']);
             }
             
             $totalWeeks = $validated['end_game_week'] - $validated['start_game_week'] + 1;
+            error_log('Total weeks: ' . $totalWeeks);
             
             // Custom tournaments can now exceed 20 gameweeks (home/away picks will be used)
             if ($totalWeeks > 38) {
+                error_log('=== CUSTOM MODE VALIDATION FAILED: exceeds 38 weeks ===');
                 return back()->withErrors(['end_game_week' => 'Custom tournaments cannot exceed the entire season (38 gameweeks).']);
             }
             
             // Ensure custom tournaments start from current or future gameweeks
+            error_log('Checking if start_game_week (' . $validated['start_game_week'] . ') >= nextGameWeekNumber (' . $nextGameWeekNumber . ')');
             if ($validated['start_game_week'] < $nextGameWeekNumber) {
+                error_log('=== CUSTOM MODE VALIDATION FAILED: start before current gameweek ===');
                 return back()->withErrors(['start_game_week' => "Tournaments cannot start before gameweek {$nextGameWeekNumber}."]);
             }
         }
+        
+        error_log('=== GAME WEEK VALIDATION PASSED ===');
 
         $totalGameWeeks = $validated['end_game_week'] - $validated['start_game_week'] + 1;
 
