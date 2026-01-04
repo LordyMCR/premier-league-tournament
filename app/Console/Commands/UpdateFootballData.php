@@ -130,6 +130,11 @@ class UpdateFootballData extends Command
 
         if (empty($gameweeks)) {
             $this->error('Failed to fetch gameweeks from API.');
+            $this->warn('Check the logs for more details. Common issues:');
+            $this->warn('  - API key may be invalid or expired');
+            $this->warn('  - API rate limit may have been exceeded');
+            $this->warn('  - Season parameter may be incorrect');
+            $this->warn('  - Network connectivity issues');
             return;
         }
 
@@ -167,6 +172,11 @@ class UpdateFootballData extends Command
 
         if (empty($gamesData)) {
             $this->error('Failed to fetch games from API.');
+            $this->warn('Check the logs for more details. Common issues:');
+            $this->warn('  - API key may be invalid or expired');
+            $this->warn('  - API rate limit may have been exceeded');
+            $this->warn('  - Season parameter may be incorrect');
+            $this->warn('  - Network connectivity issues');
             return;
         }
 
@@ -234,6 +244,11 @@ class UpdateFootballData extends Command
         
         if (empty($gamesData)) {
             $this->error('No games data received from API.');
+            $this->warn('Check the logs for more details. Common issues:');
+            $this->warn('  - API key may be invalid or expired');
+            $this->warn('  - API rate limit may have been exceeded');
+            $this->warn('  - Season parameter may be incorrect');
+            $this->warn('  - Network connectivity issues');
             return;
         }
 

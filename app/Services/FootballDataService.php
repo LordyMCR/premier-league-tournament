@@ -52,27 +52,40 @@ class FootballDataService
     public function getPremierLeagueFixtures(): array
     {
         try {
+            $season = $this->getCurrentSeason();
             // Get current season matches
             $response = Http::withHeaders([
                 'X-Auth-Token' => $this->apiKey
-            ])->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
-                'season' => $this->getCurrentSeason()
+            ])->timeout(30)->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
+                'season' => $season
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                return $this->formatGameweeksData($data['matches'] ?? []);
+                $matches = $data['matches'] ?? [];
+                
+                if (empty($matches)) {
+                    Log::warning('Premier League fixtures API returned empty matches array', [
+                        'season' => $season,
+                        'response' => $data
+                    ]);
+                }
+                
+                return $this->formatGameweeksData($matches);
             }
 
             Log::error('Failed to fetch Premier League fixtures', [
                 'status' => $response->status(),
-                'response' => $response->body()
+                'season' => $season,
+                'response' => $response->body(),
+                'headers' => $response->headers()
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Exception fetching Premier League fixtures', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return [];
         }
@@ -84,27 +97,40 @@ class FootballDataService
     public function getPremierLeagueGames(): array
     {
         try {
+            $season = $this->getCurrentSeason();
             // Get current season matches
             $response = Http::withHeaders([
                 'X-Auth-Token' => $this->apiKey
-            ])->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
-                'season' => $this->getCurrentSeason()
+            ])->timeout(30)->get("{$this->baseUrl}/competitions/{$this->premierLeagueId}/matches", [
+                'season' => $season
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                return $this->formatGamesData($data['matches'] ?? []);
+                $matches = $data['matches'] ?? [];
+                
+                if (empty($matches)) {
+                    Log::warning('Premier League games API returned empty matches array', [
+                        'season' => $season,
+                        'response' => $data
+                    ]);
+                }
+                
+                return $this->formatGamesData($matches);
             }
 
             Log::error('Failed to fetch Premier League games', [
                 'status' => $response->status(),
-                'response' => $response->body()
+                'season' => $season,
+                'response' => $response->body(),
+                'headers' => $response->headers()
             ]);
 
             return [];
         } catch (\Exception $e) {
             Log::error('Exception fetching Premier League games', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return [];
         }
@@ -491,18 +517,19 @@ class FootballDataService
 
     /**
      * Get current football season year
+     * Football season runs from August to May
+     * For 2025/2026 season, we return 2025 (the start year)
      */
     private function getCurrentSeason(): int
     {
         $now = Carbon::now();
-        // Football season runs from August to May
-        // For 2025/2026 season, we want to return 2025
+        // If we're in August or later, we're in the new season (e.g., Aug 2025 = 2025/26 season)
         if ($now->month >= 8) {
             return $now->year;
         }
         // If we're between January and July, we're still in the previous season
-        // But since we want the UPCOMING season (2025/26), we'll return current year
-        return $now->year;
+        // (e.g., Jan 2026 = still in 2025/26 season, so return 2025)
+        return $now->year - 1;
     }
 
     /**
