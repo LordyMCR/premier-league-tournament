@@ -71,7 +71,11 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
-        // Log incoming request for debugging
+        // Log incoming request for debugging - using both Log and error_log for Heroku
+        error_log('=== TOURNAMENT CREATION REQUEST START ===');
+        error_log('User ID: ' . Auth::id());
+        error_log('Request Data: ' . json_encode($request->all()));
+        
         Log::info('Tournament creation request received', [
             'user_id' => Auth::id(),
             'request_data' => $request->all(),
@@ -99,6 +103,9 @@ class TournamentController extends Controller
                 'end_game_week' => 'required|integer|min:1',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            error_log('=== VALIDATION FAILED ===');
+            error_log('Errors: ' . json_encode($e->errors()));
+            
             Log::error('Tournament creation validation failed', [
                 'user_id' => Auth::id(),
                 'errors' => $e->errors(),
@@ -155,6 +162,10 @@ class TournamentController extends Controller
                 'tournament_mode' => $validated['tournament_mode'],
             ]);
 
+            error_log('=== TOURNAMENT CREATED SUCCESSFULLY ===');
+            error_log('Tournament ID: ' . $tournament->id);
+            error_log('Tournament Name: ' . $tournament->name);
+            
             Log::info('Tournament created successfully', [
                 'tournament_id' => $tournament->id,
                 'user_id' => Auth::id(),
@@ -175,6 +186,10 @@ class TournamentController extends Controller
                 ->with('success', 'Tournament created successfully! Share the join code: ' . $tournament->join_code);
                 
         } catch (\Exception $e) {
+            error_log('=== TOURNAMENT CREATION FAILED ===');
+            error_log('Error: ' . $e->getMessage());
+            error_log('Trace: ' . $e->getTraceAsString());
+            
             Log::error('Failed to create tournament', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
