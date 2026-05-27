@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pl_tournament}
+      POSTGRES_USER: ${DB_USERNAME:-pl_tournament}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      # Host port only — do not use DB_PORT here (Compose reads root .env, often 3306 for local MySQL)
+      - "${DOCKER_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-pl_tournament} -d ${DB_DATABASE:-pl_tournament}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: postgres
+      DB_CONNECTION: pgsql
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  vite:
+    image: node:20-alpine
+    restart: unless-stopped
+    working_dir: /var/www/html
+    env_file:
+      - .env.docker
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html
+      - vite_node_modules:/var/www/html/node_modules
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+  vendor_data:
+  vite_node_modules:
