@@ -4,6 +4,8 @@ set -euo pipefail
 COMPOSE="docker compose -f docker-compose.live.yml"
 
 echo "==> Pulling latest code..."
+git fetch origin main
+git checkout main
 git pull origin main
 
 echo "==> Building containers..."
