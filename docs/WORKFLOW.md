@@ -11,10 +11,42 @@
 
 ```powershell
 git checkout develop
-docker compose up -d
+make start-dev
 ```
 
 Uses `.env.docker` (not committed). Site: http://localhost:8080
+
+### Make shortcuts
+
+From the project root (requires [GNU Make](https://www.gnu.org/software/make/) — use **Git Bash**, **WSL**, or `choco install make` on Windows):
+
+| Command | What it does |
+|---------|----------------|
+| `make` or `make help` | List commands |
+| `make start-dev` | `docker compose up -d` |
+| `make stop-dev` | `docker compose down` |
+| `make restart-dev` | Restart dev containers |
+| `make rebuild` | Rebuild images and start |
+| `make rebuild-fresh` | Wipe dev DB volume + rebuild |
+| `make logs` | Follow all logs |
+| `make migrate` | Run migrations |
+| `make shell` | Bash inside app container |
+| `make artisan CMD="..."` | Run any artisan command |
+
+### Production shortcuts (on the VPS via SSH)
+
+After `cd /var/www/premier-league-tournament` (install `make` with `apt install make` if needed):
+
+| Command | What it does |
+|---------|----------------|
+| `make ps-live` | Container status |
+| `make logs-live` | All logs |
+| `make logs-web` / `make logs-caddy` | App or SSL logs |
+| `make restart-live` | Restart containers |
+| `make rebuild-live` | Rebuild images (slow) |
+| `make deploy-live` | Same as GitHub Actions deploy script |
+
+Day-to-day deploys: push to `main` (auto-deploy). Use Make on the VPS for debugging or manual deploys.
 
 Non-Docker local dev still uses `.env` + MySQL as before.
 

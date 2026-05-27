@@ -18,9 +18,21 @@ Visit [pl-tournament.com](https://www.pl-tournament.com).
 - Frontend: Vue 3, Inertia.js, Tailwind CSS, Vite
 - Services: Brevo (email), AWS S3 (storage), Football-Data.org (data)
 
+## Local Docker (quick commands)
+
+```bash
+make start-dev    # start
+make stop-dev     # stop
+make rebuild      # rebuild images
+make help         # see all shortcuts
+```
+
+Requires Docker Desktop and `make` (Git Bash / WSL). See [docs/WORKFLOW.md](docs/WORKFLOW.md).
+
 ## Documentation
 - [Development & deployment workflow](docs/WORKFLOW.md)
 - [Production setup (Hetzner + Docker)](docs/DEPLOY.md)
+- [Backlog & future ideas](docs/BACKLOG.md)
 
 ## Status
 Actively used by a private group. The site is currently in private mode; new registrations are accepted but require approval.
