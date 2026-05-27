@@ -24,6 +24,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Migration artifacts (secrets / database dumps)
-heroku-backup.dump
-heroku-config.txt
+# Secrets / database dumps (do not commit)
+*.dump
+config-export.txt

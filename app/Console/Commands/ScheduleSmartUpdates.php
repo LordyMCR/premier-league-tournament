@@ -134,8 +134,8 @@ class ScheduleSmartUpdates extends Command
         }
 
         if (!$dryRun) {
-            $this->info("\n🚀 This would be implemented by dynamically adding to Heroku Scheduler...");
-            $this->line("💡 For now, you can manually add these times to your Heroku Scheduler dashboard");
+            $this->info("\n🚀 Add these times to the production scheduler (see routes/console.php).");
+            $this->line("💡 Production runs schedule:run every minute via the scheduler container.");
         }
 
         return Command::SUCCESS;

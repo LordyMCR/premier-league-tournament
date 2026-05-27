@@ -83,4 +83,4 @@ bash scripts/deploy-live.sh
 ## Do not commit
 
 - `.env`, `.env.docker`
-- `heroku-backup.dump`, `heroku-config.txt`
+- `*.dump`, `config-export.txt`

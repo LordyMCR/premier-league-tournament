@@ -71,7 +71,7 @@ class TournamentController extends Controller
      */
     public function store(Request $request)
     {
-        // Log incoming request for debugging - using both Log and error_log for Heroku
+        // Log incoming request for debugging
         error_log('=== TOURNAMENT CREATION REQUEST START ===');
         error_log('User ID: ' . Auth::id());
         error_log('Request Data: ' . json_encode($request->all()));

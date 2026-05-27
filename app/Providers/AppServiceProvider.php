@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Ensure storage symlink exists at runtime (Heroku dynos may not persist release step)
+        // Ensure storage symlink exists at runtime (e.g. fresh container deploys)
         try {
             $storageLink = public_path('storage');
             if (!is_link($storageLink) && !file_exists($storageLink)) {
