@@ -79,8 +79,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      SITE_DOMAINS: ${SITE_DOMAINS}
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

@@ -1,3 +1,4 @@
-{$SITE_DOMAINS} {
+# Domains for SSL and routing (space after comma is required by Caddy)
+www.pl-tournament.com, pl-tournament.com {
     reverse_proxy web:80
 }
