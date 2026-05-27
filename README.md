@@ -14,9 +14,13 @@ Visit [pl-tournament.com](https://www.pl-tournament.com).
 - Analytics: personal and tournament statistics, achievements, and head-to-head comparisons
 
 ## Technology
-- Backend: Laravel 12 (PHP 8.2), MySQL
+- Backend: Laravel 12 (PHP 8.2), PostgreSQL (production) / MySQL (local)
 - Frontend: Vue 3, Inertia.js, Tailwind CSS, Vite
 - Services: Brevo (email), AWS S3 (storage), Football-Data.org (data)
+
+## Documentation
+- [Development & deployment workflow](docs/WORKFLOW.md)
+- [Production setup (Hetzner + Docker)](docs/DEPLOY.md)
 
 ## Status
 Actively used by a private group. The site is currently in private mode; new registrations are accepted but require approval.

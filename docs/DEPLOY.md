@@ -150,7 +150,7 @@ Copy every value from your Heroku config vars screenshot / `heroku-config.txt`:
 | `FOOTBALL_*`, `NEWS_API_KEY`, etc. | All API keys |
 | `DB_PASSWORD` | Pick a **new** strong password (not Heroku's) |
 
-Set `SITE_DOMAINS=www.pl-tournament.com,pl-tournament.com` (no spaces).
+Set `SITE_DOMAINS=www.pl-tournament.com, pl-tournament.com` (space after the comma — required by Caddy).
 
 **Remove or leave blank:** `DATABASE_URL` (Docker handles DB connection).
 
@@ -219,18 +219,13 @@ Once DNS propagates, visit https://www.pl-tournament.com and check:
 
 ## Part 4 — Deploying updates
 
-On the VPS:
+Pushes to `main` auto-deploy via GitHub Actions (see [WORKFLOW.md](WORKFLOW.md)).
+
+Manual deploy on the VPS:
 
 ```bash
 cd /var/www/premier-league-tournament
 bash scripts/deploy-live.sh
-```
-
-Or manually:
-
-```bash
-git pull origin main
-docker compose -f docker-compose.live.yml up -d --build
 ```
 
 ---
