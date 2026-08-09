@@ -69,8 +69,8 @@ No manual SSH required after one-time setup below.
 
 | Secret | Value |
 |--------|--------|
-| `VPS_HOST` | `62.238.43.223` |
-| `VPS_SSH_USER` | `root` |
+| `VPS_HOST` | Your VPS public IP (from Hetzner console) |
+| `VPS_SSH_USER` | SSH user (usually `root`) |
 | `VPS_SSH_KEY` | Private key for deploy (see below) |
 | `VPS_SSH_PASSPHRASE` | Only if that key has a passphrase — otherwise leave this secret unset |
 
@@ -107,12 +107,13 @@ GitHub secrets:
 ## Manual deploy (fallback)
 
 ```bash
-ssh -i ~/.ssh/id_ed25519_hetzner root@62.238.43.223
+ssh -i ~/.ssh/YOUR_PRIVATE_KEY root@YOUR_VPS_IP
 cd /var/www/premier-league-tournament
 bash scripts/deploy-live.sh
 ```
 
 ## Do not commit
 
-- `.env`, `.env.docker`
-- `*.dump`, `config-export.txt`
+- `.env`, `.env.docker`, `.env.pull`
+- Real API keys, DB passwords, or AWS credentials
+- `*.dump`, `storage/app/live-*.sql`, `config-export.txt`

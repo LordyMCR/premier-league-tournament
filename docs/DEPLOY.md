@@ -27,6 +27,19 @@ cd /var/www/premier-league-tournament
 docker compose -f docker-compose.live.yml up -d --build
 ```
 
+## Pull live DB into local Docker
+
+From your Mac (SSH key must reach the VPS; local stack running):
+
+```bash
+cp .env.pull.example .env.pull   # once — set VPS_HOST (gitignored)
+make db-pull-live
+```
+
+This SSHs to Hetzner, dumps production Postgres, and **replaces** your local Docker database. Dump file: `storage/app/live-pull.sql`.
+
+Optional: `CONFIRM=yes` to skip the prompt.
+
 ## Database restore (from backup)
 
 If importing an existing PostgreSQL custom-format dump:

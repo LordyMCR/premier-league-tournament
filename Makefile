@@ -9,7 +9,7 @@ COMPOSE_LIVE := docker compose -f docker-compose.live.yml
 .DEFAULT_GOAL := help
 
 .PHONY: help \
-	start-dev stop-dev restart-dev rebuild rebuild-fresh ps logs logs-app migrate shell artisan cache-clear install-dev \
+	start-dev stop-dev restart-dev rebuild rebuild-fresh ps logs logs-app migrate seed db-pull-live shell artisan cache-clear install-dev \
 	start-live stop-live restart-live rebuild-live ps-live logs-live logs-web logs-caddy migrate-live shell-live artisan-live deploy-live
 
 help: ## Show available commands
@@ -25,6 +25,8 @@ help: ## Show available commands
 	@echo "  make logs            Follow all logs"
 	@echo "  make logs-app        Follow app (PHP) logs"
 	@echo "  make migrate         Run migrations"
+	@echo "  make seed            Run database seeders"
+	@echo "  make db-pull-live    Replace local DB with live (SSH + pg_dump)"
 	@echo "  make shell           Bash in app container"
 	@echo "  make artisan CMD=\"...\"  Run artisan"
 	@echo "  make cache-clear     Clear Laravel caches"
@@ -79,6 +81,15 @@ logs-app:
 
 migrate:
 	$(COMPOSE_DEV) exec app php artisan migrate
+
+seed:
+	$(COMPOSE_DEV) exec app php artisan db:seed
+
+# Pull Hetzner live Postgres into local Docker Postgres (destructive).
+# Requires local .env.pull (from .env.pull.example) with VPS_HOST set.
+# Skip prompt: CONFIRM=yes make db-pull-live
+db-pull-live:
+	bash scripts/db-pull-live.sh
 
 shell:
 	$(COMPOSE_DEV) exec app bash

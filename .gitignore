@@ -4,6 +4,7 @@
 .env.backup
 .env.production
 .env.docker
+.env.pull
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -26,4 +27,5 @@ Thumbs.db
 
 # Secrets / database dumps (do not commit)
 *.dump
+/storage/app/live-*.sql
 config-export.txt
