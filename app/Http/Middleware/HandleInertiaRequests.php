@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
             ],
             'csrf_token' => csrf_token(),
+            'isLocal' => app()->environment('local'),
         ];
     }
 }

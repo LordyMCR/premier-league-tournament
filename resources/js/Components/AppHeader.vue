@@ -1,10 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Link, usePage, router } from '@inertiajs/vue3'
+import LocalEnvironmentBanner from '@/Components/LocalEnvironmentBanner.vue'
 
 const showDropdown = ref(false)
 const showMobileMenu = ref(false)
 const page = usePage()
+const isLocal = computed(() => page.props.isLocal === true)
 
 const closeDropdown = () => {
     showDropdown.value = false
@@ -22,7 +24,9 @@ const logout = () => {
 </script>
 
 <template>
-    <header class="bg-white/90 backdrop-blur-md border-b border-green-200 relative z-[9999] shadow-sm">
+    <div :class="isLocal ? 'md:sticky md:top-0 md:z-[10000]' : ''">
+        <LocalEnvironmentBanner />
+        <header class="bg-white/90 backdrop-blur-md border-b border-green-200 relative z-[9999] shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <!-- Logo -->
@@ -269,4 +273,5 @@ const logout = () => {
             </div>
         </div>
     </header>
+    </div>
 </template> 

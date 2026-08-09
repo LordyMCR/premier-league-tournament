@@ -1,5 +1,10 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import LocalEnvironmentBanner from '@/Components/LocalEnvironmentBanner.vue';
+
+const page = usePage();
+const isLocal = computed(() => page.props.isLocal === true);
 </script>
 
 <template>
@@ -8,25 +13,29 @@ import { Link } from '@inertiajs/vue3';
         <div class="absolute inset-0 opacity-10">
             <div class="absolute inset-0" style="background-image: linear-gradient(90deg, transparent 0%, transparent 49%, rgba(34, 197, 94, 0.1) 49%, rgba(34, 197, 94, 0.1) 51%, transparent 51%, transparent 100%); background-size: 100px 100px;"></div>
         </div>
+
+        <div :class="isLocal ? 'md:sticky md:top-0 md:z-[10000]' : ''">
+            <LocalEnvironmentBanner />
         
-        <!-- Header -->
-        <header class="bg-white/90 backdrop-blur-md border-b border-green-200 relative z-10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center">
-                        <Link :href="route('welcome')" class="flex items-center space-x-3 group">
-                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-                                <i class="fas fa-futbol text-white text-lg"></i>
-                            </div>
-                            <div class="flex flex-col">
-                                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
-                                <span class="text-xs text-green-600 font-medium">Premier League</span>
-                            </div>
-                        </Link>
+            <!-- Header -->
+            <header class="bg-white/90 backdrop-blur-md border-b border-green-200 relative z-10">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center py-4">
+                        <div class="flex items-center">
+                            <Link :href="route('welcome')" class="flex items-center space-x-3 group">
+                                <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
+                                    <i class="fas fa-futbol text-white text-lg"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
+                                    <span class="text-xs text-green-600 font-medium">Premier League</span>
+                                </div>
+                            </Link>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
+        </div>
 
         <!-- Main Content -->
         <main class="flex items-center justify-center min-h-[calc(100vh-120px)] px-4 sm:px-6 lg:px-8 relative z-10">
