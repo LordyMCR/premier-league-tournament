@@ -11,14 +11,14 @@ Internet → Caddy (SSL) → web (nginx + PHP) → PostgreSQL
                       ↘ queue (background jobs / emails)
 ```
 
-External services: **AWS S3**, **Brevo**, **IONOS DNS**.
+External services: **AWS S3**, **Brevo**, **Cloudflare DNS**.
 
 ## Initial VPS setup
 
 1. Ubuntu 24.04 server with Docker installed (`curl -fsSL https://get.docker.com | sh`)
 2. Clone repo to `/var/www/premier-league-tournament`
 3. `cp .env.live.example .env` and fill in production values
-4. Point IONOS A records for `@` and `www` at the server IP
+4. Point Cloudflare A records for `@` and `www` at the server IP (DNS only / grey cloud)
 5. Ensure `docker/caddy/Caddyfile` lists your domains (space after commas)
 6. Start stack:
 

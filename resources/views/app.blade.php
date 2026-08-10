@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title inertia>{{ config('app.name', 'PL Tournament') }}</title>
+        <title inertia>{{ config('app.name', 'PL Picks') }}</title>
         
         <!-- Favicon -->
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -22,7 +22,7 @@
         <!-- iOS Safari -->
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
-        <meta name="apple-mobile-web-app-title" content="PL Tournament">
+        <meta name="apple-mobile-web-app-title" content="PL Picks">
         
         <!-- Theme color -->
         <meta name="theme-color" content="#22c55e">
@@ -32,15 +32,15 @@
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:title" content="{{ config('app.name', 'PL Tournament') }}">
-        <meta property="og:description" content="Premier League Tournament">
-        <meta property="og:site_name" content="PL Tournament">
+        <meta property="og:title" content="{{ config('app.name', 'PL Picks') }}">
+        <meta property="og:description" content="Weekly Premier League picks with friends. Create private tournaments and compete on the leaderboard.">
+        <meta property="og:site_name" content="PL Picks">
         
         <!-- Twitter -->
         <meta property="twitter:card" content="summary_large_image">
         <meta property="twitter:url" content="{{ url()->current() }}">
-        <meta property="twitter:title" content="{{ config('app.name', 'PL Tournament') }}">
-        <meta property="twitter:description" content="Premier League Tournament">
+        <meta property="twitter:title" content="{{ config('app.name', 'PL Picks') }}">
+        <meta property="twitter:description" content="Weekly Premier League picks with friends. Create private tournaments and compete on the leaderboard.">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

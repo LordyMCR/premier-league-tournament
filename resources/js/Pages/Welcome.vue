@@ -16,24 +16,24 @@ const page = usePage();
 </script>
 
 <template>
-    <Head title="PL Tournament - Premier League Predictions Game | Join Private Tournaments">
-        <meta name="description" content="PL Tournament - The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends. Simple rules, strategic gameplay." />
-        <meta name="keywords" content="PL Tournament, Premier League predictions, football predictions, soccer picks, tournament game, Premier League game, football tournament" />
-        <meta name="author" content="PL Tournament" />
+    <Head title="PL Picks - Premier League Predictions Game | Join Private Tournaments">
+        <meta name="description" content="PL Picks - The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends. Simple rules, strategic gameplay." />
+        <meta name="keywords" content="PL Picks, Premier League predictions, football predictions, soccer picks, tournament game, Premier League game, football tournament" />
+        <meta name="author" content="PL Picks" />
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.pl-tournament.com/" />
-        <meta property="og:title" content="PL Tournament - Premier League Predictions Game" />
+        <meta property="og:url" content="https://www.plpicks.com/" />
+        <meta property="og:title" content="PL Picks - Premier League Predictions Game" />
         <meta property="og:description" content="The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends." />
-        <meta property="og:image" content="https://www.pl-tournament.com/favicon.ico" />
+        <meta property="og:image" content="https://www.plpicks.com/favicon.ico" />
 
         <!-- Twitter -->
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content="https://www.pl-tournament.com/" />
-        <meta property="twitter:title" content="PL Tournament - Premier League Predictions Game" />
+        <meta property="twitter:url" content="https://www.plpicks.com/" />
+        <meta property="twitter:title" content="PL Picks - Premier League Predictions Game" />
         <meta property="twitter:description" content="The ultimate Premier League predictions game. Create private tournaments, make weekly team picks, and compete with friends." />
-        <meta property="twitter:image" content="https://www.pl-tournament.com/favicon.ico" />
+        <meta property="twitter:image" content="https://www.plpicks.com/favicon.ico" />
         
 
     </Head>
@@ -53,7 +53,7 @@ const page = usePage();
                     <div class="text-center">
                         <!-- Hero Title -->
                         <h1 class="text-5xl md:text-7xl font-bold text-gray-900 mb-6 tracking-tight">
-                            PL Tournament
+                            PL Picks
                         </h1>
                         
                         <!-- Hero Subtitle -->
@@ -136,7 +136,7 @@ const page = usePage();
             <section class="py-20 bg-green-50">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-16">
-                        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why PL Tournament?</h2>
+                        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why PL Picks?</h2>
                         <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                             Lightweight, private, and designed for weekly picks.
                         </p>

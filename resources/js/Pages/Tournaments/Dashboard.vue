@@ -9,7 +9,7 @@ defineProps({
 </script>
 
 <template>
-    <Head title="My Tournaments - PL Tournament" />
+    <Head title="My Tournaments - PL Picks" />
 
     <TournamentLayout>
         <template #header>

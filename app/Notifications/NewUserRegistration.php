@@ -40,7 +40,7 @@ class NewUserRegistration extends Notification
         return (new MailMessage)
             ->subject('New User Registration - Approval Required')
             ->greeting('New User Registration')
-            ->line('A new user has registered on PL Tournament and requires approval.')
+            ->line('A new user has registered on PL Picks and requires approval.')
             ->line('')
             ->line('**User Details:**')
             ->line('• **Name:** ' . $this->user->name)
@@ -50,7 +50,7 @@ class NewUserRegistration extends Notification
             ->action('Manage Users in Admin Panel', route('admin.index'))
             ->line('You can approve, disapprove, or remove this user from the Admin Panel.')
             ->line('')
-            ->line('This is an automated notification from your PL Tournament application.');
+            ->line('This is an automated notification from your PL Picks application.');
     }
 
     /**

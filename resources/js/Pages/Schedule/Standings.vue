@@ -1,5 +1,5 @@
 <template>
-    <Head title="Premier League Table - PL Tournament" />
+    <Head title="Premier League Table - PL Picks" />
     
     <TournamentLayout>
         <div class="min-h-screen bg-gray-50">

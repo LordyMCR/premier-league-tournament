@@ -1,4 +1,4 @@
 # Domains for SSL and routing (space after comma is required by Caddy)
-www.pl-tournament.com, pl-tournament.com {
+www.plpicks.com, plpicks.com {
     reverse_proxy web:80
 }

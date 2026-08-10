@@ -35,18 +35,18 @@ class UserDisapproved extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Account Application Update - PL Tournament')
+            ->subject('Account Application Update - PL Picks')
             ->greeting('Hello ' . $notifiable->name . ',')
-            ->line('Thank you for your interest in joining PL Tournament.')
+            ->line('Thank you for your interest in joining PL Picks.')
             ->line('After reviewing your application, we are unable to approve your account at this time.')
             ->line('This may be due to:')
             ->line('• Limited capacity for new members')
             ->line('• Incomplete registration information')
             ->line('• Other administrative reasons')
             ->line('If you believe this is an error or would like to discuss your application, please feel free to contact us.')
-            ->action('Contact Support', 'mailto:support@pl-tournament.com')
+            ->action('Contact Support', 'mailto:support@plpicks.com')
             ->line('We appreciate your understanding and interest in our platform.')
-            ->salutation('Best regards, The PL Tournament Team');
+            ->salutation('Best regards, The PL Picks Team');
     }
 
     /**

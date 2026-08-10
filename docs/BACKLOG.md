@@ -31,13 +31,13 @@ When adding a task below, tag it: **`[local]`**, **`[production]`**, **`[both]`*
 
 ### Open questions (decide before building)
 
-- [ ] Admin panel **inside** PL Tournament vs separate tool (e.g. Uptime Kuma + Sentry only)?
+- [ ] Admin panel **inside** PL Picks vs separate tool (e.g. Uptime Kuma + Sentry only)?
 - [ ] Real-time Docker stats on admin page vs email/Slack when something breaks?
 - [ ] Should local Docker expose a **debug** health dashboard (`[local]` only, `APP_DEBUG=true`)?
 
 ### Suggested phases
 
-1. **`[production]`** — External uptime check on `https://www.pl-tournament.com/up` (free tier).
+1. **`[production]`** — External uptime check on `https://www.plpicks.com/up` (free tier).
 2. **`[app]`** + **`[production]`** — Sentry (or similar) for Laravel exceptions; DSN in VPS `.env` only.
 3. **`[app]`** — Admin page: recent failed jobs, last scheduler run, link to docs for `docker compose logs` commands.
 4. **`[production]`** — Optional: lightweight on-VPS dashboard (Uptime Kuma) for container/process up/down.

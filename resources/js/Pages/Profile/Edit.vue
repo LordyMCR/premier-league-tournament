@@ -208,7 +208,7 @@ const statusMessage = computed(() => {
 </script>
 
 <template>
-    <Head title="Profile Settings - PL Tournament" />
+    <Head title="Profile Settings - PL Picks" />
 
     <TournamentLayout>
         <div class="min-h-screen py-4 sm:py-8">

@@ -36,8 +36,8 @@ const logout = () => {
                             <img src="/favicon.ico" alt="Football" class="w-6 h-6" />
                         </div>
                         <div class="flex flex-col">
-                            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
-                            <span class="text-xs text-green-600 font-medium">Premier League Predictions</span>
+                            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Picks</h1>
+                            <span class="text-xs text-green-600 font-medium">Weekly Premier League picks</span>
                         </div>
                     </Link>
                 </div>

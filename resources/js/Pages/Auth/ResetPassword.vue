@@ -33,7 +33,7 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Reset Password - PL Tournament" />
+        <Head title="Reset Password - PL Picks" />
 
         <form @submit.prevent="submit">
             <div>

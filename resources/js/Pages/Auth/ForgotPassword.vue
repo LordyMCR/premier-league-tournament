@@ -23,7 +23,7 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Forgot Password - PL Tournament" />
+        <Head title="Forgot Password - PL Picks" />
 
         <div class="text-center mb-8">
             <div class="flex justify-center mb-6">

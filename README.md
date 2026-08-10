@@ -1,9 +1,9 @@
-# Premier League Tournament Platform
+# PL Picks Platform
 
 A web application for running private Premier League prediction tournaments with friends and family. Create tournaments, make weekly picks, and track standings and statistics powered by real match data.
 
 ## Website
-Visit [pl-tournament.com](https://www.pl-tournament.com).
+Visit [plpicks.com](https://www.plpicks.com).
 
 ## Core Features
 - Tournament management: private tournaments, join codes, leaderboards
@@ -38,7 +38,7 @@ Requires Docker Desktop and `make` (Git Bash / WSL). See [docs/WORKFLOW.md](docs
 Actively used by a private group. The site is currently in private mode; new registrations are accepted but require approval.
 
 ## Contact
-Questions or access requests: support@pl-tournament.com
+Questions or access requests: support@plpicks.com
 
 ## Author
 Daniel Lord ([@LordyMCR](https://github.com/LordyMCR))

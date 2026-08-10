@@ -168,7 +168,7 @@ const resetFilters = () => {
 </script>
 
 <template>
-    <Head title="Premier League Schedule - PL Tournament" />
+    <Head title="Premier League Schedule - PL Picks" />
 
     <TournamentLayout>
         <template #header>

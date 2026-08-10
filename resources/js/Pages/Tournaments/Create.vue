@@ -175,7 +175,7 @@ watch(() => [props.nextGameWeekNumber, props.fullSeasonEnd, props.halfSeasonEnd]
 </script>
 
 <template>
-    <Head title="Create Tournament - PL Tournament" />
+    <Head title="Create Tournament - PL Picks" />
 
     <TournamentLayout>
         <template #header>

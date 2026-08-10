@@ -1,7 +1,7 @@
 {
-  "name": "Premier League Tournament",
-  "short_name": "PL Tournament",
-  "description": "Premier League Tournament - Pick your teams and compete with friends",
+  "name": "PL Picks",
+  "short_name": "PL Picks",
+  "description": "PL Picks - Pick your teams and compete with friends",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

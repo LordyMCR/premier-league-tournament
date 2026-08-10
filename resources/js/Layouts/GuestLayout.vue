@@ -27,7 +27,7 @@ const isLocal = computed(() => page.props.isLocal === true);
                                     <i class="fas fa-futbol text-white text-lg"></i>
                                 </div>
                                 <div class="flex flex-col">
-                                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Tournament</h1>
+                                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">PL Picks</h1>
                                     <span class="text-xs text-green-600 font-medium">Premier League</span>
                                 </div>
                             </Link>

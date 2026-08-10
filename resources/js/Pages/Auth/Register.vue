@@ -29,7 +29,7 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Create Account - PL Tournament" />
+        <Head title="Create Account - PL Picks" />
 
         <div class="text-center mb-8">
             <div class="flex justify-center mb-6">
@@ -37,7 +37,7 @@ const submit = () => {
                     <i class="fas fa-user-plus text-white text-2xl"></i>
                 </div>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Join PL Tournament</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Join PL Picks</h1>
             <p class="text-gray-600">Create your account and start playing</p>
         </div>
 
@@ -58,13 +58,13 @@ const submit = () => {
                         </p>
                         <div class="flex items-center space-x-4">
                             <a 
-                                href="mailto:support@pl-tournament.com?subject=Account Approval Request"
+                                href="mailto:support@plpicks.com?subject=Account Approval Request"
                                 class="inline-flex items-center px-3 py-2 border border-amber-300 rounded-md text-sm font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 transition-colors duration-200"
                             >
                                 <i class="fas fa-envelope mr-2"></i>
                                 Contact Support
                             </a>
-                            <span class="text-amber-600">support@pl-tournament.com</span>
+                            <span class="text-amber-600">support@plpicks.com</span>
                         </div>
                     </div>
                 </div>

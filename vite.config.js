@@ -54,9 +54,9 @@ export default defineConfig({
                 ]
             },
             manifest: {
-                name: 'Premier League Tournament',
-                short_name: 'PL Tournament',
-                description: 'Premier League prediction tournaments - pick teams, compete with friends!',
+                name: 'PL Picks',
+                short_name: 'PL Picks',
+                description: 'Weekly Premier League picks - pick teams, compete with friends!',
                 theme_color: '#0f172a',
                 background_color: '#0f172a',
                 display: 'standalone',

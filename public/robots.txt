@@ -5,4 +5,4 @@ Disallow: /dashboard/
 Disallow: /tournaments/*/
 Disallow: /profile/
 
-Sitemap: https://www.pl-tournament.com/sitemap.xml
+Sitemap: https://www.plpicks.com/sitemap.xml

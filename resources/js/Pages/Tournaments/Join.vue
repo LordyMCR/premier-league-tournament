@@ -16,7 +16,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Join Tournament - PL Tournament" />
+    <Head title="Join Tournament - PL Picks" />
 
     <TournamentLayout>
         <template #header>

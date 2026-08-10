@@ -53,7 +53,7 @@ class LoginRequest extends FormRequest
                     RateLimiter::hit($this->throttleKey());
                     
                     throw ValidationException::withMessages([
-                        'email' => 'Your account is pending approval. Please contact support@pl-tournament.com for assistance.',
+                        'email' => 'Your account is pending approval. Please contact support@plpicks.com for assistance.',
                     ]);
                 }
             }

@@ -50,7 +50,7 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Sign In - PL Tournament" />
+        <Head title="Sign In - PL Picks" />
 
         <div class="text-center mb-8">
             <div class="flex justify-center mb-6">
@@ -59,7 +59,7 @@ const submit = () => {
                 </div>
             </div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p class="text-gray-600">Sign in to your PL Tournament account</p>
+            <p class="text-gray-600">Sign in to your PL Picks account</p>
         </div>
 
         <!-- Status Messages -->
@@ -70,7 +70,7 @@ const submit = () => {
                     <span :class="(status && (status.includes('approval') || status.includes('pending'))) || error ? 'text-amber-800' : 'text-green-800'">{{ status || error }}</span>
                     <div v-if="(status && (status.includes('approval') || status.includes('pending'))) || (error && error.includes('approval'))" class="mt-2">
                         <a 
-                            href="mailto:support@pl-tournament.com?subject=Account Approval Request"
+                            href="mailto:support@plpicks.com?subject=Account Approval Request"
                             class="inline-flex items-center text-amber-700 hover:text-amber-800 text-sm font-medium"
                         >
                             <i class="fas fa-envelope mr-1"></i>

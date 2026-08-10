@@ -32,7 +32,7 @@ const getFormClass = (result) => {
 </script>
 
 <template>
-    <Head title="Dashboard - PL Tournament" />
+    <Head title="Dashboard - PL Picks" />
 
     <TournamentLayout>
         <template #header>

@@ -35,17 +35,17 @@ class UserApproved extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Account Approved - Welcome to PL Tournament!')
+            ->subject('Account Approved - Welcome to PL Picks!')
             ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Great news! Your account has been approved and you now have full access to PL Tournament.')
+            ->line('Great news! Your account has been approved and you now have full access to PL Picks.')
             ->line('You can now:')
             ->line('• Create and join tournaments')
             ->line('• Make team picks for each gameweek')
             ->line('• Compete with friends and family')
             ->line('• Track your performance on leaderboards')
-            ->action('Log In to PL Tournament', url('/login'))
+            ->action('Log In to PL Picks', url('/login'))
             ->line('Thank you for joining our community!')
-            ->salutation('Best regards, The PL Tournament Team');
+            ->salutation('Best regards, The PL Picks Team');
     }
 
     /**
