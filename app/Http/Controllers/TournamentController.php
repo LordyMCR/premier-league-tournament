@@ -96,7 +96,7 @@ class TournamentController extends Controller
         // Check if user can create more tournaments (restrictions)
         if (!$user->canCreateTournament()) {
             Log::warning('Tournament creation blocked: user limit reached', ['user_id' => Auth::id()]);
-            return back()->withErrors(['tournament' => 'You have reached the maximum number of tournaments (3) you can create. Contact support@plpicks.com to request additional tournament slots.']);
+            return back()->withErrors(['tournament' => 'You have reached the maximum number of tournaments (10) you can create. Contact support@plpicks.com to request additional tournament slots.']);
         }
 
         $season = Season::current();

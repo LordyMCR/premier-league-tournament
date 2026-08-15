@@ -394,7 +394,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->createdTournaments()->count() < 3;
+        return $this->createdTournaments()->count() < 10;
     }
 
     /**
