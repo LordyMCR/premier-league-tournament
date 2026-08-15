@@ -11,6 +11,7 @@ class Tournament extends Model
     use HasFactory;
 
     protected $fillable = [
+        'season_id',
         'name',
         'description',
         'creator_id',
@@ -28,6 +29,15 @@ class Tournament extends Model
         'is_private' => 'boolean',
     ];
 
+    protected $appends = [
+        'is_read_only',
+    ];
+
+    public function getIsReadOnlyAttribute(): bool
+    {
+        return $this->isReadOnly();
+    }
+
     /**
      * Boot the model to generate join code
      */
@@ -43,11 +53,47 @@ class Tournament extends Model
     }
 
     /**
+     * Get the season this tournament belongs to
+     */
+    public function season()
+    {
+        return $this->belongsTo(Season::class);
+    }
+
+    /**
      * Get the creator of the tournament
      */
     public function creator()
     {
         return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    /**
+     * Whether the tournament is read-only (completed or not in the current season).
+     */
+    public function isReadOnly(): bool
+    {
+        if ($this->status === 'completed') {
+            return true;
+        }
+
+        $current = Season::current();
+
+        return $current && $this->season_id && (int) $this->season_id !== (int) $current->id;
+    }
+
+    /**
+     * Scope gameweek lookups for this tournament's season.
+     */
+    protected function gameWeekQuery()
+    {
+        $query = GameWeek::query();
+
+        if ($this->season_id) {
+            $query->where('season_id', $this->season_id);
+        }
+
+        return $query;
     }
 
     /**
@@ -140,7 +186,10 @@ class Tournament extends Model
      */
     public function getStartDateAttribute()
     {
-        $gameWeek = GameWeek::where('week_number', $this->start_game_week)->first();
+        $gameWeek = $this->gameWeekQuery()
+            ->where('week_number', $this->start_game_week)
+            ->first();
+
         return $gameWeek ? $gameWeek->start_date : null;
     }
 
@@ -150,7 +199,10 @@ class Tournament extends Model
     public function getEndDateAttribute()
     {
         $endGameWeek = $this->start_game_week + $this->total_game_weeks - 1;
-        $gameWeek = GameWeek::where('week_number', $endGameWeek)->first();
+        $gameWeek = $this->gameWeekQuery()
+            ->where('week_number', $endGameWeek)
+            ->first();
+
         return $gameWeek ? $gameWeek->end_date : null;
     }
 
@@ -160,8 +212,10 @@ class Tournament extends Model
     public function gameWeeks()
     {
         $endGameWeek = $this->start_game_week + $this->total_game_weeks - 1;
-        return GameWeek::whereBetween('week_number', [$this->start_game_week, $endGameWeek])
-                      ->orderBy('week_number');
+
+        return $this->gameWeekQuery()
+            ->whereBetween('week_number', [$this->start_game_week, $endGameWeek])
+            ->orderBy('week_number');
     }
 
     /**
@@ -169,7 +223,9 @@ class Tournament extends Model
      */
     public function currentGameWeek()
     {
-        return GameWeek::where('week_number', $this->current_game_week)->first();
+        return $this->gameWeekQuery()
+            ->where('week_number', $this->current_game_week)
+            ->first();
     }
 
     /**
@@ -177,28 +233,38 @@ class Tournament extends Model
      */
     public function isActiveForCurrentGameWeek()
     {
-        $currentGameWeekNumber = GameWeek::where('is_completed', false)
+        $season = $this->season_id
+            ? Season::find($this->season_id)
+            : Season::current();
+
+        $currentGameWeekNumber = GameWeek::forSeason($season)
+            ->where('is_completed', false)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->min('week_number') ?? 1;
+
         return $currentGameWeekNumber >= $this->start_game_week &&
                $currentGameWeekNumber <= $this->end_game_week;
     }
 
     /**
-     * Get remaining gameweeks count
+     * Get remaining gameweeks count for the current season
      */
-    public static function getRemainingGameWeeksCount()
+    public static function getRemainingGameWeeksCount(?Season $season = null)
     {
-        return GameWeek::where('is_completed', false)->count();
+        return GameWeek::forSeason($season)->where('is_completed', false)->count();
     }
 
     /**
-     * Get next available gameweek number
+     * Get next available gameweek number for the current season
      */
-    public static function getNextGameWeekNumber()
+    public static function getNextGameWeekNumber(?Season $season = null)
     {
-        $currentGameWeek = GameWeek::where('is_completed', false)->orderBy('week_number')->first();
+        $currentGameWeek = GameWeek::forSeason($season)
+            ->where('is_completed', false)
+            ->orderBy('week_number')
+            ->first();
+
         return $currentGameWeek ? $currentGameWeek->week_number : 1;
     }
 

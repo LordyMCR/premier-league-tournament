@@ -8,23 +8,42 @@ use Illuminate\Console\Command;
 
 class ResetAndScorePicks extends Command
 {
-    protected $signature = 'picks:reset-and-score';
-    protected $description = 'Reset all pick results and rescore them based on actual game results';
+    protected $signature = 'picks:reset-and-score {--season= : Season slug/name/api_year; defaults to current season only} {--all : Reset and rescore picks across every season}';
+    protected $description = 'Reset pick results and rescore them based on actual game results (current season by default)';
 
     public function handle()
     {
-        $this->info('Resetting and rescoring all picks...');
+        $this->info('Resetting and rescoring picks...');
 
-        // First, reset all picks
-        Pick::query()->update([
+        $pickQuery = Pick::query();
+
+        if (!$this->option('all')) {
+            $season = \App\Models\Season::resolveFromRequest($this->option('season'));
+            if (!$season) {
+                $this->error('No season found. Pass --season= or run season:migrate-existing first.');
+                return Command::FAILURE;
+            }
+
+            $this->info("Scoping to season {$season->name}");
+            $pickQuery->whereHas('tournament', fn ($q) => $q->where('season_id', $season->id));
+        } else {
+            $this->warn('Rescoring ALL seasons (--all).');
+        }
+
+        $pickIds = (clone $pickQuery)->pluck('id');
+
+        // First, reset scoped picks
+        Pick::whereIn('id', $pickIds)->update([
             'result' => null,
             'points_earned' => null
         ]);
 
-        $this->info('All pick results have been reset.');
+        $this->info('Pick results have been reset for ' . $pickIds->count() . ' picks.');
 
         // Now rescore them based on actual finished games
-        $picks = Pick::with(['team', 'gameWeek', 'user', 'tournament'])->get();
+        $picks = Pick::with(['team', 'gameWeek', 'user', 'tournament'])
+            ->whereIn('id', $pickIds)
+            ->get();
 
         $this->info("Processing " . $picks->count() . " picks...");
 

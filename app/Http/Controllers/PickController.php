@@ -19,9 +19,20 @@ class PickController extends Controller
     {
         $user = Auth::user();
 
+        if ($tournament->isReadOnly()) {
+            return redirect()->route('tournaments.show', $tournament)
+                ->withErrors(['error' => 'This tournament is completed and read-only.']);
+        }
+
         // Check if user is participant
         if (!$tournament->hasParticipant($user->id)) {
             abort(403, 'You must be a participant in this tournament to make picks.');
+        }
+
+        if ($tournament->season_id && $gameWeek->season_id
+            && (int) $tournament->season_id !== (int) $gameWeek->season_id) {
+            return redirect()->route('tournaments.show', $tournament)
+                ->withErrors(['error' => 'That gameweek does not belong to this tournament\'s season.']);
         }
 
         // Check if selection window is open for this gameweek (and the gameweek is inside tournament bounds)
@@ -58,13 +69,17 @@ class PickController extends Controller
         // Get available teams (considering home/away logic if applicable)
         if ($tournament->allowsHomeAwayPicks()) {
             $availableTeams = Pick::getAvailableTeamsForGameWeek($user->id, $tournament->id, $gameWeek->id);
-            // For home/away tournaments, get ALL teams for display purposes
-            $allTeamsForDisplay = \App\Models\Team::all();
+            // For home/away tournaments, get season teams for display purposes
+            $allTeamsForDisplay = $tournament->season_id
+                ? \App\Models\Team::whereHas('seasons', fn ($q) => $q->where('seasons.id', $tournament->season_id))->get()
+                : \App\Models\Team::all();
             $actuallyAvailableTeams = $availableTeams; // Track which are actually available
         } else {
             $availableTeams = Pick::getAvailableTeamsForUser($user->id, $tournament->id, $gameWeek->id);
-            // For once_only tournaments, get all teams for display purposes
-            $allTeamsForDisplay = \App\Models\Team::all();
+            // For once_only tournaments, get season teams for display purposes
+            $allTeamsForDisplay = $tournament->season_id
+                ? \App\Models\Team::whereHas('seasons', fn ($q) => $q->where('seasons.id', $tournament->season_id))->get()
+                : \App\Models\Team::all();
             $actuallyAvailableTeams = $availableTeams; // Track which are actually available
         }
         
@@ -125,6 +140,10 @@ class PickController extends Controller
     {
         $user = Auth::user();
 
+        if ($tournament->isReadOnly()) {
+            return back()->withErrors(['error' => 'This tournament is completed and read-only.']);
+        }
+
         // Validate request
         $validated = $request->validate([
             'team_id' => 'required|exists:teams,id',
@@ -134,6 +153,11 @@ class PickController extends Controller
         // Check if user is participant
         if (!$tournament->hasParticipant($user->id)) {
             abort(403, 'You must be a participant in this tournament to make picks.');
+        }
+
+        if ($tournament->season_id && $gameWeek->season_id
+            && (int) $tournament->season_id !== (int) $gameWeek->season_id) {
+            return back()->withErrors(['error' => 'That gameweek does not belong to this tournament\'s season.']);
         }
 
         // Check if selection window is open for this gameweek (and the gameweek is inside tournament bounds)

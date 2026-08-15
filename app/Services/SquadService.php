@@ -97,7 +97,9 @@ class SquadService
      */
     private function fetchIndividualTeams(bool $forceUpdate = false): array
     {
-        $teams = Team::all();
+        $teams = \App\Models\Season::current()
+            ? \App\Models\Season::current()->teams()->get()
+            : Team::all();
         $results = ['success' => 0, 'errors' => 0, 'teams' => []];
         
         foreach ($teams as $team) {

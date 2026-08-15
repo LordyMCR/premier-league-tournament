@@ -133,11 +133,20 @@ class Pick extends Model
                                   ->where('tournament_id', $tournamentId)
                                   ->pluck('team_id');
 
-            return Team::whereNotIn('id', $pickedTeamIds)->get();
+            $query = Team::whereNotIn('id', $pickedTeamIds);
+            if ($tournament->season_id) {
+                $query->whereHas('seasons', fn ($q) => $q->where('seasons.id', $tournament->season_id));
+            }
+
+            return $query->get();
         } else {
             // Home/away logic: teams can be picked up to twice (home and away)
             if (!$gameWeekId) {
-                // If no gameweek specified, return all teams (will be filtered by availability)
+                // If no gameweek specified, return season teams (will be filtered by availability)
+                if ($tournament->season_id) {
+                    return Team::whereHas('seasons', fn ($q) => $q->where('seasons.id', $tournament->season_id))->get();
+                }
+
                 return Team::all();
             }
 

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\GameWeek;
 use App\Models\Game;
 use App\Models\Team;
+use App\Models\Season;
 use App\Services\HistoricalDataService;
 use App\Services\TeamNewsService;
+use App\Services\StandingsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -16,49 +18,75 @@ use Illuminate\Support\Facades\Log;
 class ScheduleController extends Controller
 {
     /**
+     * Shared season props for schedule pages.
+     */
+    private function seasonProps(?Season $selected = null): array
+    {
+        $selected = $selected ?? Season::current();
+
+        return [
+            'seasons' => Season::orderByDesc('api_year')->get(['id', 'name', 'slug', 'api_year', 'is_current']),
+            'currentSeason' => Season::current(),
+            'selectedSeason' => $selected,
+        ];
+    }
+
+    /**
      * Display the Premier League schedule
      */
     public function index(Request $request)
     {
         $currentDate = now();
-        
-        // Get all gameweeks with their games
-        $gameweeks = GameWeek::with([
+        $selectedSeason = Season::resolveFromRequest($request->get('season'));
+
+        // Get all gameweeks with their games for the selected season
+        $gameweeksQuery = GameWeek::with([
             'games' => function ($query) {
                 $query->with(['homeTeam', 'awayTeam'])
                       ->orderBy('kick_off_time');
             }
         ])
-        ->orderBy('week_number')
-        ->get();
+        ->orderBy('week_number');
+
+        if ($selectedSeason) {
+            $gameweeksQuery->where('season_id', $selectedSeason->id);
+        }
+
+        $gameweeks = $gameweeksQuery->get();
 
         // Get current and upcoming gameweeks
-        $currentGameweek = GameWeek::getCurrentGameWeek();
-        $nextGameweek = GameWeek::getNextGameWeek();
-        
-        // Get teams for filtering/reference
-        $teams = Team::orderBy('name')->get();
-        
+        $currentGameweek = GameWeek::getCurrentGameWeek($selectedSeason);
+        $nextGameweek = GameWeek::getNextGameWeek($selectedSeason);
+
+        // Get teams for filtering/reference (season roster when available)
+        $teams = $selectedSeason
+            ? $selectedSeason->teams()->orderBy('name')->get()
+            : Team::orderBy('name')->get();
+
+        $gameWeekIds = $gameweeks->pluck('id');
+
         // Calculate some statistics
-        $totalGames = Game::count();
-        $completedGames = Game::where('status', 'FINISHED')->count();
-        $upcomingGames = Game::where('status', 'SCHEDULED')->count();
-        
+        $totalGames = Game::whereIn('game_week_id', $gameWeekIds)->count();
+        $completedGames = Game::whereIn('game_week_id', $gameWeekIds)->where('status', 'FINISHED')->count();
+        $upcomingGames = Game::whereIn('game_week_id', $gameWeekIds)->where('status', 'SCHEDULED')->count();
+
         // Get recent and upcoming games for highlights
         $recentGames = Game::with(['homeTeam', 'awayTeam'])
+            ->whereIn('game_week_id', $gameWeekIds)
             ->where('status', 'FINISHED')
             ->orderBy('kick_off_time', 'desc')
             ->limit(6)
             ->get();
-            
+
         $upcomingHighlights = Game::with(['homeTeam', 'awayTeam'])
+            ->whereIn('game_week_id', $gameWeekIds)
             ->where('status', 'SCHEDULED')
             ->where('kick_off_time', '>', $currentDate)
             ->orderBy('kick_off_time')
             ->limit(6)
             ->get();
 
-        return Inertia::render('Schedule/Index', [
+        return Inertia::render('Schedule/Index', array_merge([
             'gameweeks' => $gameweeks,
             'currentGameweek' => $currentGameweek,
             'nextGameweek' => $nextGameweek,
@@ -74,8 +102,9 @@ class ScheduleController extends Controller
             'filters' => [
                 'status' => request('status'),
                 'team' => request('team'),
+                'season' => $selectedSeason?->slug,
             ],
-        ]);
+        ], $this->seasonProps($selectedSeason)));
     }
 
     /**
@@ -87,18 +116,23 @@ class ScheduleController extends Controller
             'games' => function ($query) {
                 $query->with(['homeTeam', 'awayTeam'])
                       ->orderBy('kick_off_time');
-            }
+            },
+            'season',
         ]);
 
-        // Get previous and next gameweeks for navigation
-        $previousGameweek = GameWeek::where('week_number', '<', $gameweek->week_number)
+        $season = $gameweek->season ?? Season::resolveFromRequest($request->get('season'));
+
+        // Get previous and next gameweeks for navigation (same season)
+        $previousGameweek = GameWeek::forSeason($season)
+            ->where('week_number', '<', $gameweek->week_number)
             ->orderBy('week_number', 'desc')
             ->first();
-            
-        $nextGameweek = GameWeek::where('week_number', '>', $gameweek->week_number)
+
+        $nextGameweek = GameWeek::forSeason($season)
+            ->where('week_number', '>', $gameweek->week_number)
             ->orderBy('week_number')
             ->first();
-            
+
         // Extract schedule filters if coming from schedule page
         $scheduleFilters = [];
         $referer = $request->header('referer');
@@ -110,14 +144,21 @@ class ScheduleController extends Controller
             if (isset($queryParams['team'])) {
                 $scheduleFilters['team'] = $queryParams['team'];
             }
+            if (isset($queryParams['season'])) {
+                $scheduleFilters['season'] = $queryParams['season'];
+            }
         }
 
-        return Inertia::render('Schedule/Gameweek', [
+        if ($season && !isset($scheduleFilters['season'])) {
+            $scheduleFilters['season'] = $season->slug;
+        }
+
+        return Inertia::render('Schedule/Gameweek', array_merge([
             'gameweek' => $gameweek,
             'previousGameweek' => $previousGameweek,
             'nextGameweek' => $nextGameweek,
             'scheduleFilters' => $scheduleFilters,
-        ]);
+        ], $this->seasonProps($season)));
     }
 
     /**
@@ -887,124 +928,16 @@ class ScheduleController extends Controller
      */
     public function standings(Request $request)
     {
-        // Calculate Premier League standings
-        $teams = Team::all();
-        $standings = [];
-        
-        foreach ($teams as $team) {
-            $homeGames = Game::where('home_team_id', $team->id)->where('status', 'FINISHED')->get();
-            $awayGames = Game::where('away_team_id', $team->id)->where('status', 'FINISHED')->get();
-            
-            $played = $homeGames->count() + $awayGames->count();
-            $wins = 0;
-            $draws = 0;
-            $losses = 0;
-            $goalsFor = 0;
-            $goalsAgainst = 0;
-            
-            // Home games
-            foreach ($homeGames as $game) {
-                $goalsFor += $game->home_score;
-                $goalsAgainst += $game->away_score;
-                
-                if ($game->home_score > $game->away_score) {
-                    $wins++;
-                } elseif ($game->home_score == $game->away_score) {
-                    $draws++;
-                } else {
-                    $losses++;
-                }
-            }
-            
-            // Away games  
-            foreach ($awayGames as $game) {
-                $goalsFor += $game->away_score;
-                $goalsAgainst += $game->home_score;
-                
-                if ($game->away_score > $game->home_score) {
-                    $wins++;
-                } elseif ($game->home_score == $game->away_score) {
-                    $draws++;
-                } else {
-                    $losses++;
-                }
-            }
-            
-            $goalDifference = $goalsFor - $goalsAgainst;
-            $points = ($wins * 3) + $draws;
-            
-            // Get recent form (last 5 games)
-            $allGames = $homeGames->concat($awayGames)->sortByDesc('kick_off_time')->take(5);
-            $form = [];
-            
-            foreach ($allGames as $game) {
-                if ($game->home_team_id == $team->id) {
-                    // Home game
-                    if ($game->home_score > $game->away_score) {
-                        $form[] = 'W';
-                    } elseif ($game->home_score == $game->away_score) {
-                        $form[] = 'D';
-                    } else {
-                        $form[] = 'L';
-                    }
-                } else {
-                    // Away game
-                    if ($game->away_score > $game->home_score) {
-                        $form[] = 'W';
-                    } elseif ($game->home_score == $game->away_score) {
-                        $form[] = 'D';
-                    } else {
-                        $form[] = 'L';
-                    }
-                }
-            }
-            
-            // Pad form with empty slots if less than 5 games
-            while (count($form) < 5) {
-                $form[] = null;
-            }
-            
-            $standings[] = [
-                'position' => 0, // Will be set after sorting
-                'team' => $team->name,
-                'team_short' => $team->short_name ?? substr($team->name, 0, 3),
-                'team_id' => $team->id,
-                'team_logo' => $team->logo_url,
-                'team_primary_color' => $team->primary_color,
-                'played' => $played,
-                'wins' => $wins,
-                'draws' => $draws,
-                'losses' => $losses,
-                'goals_for' => $goalsFor,
-                'goals_against' => $goalsAgainst,
-                'goal_difference' => $goalDifference,
-                'points' => $points,
-                'form' => $form, // Keep original order: most recent first (left)
-            ];
-        }
-        
-        // Sort by points (desc), then goal difference (desc), then goals for (desc)
-        usort($standings, function($a, $b) {
-            if ($a['points'] != $b['points']) {
-                return $b['points'] - $a['points'];
-            }
-            if ($a['goal_difference'] != $b['goal_difference']) {
-                return $b['goal_difference'] - $a['goal_difference'];
-            }
-            return $b['goals_for'] - $a['goals_for'];
-        });
-        
-        // Set positions
-        foreach ($standings as $key => $standing) {
-            $standings[$key]['position'] = $key + 1;
-        }
+        $selectedSeason = Season::resolveFromRequest($request->get('season'));
+        $standings = app(StandingsService::class)->forSeason($selectedSeason);
 
-        return Inertia::render('Schedule/Standings', [
+        return Inertia::render('Schedule/Standings', array_merge([
             'standings' => $standings,
             'filters' => [
                 'status' => $request->get('status'),
                 'team' => $request->get('team'),
+                'season' => $selectedSeason?->slug,
             ],
-        ]);
+        ], $this->seasonProps($selectedSeason)));
     }
 }

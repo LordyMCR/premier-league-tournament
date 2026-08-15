@@ -7,13 +7,24 @@
                 
                 <!-- Header -->
                 <div class="bg-white rounded-xl p-6 mb-6 border border-green-200 shadow-md">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">Premier League Table</h1>
-                            <p class="text-gray-600 mt-1">2025-26 Season Standings</p>
+                            <p class="text-gray-600 mt-1">{{ seasonLabel }} Season Standings</p>
                         </div>
-                        <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
-                            <i class="fas fa-trophy text-white text-xl"></i>
+                        <div class="flex items-center gap-3">
+                            <SeasonSwitcher
+                                :seasons="seasons"
+                                :selected-season="selectedSeason"
+                                route-name="schedule.standings"
+                                :extra-query="{
+                                    status: filters?.status || undefined,
+                                    team: filters?.team || undefined,
+                                }"
+                            />
+                            <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center shadow-md">
+                                <i class="fas fa-trophy text-white text-xl"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -23,7 +34,8 @@
                     <div class="flex border-b border-gray-200">
                         <Link :href="route('schedule.index', { 
                                 status: filters?.status || undefined,
-                                team: filters?.team || undefined
+                                team: filters?.team || undefined,
+                                season: selectedSeason?.slug || undefined,
                             })" 
                               class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors">
                             <i class="fas fa-calendar mr-2"></i>
@@ -132,11 +144,23 @@
 
 <script setup>
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import SeasonSwitcher from '@/Components/SeasonSwitcher.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     standings: Array,
-    filters: Object, // Add filters to preserve state
+    filters: Object,
+    seasons: Array,
+    currentSeason: Object,
+    selectedSeason: Object,
+});
+
+const seasonLabel = computed(() => {
+    const name = props.selectedSeason?.name;
+    if (!name) return 'Season';
+    const match = String(name).match(/^(\d{4})-(\d{2})$/);
+    return match ? `${match[1]}/${match[2]}` : name;
 });
 
 const getPositionClass = (position) => {

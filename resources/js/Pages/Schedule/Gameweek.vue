@@ -1,12 +1,29 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
+import SeasonSwitcher from '@/Components/SeasonSwitcher.vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     gameweek: Object,
     previousGameweek: Object,
     nextGameweek: Object,
     scheduleFilters: Object,
+    seasons: Array,
+    currentSeason: Object,
+    selectedSeason: Object,
+});
+
+const seasonQuery = computed(() => ({
+    ...(props.scheduleFilters || {}),
+    season: props.selectedSeason?.slug || props.scheduleFilters?.season || undefined,
+}));
+
+const seasonLabel = computed(() => {
+    const name = props.selectedSeason?.name || props.gameweek?.season?.name;
+    if (!name) return '';
+    const match = String(name).match(/^(\d{4})-(\d{2})$/);
+    return match ? `${match[1]}/${match[2]}` : name;
 });
 
 const formatDate = (dateString) => {
@@ -100,10 +117,11 @@ const gamesByDate = getGamesByDate();
                     </h2>
                     <p class="text-gray-600 mt-2">
                         {{ formatDate(gameweek.start_date) }} - {{ formatDate(gameweek.end_date) }}
+                        <span v-if="seasonLabel" class="text-gray-500"> · {{ seasonLabel }}</span>
                     </p>
                     <!-- Mobile controls under title -->
-                    <div class="mt-3 flex items-center gap-2 sm:hidden">
-                        <Link :href="route('schedule.index', scheduleFilters || {})" 
+                    <div class="mt-3 flex flex-wrap items-center gap-2 sm:hidden">
+                        <Link :href="route('schedule.index', seasonQuery)" 
                               class="bg-white border border-green-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-green-50">
                             ← Back
                         </Link>
@@ -117,13 +135,18 @@ const gamesByDate = getGamesByDate();
                 </div>
                 <!-- Desktop/tablet controls on the right -->
                 <div class="hidden sm:flex items-center space-x-4">
+                    <SeasonSwitcher
+                        :seasons="seasons"
+                        :selected-season="selectedSeason"
+                        route-name="schedule.index"
+                    />
                     <div v-if="gameweek.is_completed" class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
                         Completed
                     </div>
                     <div v-else class="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
                         Upcoming
                     </div>
-                    <Link :href="route('schedule.index', scheduleFilters || {})" 
+                    <Link :href="route('schedule.index', seasonQuery)" 
                           class="bg-white border border-green-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-green-50">
                         ← Back to Schedule
                     </Link>

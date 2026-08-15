@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\GameWeek;
 use App\Models\Game;
 use App\Models\Pick;
+use App\Models\Season;
 use App\Services\FootballDataService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +23,8 @@ class UpdateFootballData extends Command
                             {--gameweeks : Only update gameweeks data}
                             {--games : Only update games data}
                             {--results : Only update game results and calculate points}
-                            {--force : Force update even if data exists}';
+                            {--force : Force update even if data exists}
+                            {--season= : API season year (e.g. 2026). Defaults to current calendar season}';
 
     /**
      * The console command description.
@@ -30,6 +32,9 @@ class UpdateFootballData extends Command
      * @var string
      */
     protected $description = 'Update Premier League teams, gameweeks, games and results data from external API';
+
+    private ?Season $season = null;
+    private int $apiYear;
 
     /**
      * Execute the console command.
@@ -43,6 +48,16 @@ class UpdateFootballData extends Command
             $this->info('You can get a free API key from: https://www.football-data.org/');
             return Command::FAILURE;
         }
+
+        $this->apiYear = $this->option('season')
+            ? (int) $this->option('season')
+            : $footballService->getCurrentSeason();
+
+        $makeCurrent = $this->apiYear === $footballService->getCurrentSeason();
+        $this->season = Season::ensureForApiYear($this->apiYear, $makeCurrent);
+
+        $this->info("Target season: {$this->season->name} (api_year={$this->apiYear})"
+            . ($this->season->is_current ? ' [current]' : ''));
 
         $teamsOnly = $this->option('teams');
         $gameweeksOnly = $this->option('gameweeks');
@@ -99,16 +114,25 @@ class UpdateFootballData extends Command
         $progressBar = $this->output->createProgressBar(count($teams));
         $progressBar->start();
 
+        $syncedTeamIds = [];
+
         foreach ($teams as $team) {
-            Team::updateOrCreate(
+            $model = Team::updateOrCreate(
                 ['short_name' => $team['short_name']],
                 $team
             );
+            $syncedTeamIds[] = $model->id;
             $progressBar->advance();
         }
 
         $progressBar->finish();
         $this->newLine();
+
+        if ($this->season && !empty($syncedTeamIds)) {
+            $this->season->teams()->sync($syncedTeamIds);
+            $this->info('Synced ' . count($syncedTeamIds) . " teams to season {$this->season->name}.");
+        }
+
         $this->info('Successfully updated ' . count($teams) . ' teams.');
     }
 
@@ -117,16 +141,16 @@ class UpdateFootballData extends Command
      */
     private function updateGameweeks(FootballDataService $footballService, bool $force): void
     {
-        $this->info('Updating Premier League gameweeks...');
+        $this->info("Updating Premier League gameweeks for {$this->season->name}...");
 
-        if (!$force && GameWeek::count() > 0) {
-            if (!$this->confirm('Gameweeks data already exists. Do you want to continue?', true)) {
+        if (!$force && GameWeek::where('season_id', $this->season->id)->count() > 0) {
+            if (!$this->confirm('Gameweeks data already exists for this season. Do you want to continue?', true)) {
                 $this->info('Gameweeks update skipped.');
                 return;
             }
         }
 
-        $gameweeks = $footballService->getPremierLeagueFixtures();
+        $gameweeks = $footballService->getPremierLeagueFixtures($this->apiYear);
 
         if (empty($gameweeks)) {
             $this->error('Failed to fetch gameweeks from API.');
@@ -143,8 +167,11 @@ class UpdateFootballData extends Command
 
         foreach ($gameweeks as $gameweek) {
             GameWeek::updateOrCreate(
-                ['week_number' => $gameweek['week_number']],
-                $gameweek
+                [
+                    'season_id' => $this->season->id,
+                    'week_number' => $gameweek['week_number'],
+                ],
+                array_merge($gameweek, ['season_id' => $this->season->id])
             );
             $progressBar->advance();
         }
@@ -168,7 +195,7 @@ class UpdateFootballData extends Command
             }
         }
 
-        $gamesData = $footballService->getPremierLeagueGames();
+        $gamesData = $footballService->getPremierLeagueGames($this->apiYear);
 
         if (empty($gamesData)) {
             $this->error('Failed to fetch games from API.');
@@ -182,15 +209,16 @@ class UpdateFootballData extends Command
 
         $this->info('Processing ' . count($gamesData) . ' games...');
 
-        // Create lookup maps for teams and gameweeks
+        // Create lookup maps for teams and gameweeks (scoped to this season)
         $teams = Team::all()->keyBy('external_id');
-        $gameWeeks = GameWeek::all()->keyBy('week_number');
+        $gameWeeks = GameWeek::where('season_id', $this->season->id)->get()->keyBy('week_number');
 
         $progressBar = $this->output->createProgressBar(count($gamesData));
         $progressBar->start();
 
         $successCount = 0;
         $errorCount = 0;
+        $syncedTeamIds = [];
 
         foreach ($gamesData as $gameData) {
             try {
@@ -215,6 +243,8 @@ class UpdateFootballData extends Command
                             'status' => $gameData['status'],
                         ]
                     );
+                    $syncedTeamIds[$homeTeam->id] = true;
+                    $syncedTeamIds[$awayTeam->id] = true;
                     $successCount++;
                 }
             } catch (\Exception $e) {
@@ -230,6 +260,11 @@ class UpdateFootballData extends Command
 
         $progressBar->finish();
         $this->newLine();
+
+        if (!empty($syncedTeamIds)) {
+            $this->season->teams()->syncWithoutDetaching(array_keys($syncedTeamIds));
+        }
+
         $this->info("Successfully updated {$successCount} games. Errors: {$errorCount}");
     }
 
@@ -240,7 +275,7 @@ class UpdateFootballData extends Command
     {
         $this->info('Updating game results and calculating points...');
         
-        $gamesData = $footballService->getPremierLeagueGames();
+        $gamesData = $footballService->getPremierLeagueGames($this->apiYear);
         
         if (empty($gamesData)) {
             $this->error('No games data received from API.');
@@ -417,7 +452,9 @@ class UpdateFootballData extends Command
      */
     private function updateGameweekCompletion(): void
     {
-        $gameweeks = GameWeek::where('is_completed', false)->get();
+        $gameweeks = GameWeek::where('season_id', $this->season->id)
+            ->where('is_completed', false)
+            ->get();
         
         foreach ($gameweeks as $gameweek) {
             $allGamesFinished = $gameweek->games()

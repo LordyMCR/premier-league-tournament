@@ -218,6 +218,7 @@ class AdminController extends Controller
             'picks:reset-and-score',
             'tournament:recalculate-points',
             'football:update',
+            'season:migrate-existing',
             'users:recalculate-stats',
             'cache:clear',
             'config:clear',
@@ -283,6 +284,11 @@ class AdminController extends Controller
                 [
                     'name' => 'football:update',
                     'description' => 'Update Premier League teams, gameweeks, games and results data from external API',
+                    'category' => 'Data',
+                ],
+                [
+                    'name' => 'season:migrate-existing',
+                    'description' => 'Split mixed season data into 2025-26 / 2026-27, complete old tournaments (use --dry-run first)',
                     'category' => 'Data',
                 ],
                 [

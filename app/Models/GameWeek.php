@@ -10,6 +10,7 @@ class GameWeek extends Model
     use HasFactory;
 
     protected $fillable = [
+        'season_id',
         'week_number',
         'name',
         'start_date',
@@ -34,6 +35,14 @@ class GameWeek extends Model
     ];
 
     /**
+     * Get the season this game week belongs to
+     */
+    public function season()
+    {
+        return $this->belongsTo(Season::class);
+    }
+
+    /**
      * Get all picks for this game week
      */
     public function picks()
@@ -47,6 +56,20 @@ class GameWeek extends Model
     public function games()
     {
         return $this->hasMany(Game::class);
+    }
+
+    /**
+     * Scope to a specific season (or the current season when none given).
+     */
+    public function scopeForSeason($query, ?Season $season = null)
+    {
+        $season = $season ?? Season::current();
+
+        if (!$season) {
+            return $query;
+        }
+
+        return $query->where('season_id', $season->id);
     }
 
     /**
@@ -129,68 +152,73 @@ class GameWeek extends Model
     /**
      * Get the current active game week
      */
-    public static function getCurrentGameWeek()
+    public static function getCurrentGameWeek(?Season $season = null)
     {
         $now = now();
-        
+        $query = static::forSeason($season)->where('is_completed', false);
+
         // First, try to find a gameweek that's currently active
-        $activeGameweek = static::where('is_completed', false)
-                               ->where('start_date', '<=', $now)
-                               ->where('end_date', '>=', $now)
-                               ->first();
-        
+        $activeGameweek = (clone $query)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->first();
+
         if ($activeGameweek) {
             return $activeGameweek;
         }
-        
+
         // If no active gameweek, return the next upcoming one
-        return static::where('is_completed', false)
-                     ->where('start_date', '>', $now)
-                     ->orderBy('start_date')
-                     ->first();
+        return (clone $query)
+            ->where('start_date', '>', $now)
+            ->orderBy('start_date')
+            ->first();
     }
 
     /**
      * Get the gameweek currently available for selection
      */
-    public static function getCurrentSelectionGameWeek()
+    public static function getCurrentSelectionGameWeek(?Season $season = null)
     {
-        return static::where('is_completed', false)
-                     ->where('selection_opens', '<=', now())
-                     ->where('selection_deadline', '>=', now())
-                     ->orderBy('week_number')
-                     ->first();
+        return static::forSeason($season)
+            ->where('is_completed', false)
+            ->where('selection_opens', '<=', now())
+            ->where('selection_deadline', '>=', now())
+            ->orderBy('week_number')
+            ->first();
     }
 
     /**
      * Get the next upcoming game week
      */
-    public static function getNextGameWeek()
+    public static function getNextGameWeek(?Season $season = null)
     {
-        return static::where('start_date', '>', now())
-                     ->orderBy('start_date')
-                     ->first();
+        return static::forSeason($season)
+            ->where('start_date', '>', now())
+            ->orderBy('start_date')
+            ->first();
     }
 
     /**
      * Get the next upcoming selection gameweek
      */
-    public static function getNextSelectionGameWeek()
+    public static function getNextSelectionGameWeek(?Season $season = null)
     {
-        return static::where('is_completed', false)
-                     ->where('selection_opens', '>', now())
-                     ->orderBy('selection_opens')
-                     ->first();
+        return static::forSeason($season)
+            ->where('is_completed', false)
+            ->where('selection_opens', '>', now())
+            ->orderBy('selection_opens')
+            ->first();
     }
 
     /**
      * Get gameweeks where selection deadline has passed but auto-assignment may be needed
      */
-    public static function getGameweeksNeedingAutoAssignment()
+    public static function getGameweeksNeedingAutoAssignment(?Season $season = null)
     {
-        return static::where('selection_deadline', '<', now())
-                     ->where('is_completed', false)
-                     ->orderBy('selection_deadline', 'desc')
-                     ->get();
+        return static::forSeason($season)
+            ->where('selection_deadline', '<', now())
+            ->where('is_completed', false)
+            ->orderBy('selection_deadline', 'desc')
+            ->get();
     }
 }

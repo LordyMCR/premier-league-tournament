@@ -8,6 +8,7 @@ const props = defineProps({
     tournament: Object,
     isParticipant: Boolean,
     isFavorite: Boolean,
+    isReadOnly: Boolean,
     leaderboard: Array,
     currentGameweek: Object,
     selectionGameweek: Object,
@@ -17,6 +18,8 @@ const props = defineProps({
     allParticipantPicks: Object,
     gameweeksWithHiddenPicks: Array,
 });
+
+const readOnly = computed(() => props.isReadOnly || props.tournament?.is_read_only || props.tournament?.status === 'completed');
 
 const joinCodeVisible = ref(false);
 const codeCopied = ref(false);
@@ -78,6 +81,17 @@ const timeUntilNextSelection = computed(() => {
                         <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
                             {{ tournament.name }}
                         </h1>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <span
+                                class="px-2 py-1 rounded text-xs font-medium"
+                                :class="readOnly ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'"
+                            >
+                                {{ readOnly ? 'Completed / Read-only' : tournament.status }}
+                            </span>
+                            <span v-if="tournament.season" class="px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                {{ tournament.season.name }}
+                            </span>
+                        </div>
                         <p class="text-gray-600 mt-2 text-sm sm:text-base break-words">
                             {{ tournament.description || 'Premier League prediction tournament' }}
                         </p>
@@ -98,7 +112,7 @@ const timeUntilNextSelection = computed(() => {
                         </svg>
                     </button>
                 </div>
-                <div class="w-full lg:w-auto lg:text-right">
+                <div class="w-full lg:w-auto lg:text-right" v-if="!readOnly">
                     <div class="bg-gray-50 rounded-lg px-4 py-3 sm:px-5 border border-gray-200">
                         <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Join Code</p>
                         <div class="flex items-center gap-2 sm:gap-3">
@@ -133,7 +147,7 @@ const timeUntilNextSelection = computed(() => {
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-4 mb-6" v-if="!isParticipant">
+        <div class="flex gap-4 mb-6" v-if="!isParticipant && !readOnly">
             <button @click="copyJoinCode" 
                     class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-copy mr-2"></i>
@@ -146,8 +160,12 @@ const timeUntilNextSelection = computed(() => {
             </Link>
         </div>
 
+        <div v-if="readOnly" class="bg-gray-50 rounded-xl p-4 border border-gray-200 mb-6 text-sm text-gray-600">
+            This tournament is archived for {{ tournament.season?.name || 'a past season' }}. You can still view picks, scores, and the leaderboard.
+        </div>
+
         <!-- Selection Window Open -->
-        <div v-if="isParticipant && selectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-6">
+        <div v-if="isParticipant && !readOnly && selectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Selection Window Open</h3>
                 <div class="flex items-center justify-between">
                     <div>
@@ -172,7 +190,7 @@ const timeUntilNextSelection = computed(() => {
             </div>
 
             <!-- Next Selection Window -->
-            <div v-else-if="nextSelectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg">
+            <div v-else-if="isParticipant && !readOnly && nextSelectionGameweek" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Next Selection Window</h3>
                 <div class="flex items-center justify-between">
                     <div>

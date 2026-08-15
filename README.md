@@ -32,6 +32,7 @@ Requires Docker Desktop and `make` (Git Bash / WSL). See [docs/WORKFLOW.md](docs
 ## Documentation
 - [Development & deployment workflow](docs/WORKFLOW.md)
 - [Production setup (Hetzner + Docker)](docs/DEPLOY.md)
+- [Season archive & rollover](docs/SEASON_ROLLOVER.md)
 - [Backlog & future ideas](docs/BACKLOG.md)
 
 ## Status

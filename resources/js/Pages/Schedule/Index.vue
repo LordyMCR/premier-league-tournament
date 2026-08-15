@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import LiveMatchTracker from '@/Components/LiveMatchTracker.vue';
+import SeasonSwitcher from '@/Components/SeasonSwitcher.vue';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -13,11 +14,45 @@ const props = defineProps({
     recentGames: Array,
     upcomingHighlights: Array,
     filters: Object,
+    seasons: Array,
+    currentSeason: Object,
+    selectedSeason: Object,
 });
 
-// Initialize filters from URL parameters or defaults
-const selectedFilter = ref(props.filters?.status || 'upcoming');
+const seasonLabel = computed(() => {
+    const name = props.selectedSeason?.name;
+    if (!name) return 'Premier League';
+    const match = String(name).match(/^(\d{4})-(\d{2})$/);
+    return match ? `${match[1]}/${match[2]}` : name;
+});
+
+const isArchivedSeason = computed(() => {
+    return Boolean(props.selectedSeason && !props.selectedSeason.is_current);
+});
+
+const defaultFilterForSeason = (season) => {
+    // Past seasons are fully completed — show results, not an empty "upcoming" list
+    if (season && !season.is_current) {
+        return 'completed';
+    }
+    return 'upcoming';
+};
+
+// Initialize filters from URL parameters or season-aware defaults
+const selectedFilter = ref(props.filters?.status || defaultFilterForSeason(props.selectedSeason));
 const selectedTeam = ref(props.filters?.team || '');
+
+// When the season changes (Inertia may preserve component state), re-apply a sensible filter
+watch(
+    () => props.selectedSeason?.slug,
+    (slug, previousSlug) => {
+        if (!slug || slug === previousSlug) {
+            return;
+        }
+        selectedFilter.value = props.filters?.status || defaultFilterForSeason(props.selectedSeason);
+        selectedTeam.value = props.filters?.team || '';
+    }
+);
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -138,13 +173,21 @@ const filteredGameweeks = computed(() => {
 // Watch for filter changes and update URL
 watch([selectedFilter, selectedTeam], ([newFilter, newTeam]) => {
     const params = {};
+    const defaultFilter = defaultFilterForSeason(props.selectedSeason);
     
-    if (newFilter && newFilter !== 'upcoming') {
+    if (newFilter && newFilter !== defaultFilter) {
         params.status = newFilter;
+    } else if (newFilter === 'completed' && isArchivedSeason.value) {
+        // Keep completed in the URL for archived seasons so refresh stays correct
+        params.status = 'completed';
     }
     
     if (newTeam && newTeam !== '') {
         params.team = newTeam;
+    }
+
+    if (props.selectedSeason?.slug) {
+        params.season = props.selectedSeason.slug;
     }
     
     // Update URL without triggering a full page reload
@@ -157,12 +200,13 @@ watch([selectedFilter, selectedTeam], ([newFilter, newTeam]) => {
 
 // Check if any filters are active
 const hasActiveFilters = computed(() => {
-    return selectedFilter.value !== 'upcoming' || selectedTeam.value !== '';
+    const defaultFilter = defaultFilterForSeason(props.selectedSeason);
+    return selectedFilter.value !== defaultFilter || selectedTeam.value !== '';
 });
 
-// Reset filters to default
+// Reset filters to season-aware default
 const resetFilters = () => {
-    selectedFilter.value = 'upcoming';
+    selectedFilter.value = defaultFilterForSeason(props.selectedSeason);
     selectedTeam.value = '';
 };
 </script>
@@ -172,19 +216,31 @@ const resetFilters = () => {
 
     <TournamentLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">
                         Premier League Schedule
                     </h2>
                     <p class="text-gray-600 mt-2">
-                        Complete fixture list for the 2025/26 season
+                        Complete fixture list for the {{ seasonLabel }} season
                     </p>
                 </div>
-                <div class="text-right">
-                    <div class="bg-green-50 rounded-lg px-4 py-2 border border-green-200 shadow-md">
-                        <p class="text-gray-600 text-sm">Current Gameweek</p>
-                        <p class="text-gray-900 font-bold text-lg">{{ currentGameweek?.week_number || 'N/A' }}</p>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <SeasonSwitcher
+                        :seasons="seasons"
+                        :selected-season="selectedSeason"
+                        route-name="schedule.index"
+                        :extra-query="{
+                            status: selectedFilter !== defaultFilterForSeason(selectedSeason) ? selectedFilter : undefined,
+                            team: selectedTeam || undefined,
+                        }"
+                    />
+                    <div class="bg-green-50 rounded-lg px-4 py-2 border border-green-200 shadow-md text-right">
+                        <p class="text-gray-600 text-sm">{{ isArchivedSeason ? 'Season status' : 'Current Gameweek' }}</p>
+                        <p class="text-gray-900 font-bold text-lg">
+                            <template v-if="isArchivedSeason">Complete</template>
+                            <template v-else>{{ currentGameweek?.week_number || 'N/A' }}</template>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -198,8 +254,9 @@ const resetFilters = () => {
                     Fixtures
                 </div>
                 <Link :href="route('schedule.standings', { 
-                        status: selectedFilter !== 'upcoming' ? selectedFilter : undefined,
-                        team: selectedTeam || undefined
+                        status: selectedFilter !== defaultFilterForSeason(selectedSeason) ? selectedFilter : undefined,
+                        team: selectedTeam || undefined,
+                        season: selectedSeason?.slug || undefined,
                     })" 
                       class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors">
                     <i class="fas fa-trophy mr-2"></i>
@@ -247,12 +304,31 @@ const resetFilters = () => {
             </div>
         </div>
 
-        <!-- Live Match Tracker -->
-        <div class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-8">
+        <!-- Live Match Tracker (current season only) -->
+        <div v-if="!isArchivedSeason" class="bg-white rounded-xl p-6 border border-green-200 shadow-lg mb-8">
             <LiveMatchTracker :hide-stats="true" />
         </div>
 
         <!-- Gameweeks Grid -->
+        <div v-if="filteredGameweeks.length === 0" class="bg-white rounded-xl p-10 border border-green-200 shadow-lg text-center mb-8">
+            <p class="text-gray-900 font-semibold text-lg mb-2">No gameweeks match these filters</p>
+            <p class="text-gray-600 text-sm mb-4">
+                <template v-if="isArchivedSeason && selectedFilter === 'upcoming'">
+                    The {{ seasonLabel }} season is finished — switch the status filter to Completed or All Gameweeks.
+                </template>
+                <template v-else>
+                    Try clearing filters or choosing a different status.
+                </template>
+            </p>
+            <button
+                type="button"
+                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+                @click="resetFilters"
+            >
+                Show {{ isArchivedSeason ? 'completed results' : 'upcoming fixtures' }}
+            </button>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div v-for="gameweek in filteredGameweeks" :key="gameweek.id" 
                  class="bg-white rounded-xl border border-green-200 shadow-lg hover:shadow-xl transition-all duration-300">

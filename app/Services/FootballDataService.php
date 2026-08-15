@@ -49,10 +49,10 @@ class FootballDataService
     /**
      * Get Premier League matches and generate gameweeks
      */
-    public function getPremierLeagueFixtures(): array
+    public function getPremierLeagueFixtures(?int $apiYear = null): array
     {
         try {
-            $season = $this->getCurrentSeason();
+            $season = $apiYear ?? $this->getCurrentSeason();
             // Get current season matches
             $response = Http::withHeaders([
                 'X-Auth-Token' => $this->apiKey
@@ -94,10 +94,10 @@ class FootballDataService
     /**
      * Get detailed games data for each match
      */
-    public function getPremierLeagueGames(): array
+    public function getPremierLeagueGames(?int $apiYear = null): array
     {
         try {
-            $season = $this->getCurrentSeason();
+            $season = $apiYear ?? $this->getCurrentSeason();
             // Get current season matches
             $response = Http::withHeaders([
                 'X-Auth-Token' => $this->apiKey
@@ -520,7 +520,7 @@ class FootballDataService
      * Football season runs from August to May
      * For 2025/2026 season, we return 2025 (the start year)
      */
-    private function getCurrentSeason(): int
+    public function getCurrentSeason(): int
     {
         $now = Carbon::now();
         // If we're in August or later, we're in the new season (e.g., Aug 2025 = 2025/26 season)

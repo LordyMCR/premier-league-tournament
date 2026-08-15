@@ -21,6 +21,14 @@ class Team extends Model
     ];
 
     /**
+     * Seasons this team participated in
+     */
+    public function seasons()
+    {
+        return $this->belongsToMany(Season::class)->withTimestamps();
+    }
+
+    /**
      * Get all picks for this team
      */
     public function picks()

@@ -5,6 +5,7 @@ import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 defineProps({
     tournaments: Array,
     createdTournaments: Array,
+    currentSeason: Object,
 });
 </script>
 
@@ -20,6 +21,7 @@ defineProps({
                     </h2>
                     <p class="text-gray-600 mt-2">
                         Manage your tournaments and track your progress
+                        <span v-if="currentSeason"> · Current season {{ currentSeason.name }}</span>
                     </p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -82,8 +84,8 @@ defineProps({
                             <div class="flex items-start justify-between mb-3">
                                 <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2 leading-tight">{{ tournament.name }}</h4>
                                 <span class="px-2 py-1 rounded text-xs font-medium flex-shrink-0"
-                                      :class="tournament.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
-                                    {{ tournament.status }}
+                                      :class="(tournament.is_read_only || tournament.status === 'completed') ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'">
+                                    {{ (tournament.is_read_only || tournament.status === 'completed') ? 'completed' : tournament.status }}
                                 </span>
                             </div>
                             
@@ -100,7 +102,11 @@ defineProps({
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Progress:</span>
-                                    <span class="text-gray-700 font-medium">{{ tournament.current_game_week }}/20</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.current_game_week }}/{{ tournament.total_game_weeks }}</span>
+                                </div>
+                                <div v-if="tournament.season" class="flex justify-between">
+                                    <span>Season:</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.season.name }}</span>
                                 </div>
                             </div>
                             
@@ -144,8 +150,8 @@ defineProps({
                             <div class="flex items-start justify-between mb-3">
                                 <h4 class="text-lg font-semibold text-gray-900 flex-1 mr-2 leading-tight">{{ tournament.name }}</h4>
                                 <span class="px-2 py-1 rounded text-xs font-medium flex-shrink-0"
-                                      :class="tournament.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
-                                    {{ tournament.status }}
+                                      :class="(tournament.is_read_only || tournament.status === 'completed') ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'">
+                                    {{ (tournament.is_read_only || tournament.status === 'completed') ? 'completed' : tournament.status }}
                                 </span>
                             </div>
                             
@@ -158,7 +164,11 @@ defineProps({
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Progress:</span>
-                                    <span class="text-gray-700 font-medium">{{ tournament.current_game_week }}/20</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.current_game_week }}/{{ tournament.total_game_weeks }}</span>
+                                </div>
+                                <div v-if="tournament.season" class="flex justify-between">
+                                    <span>Season:</span>
+                                    <span class="text-gray-700 font-medium">{{ tournament.season.name }}</span>
                                 </div>
                             </div>
                             

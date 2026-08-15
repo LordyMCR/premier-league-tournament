@@ -41,7 +41,9 @@ class AutoAssignMissingPicks extends Command
         } else {
             // Get the most recent gameweek where selection deadline has passed
             // Look back up to 7 days to catch any missed assignments (increased from 24 hours)
-            $gameweek = GameWeek::where('selection_deadline', '<', now())
+            $season = \App\Models\Season::current();
+            $gameweek = GameWeek::forSeason($season)
+                               ->where('selection_deadline', '<', now())
                                ->where('selection_deadline', '>', now()->subDays(7)) // Extended window
                                ->orderBy('selection_deadline', 'desc')
                                ->first();
@@ -54,8 +56,12 @@ class AutoAssignMissingPicks extends Command
 
         $this->info("Processing auto-assignments for {$gameweek->name} (Deadline: {$gameweek->selection_deadline})");
 
-        // Get tournaments to process
+        // Get tournaments to process (current season / matching gameweek season only)
         $tournaments = Tournament::where('status', 'active');
+
+        if ($gameweek->season_id) {
+            $tournaments = $tournaments->where('season_id', $gameweek->season_id);
+        }
         
         if ($tournamentId) {
             $tournaments = $tournaments->where('id', $tournamentId);

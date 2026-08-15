@@ -226,7 +226,8 @@ class UpdateLiveMatches extends Command
         $data = $apiKeyManager->makeRequest('https://v3.football.api-sports.io/fixtures', [
             'live' => 'all',
             'league' => 39, // Premier League
-            'season' => 2024
+            'season' => \App\Models\Season::current()?->api_year
+                ?? (new \App\Services\FootballDataService())->getCurrentSeason(),
         ]);
 
         if ($data === null) {

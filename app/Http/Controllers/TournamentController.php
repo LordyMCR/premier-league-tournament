@@ -6,6 +6,7 @@ use App\Models\Tournament;
 use App\Models\Team;
 use App\Models\GameWeek;
 use App\Models\Pick;
+use App\Models\Season;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -22,18 +23,19 @@ class TournamentController extends Controller
         $user = Auth::user();
         
         $myTournaments = $user->tournaments()
-            ->with(['creator', 'participantRecords'])
+            ->with(['creator', 'participantRecords', 'season'])
             ->withCount('participants')
             ->get();
             
         $createdTournaments = $user->createdTournaments()
-            ->with('participantRecords')
+            ->with(['participantRecords', 'season'])
             ->withCount('participants')
             ->get();
 
         return Inertia::render('Tournaments/Dashboard', [
             'tournaments' => $myTournaments,
             'createdTournaments' => $createdTournaments,
+            'currentSeason' => Season::current(),
         ]);
     }
 
@@ -42,12 +44,19 @@ class TournamentController extends Controller
      */
     public function create()
     {
-        $currentGameWeek = GameWeek::getCurrentGameWeek();
+        $season = Season::current();
+        if (!$season) {
+            return redirect()->route('tournaments.index')
+                ->withErrors(['tournament' => 'No current season is configured. Run season setup before creating tournaments.']);
+        }
+
+        $currentGameWeek = GameWeek::getCurrentGameWeek($season);
         $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
-        $remainingGameWeeks = Tournament::getRemainingGameWeeksCount();
+        $remainingGameWeeks = Tournament::getRemainingGameWeeksCount($season);
         
         // Get all available gameweeks for custom mode (only future/incomplete ones)
-        $availableGameWeeks = GameWeek::where('week_number', '>=', $nextGameWeekNumber)
+        $availableGameWeeks = GameWeek::forSeason($season)
+            ->where('week_number', '>=', $nextGameWeekNumber)
             ->where('is_completed', false)
             ->orderBy('week_number')
             ->get(['week_number', 'name', 'start_date', 'end_date']);
@@ -63,6 +72,7 @@ class TournamentController extends Controller
             'availableGameWeeks' => $availableGameWeeks,
             'fullSeasonEnd' => $fullSeasonEnd,
             'halfSeasonEnd' => $halfSeasonEnd,
+            'currentSeason' => $season,
         ]);
     }
 
@@ -89,7 +99,12 @@ class TournamentController extends Controller
             return back()->withErrors(['tournament' => 'You have reached the maximum number of tournaments (3) you can create. Contact support@plpicks.com to request additional tournament slots.']);
         }
 
-        $currentGameWeek = GameWeek::getCurrentGameWeek();
+        $season = Season::current();
+        if (!$season) {
+            return back()->withErrors(['tournament' => 'No current season is configured.']);
+        }
+
+        $currentGameWeek = GameWeek::getCurrentGameWeek($season);
         $nextGameWeekNumber = $currentGameWeek ? $currentGameWeek->week_number : 1;
         
         error_log('Current Game Week: ' . ($currentGameWeek ? $currentGameWeek->week_number : 'null'));
@@ -172,6 +187,7 @@ class TournamentController extends Controller
 
         try {
             $tournament = Tournament::create([
+                'season_id' => $season->id,
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'creator_id' => Auth::id(),
@@ -235,20 +251,27 @@ class TournamentController extends Controller
         $tournament->load([
             'creator',
             'participants',
-            'participantRecords.user'
+            'participantRecords.user',
+            'season',
         ]);
         // Include participant count for frontend display
         $tournament->loadCount('participants');
 
         $isParticipant = $tournament->hasParticipant($user->id);
         $leaderboard = $tournament->getLeaderboard();
+        $isReadOnly = $tournament->isReadOnly();
         
         // Compute tournament gameweek bounds
         $tournamentStart = $tournament->start_game_week;
         $tournamentEnd = $tournament->end_game_week; // accessor on model
 
+        $seasonScoped = fn ($query) => $tournament->season_id
+            ? $query->where('season_id', $tournament->season_id)
+            : $query;
+
         // Get current gameweek within this tournament's range
-        $currentGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+        $currentGameweek = $seasonScoped(GameWeek::query())
+            ->whereBetween('week_number', [$tournamentStart, $tournamentEnd])
             ->where('is_completed', false)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
@@ -256,7 +279,8 @@ class TournamentController extends Controller
             ->first();
 
         // Get the selection gameweek that is currently open within the tournament range
-        $selectionGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+        $selectionGameweek = $isReadOnly ? null : $seasonScoped(GameWeek::query())
+            ->whereBetween('week_number', [$tournamentStart, $tournamentEnd])
             ->where('is_completed', false)
             ->whereNotNull('selection_opens')
             ->whereNotNull('selection_deadline')
@@ -266,7 +290,8 @@ class TournamentController extends Controller
             ->first();
 
         // Fallback to the next selection gameweek within range when none are open
-        $nextSelectionGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+        $nextSelectionGameweek = $isReadOnly ? null : $seasonScoped(GameWeek::query())
+            ->whereBetween('week_number', [$tournamentStart, $tournamentEnd])
             ->where('is_completed', false)
             ->where('selection_opens', '>', now())
             ->orderBy('selection_opens')
@@ -278,7 +303,8 @@ class TournamentController extends Controller
         }
         // Otherwise, if still null, choose the earliest not-completed upcoming gameweek in range
         if (!$currentGameweek) {
-            $currentGameweek = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+            $currentGameweek = $seasonScoped(GameWeek::query())
+                ->whereBetween('week_number', [$tournamentStart, $tournamentEnd])
                 ->where('is_completed', false)
                 ->orderBy('week_number')
                 ->first();
@@ -407,7 +433,10 @@ class TournamentController extends Controller
         // Get gameweeks within tournament range that have hidden picks (selection deadline not passed)
         $tournamentStart = $tournament->start_game_week;
         $tournamentEnd = $tournament->start_game_week + $tournament->total_game_weeks - 1;
-        $gameweeksWithHiddenPicks = GameWeek::whereBetween('week_number', [$tournamentStart, $tournamentEnd])
+        $gameweeksWithHiddenPicks = $isReadOnly
+            ? collect()
+            : $seasonScoped(GameWeek::query())
+            ->whereBetween('week_number', [$tournamentStart, $tournamentEnd])
             ->where(function ($query) {
                 $query->whereNull('selection_deadline')
                       ->orWhere('selection_deadline', '>', now());
@@ -427,10 +456,15 @@ class TournamentController extends Controller
             $isFavorite = $participation ? $participation->is_favorite : false;
         }
 
+        $seasonTeams = $tournament->season_id
+            ? Team::whereHas('seasons', fn ($q) => $q->where('seasons.id', $tournament->season_id))->get()
+            : Team::all();
+
         return Inertia::render('Tournaments/Show', [
             'tournament' => $tournament,
             'isParticipant' => $isParticipant,
             'isFavorite' => $isFavorite,
+            'isReadOnly' => $isReadOnly,
             'leaderboard' => $leaderboard,
             'currentGameweek' => $currentGameweek,
             'selectionGameweek' => $selectionGameweek,
@@ -438,7 +472,7 @@ class TournamentController extends Controller
             'userPicks' => $userPicks,
             'currentPick' => $currentPick,
             'availableTeams' => $availableTeams,
-            'allTeams' => Team::all(),
+            'allTeams' => $seasonTeams,
             'allParticipantPicks' => $allParticipantPicks,
             'gameweeksWithHiddenPicks' => $gameweeksWithHiddenPicks,
         ]);
@@ -467,7 +501,7 @@ class TournamentController extends Controller
             return back()->withErrors(['join_code' => 'Invalid join code.']);
         }
 
-        if ($tournament->status === 'completed') {
+        if ($tournament->status === 'completed' || $tournament->isReadOnly()) {
             return back()->withErrors(['join_code' => 'This tournament has already ended.']);
         }
 
