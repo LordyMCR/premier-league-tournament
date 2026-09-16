@@ -1,19 +1,19 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TournamentController;
-use App\Http\Controllers\PickController;
-use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AdminController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
-use App\Models\UserStatistic;
+use App\Http\Controllers\PickController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\TournamentController;
 use App\Models\Game;
 use App\Models\Season;
+use App\Models\UserStatistic;
 use App\Services\StandingsService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Include debug routes
 require __DIR__.'/debug.php';
@@ -22,9 +22,10 @@ Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canRegister' => \App\Services\AppSettings::isPublicRegistration(),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
@@ -38,13 +39,13 @@ Route::get('/dashboard', function () {
         ? $currentSeason->gameWeeks()->pluck('id')
         : collect();
 
-    $upcomingFixtures = Game::with(['homeTeam','awayTeam'])
+    $upcomingFixtures = Game::with(['homeTeam', 'awayTeam'])
         ->where('status', 'SCHEDULED')
         ->when($seasonGameWeekIds->isNotEmpty(), fn ($q) => $q->whereIn('game_week_id', $seasonGameWeekIds))
         ->orderBy('kick_off_time')
         ->limit(3)
         ->get()
-        ->map(fn($game) => [
+        ->map(fn ($game) => [
             'home' => $game->homeTeam->name,
             'home_short' => $game->homeTeam->short_name,
             'home_crest' => $game->homeTeam->logo_url,
@@ -54,17 +55,17 @@ Route::get('/dashboard', function () {
             'when' => Carbon::parse($game->kick_off_time)->diffForHumans(),
         ]);
     // Also fetch fixtures for the user's favorite team
-    $favoriteFixtures = Game::with(['homeTeam','awayTeam'])
+    $favoriteFixtures = Game::with(['homeTeam', 'awayTeam'])
         ->where('status', 'SCHEDULED')
         ->when($seasonGameWeekIds->isNotEmpty(), fn ($q) => $q->whereIn('game_week_id', $seasonGameWeekIds))
-        ->where(function($q) use ($user) {
+        ->where(function ($q) use ($user) {
             $q->where('home_team_id', $user->favorite_team_id)
-              ->orWhere('away_team_id', $user->favorite_team_id);
+                ->orWhere('away_team_id', $user->favorite_team_id);
         })
         ->orderBy('kick_off_time')
         ->limit(3)
         ->get()
-        ->map(fn($game) => [
+        ->map(fn ($game) => [
             'home' => $game->homeTeam->name,
             'away' => $game->awayTeam->name,
             'when' => Carbon::parse($game->kick_off_time)->diffForHumans(),
@@ -73,20 +74,21 @@ Route::get('/dashboard', function () {
     $standings = app(StandingsService::class)->forSeason($currentSeason);
     $topStandings = array_map(function ($row) {
         $row['team_crest'] = $row['team_logo'] ?? null;
+
         return $row;
     }, array_slice($standings, 0, 10));
 
     return Inertia::render('Dashboard', [
-        'stats'            => [
-            'tournaments'   => $stat->total_tournaments,
-            'wins'          => $stat->tournaments_won,
-            'total_points'  => $stat->total_points,
-            'win_rate'      => round($stat->win_percentage) . '%',
+        'stats' => [
+            'tournaments' => $stat->total_tournaments,
+            'wins' => $stat->tournaments_won,
+            'total_points' => $stat->total_points,
+            'win_rate' => round($stat->win_percentage).'%',
         ],
         'upcomingFixtures' => $upcomingFixtures,
         'favoriteFixtures' => $favoriteFixtures,
-        'favoriteTeam'     => $user->favoriteTeam?->name,
-        'standings'        => $topStandings,
+        'favoriteTeam' => $user->favoriteTeam?->name,
+        'standings' => $topStandings,
     ]);
 })->middleware(['auth', 'verified', 'user.approval'])->name('dashboard');
 
@@ -103,7 +105,7 @@ Route::middleware(['auth', 'user.approval'])->group(function () {
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Tournament routes
     Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
     Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
@@ -117,12 +119,12 @@ Route::middleware(['auth', 'user.approval'])->group(function () {
     Route::post('/tournaments/{tournament}/toggle-favorite', [TournamentController::class, 'toggleFavorite'])->name('tournaments.toggle-favorite');
     Route::delete('/tournaments/{tournament}/participants/{participant}', [TournamentController::class, 'removeParticipant'])->name('tournaments.participants.remove');
     Route::delete('/tournaments/{tournament}', [TournamentController::class, 'destroy'])->name('tournaments.destroy');
-    
+
     // Pick routes
     Route::get('/tournaments/{tournament}/picks', [PickController::class, 'index'])->name('tournaments.picks');
     Route::get('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'create'])->name('tournaments.gameweeks.picks.create');
     Route::post('/tournaments/{tournament}/gameweeks/{gameWeek}/pick', [PickController::class, 'store'])->name('tournaments.gameweeks.picks.store');
-    
+
     // Schedule routes
     Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
     Route::get('/schedule/standings', [ScheduleController::class, 'standings'])->name('schedule.standings');
@@ -130,7 +132,7 @@ Route::middleware(['auth', 'user.approval'])->group(function () {
     Route::get('/schedule/team/{team}', [ScheduleController::class, 'team'])->name('schedule.team');
     Route::get('/schedule/match/{game}', [ScheduleController::class, 'match'])->name('schedule.match');
     Route::patch('/picks/{pick}/result', [PickController::class, 'updateResult'])->name('picks.update-result');
-    
+
     // Live Match routes
     Route::get('/api/live-matches', [App\Http\Controllers\LiveMatchController::class, 'index'])->name('api.live-matches');
     Route::get('/api/live-matches/{game}', [App\Http\Controllers\LiveMatchController::class, 'show'])->name('api.live-matches.show');
@@ -151,23 +153,23 @@ Route::get('/test-s3', function () {
                 'secret' => env('AWS_SECRET_ACCESS_KEY'),
             ],
         ];
-        
+
         $s3Client = new \Aws\S3\S3Client($config);
-        
+
         // Test basic bucket access
         $result = $s3Client->listObjectsV2([
             'Bucket' => env('AWS_BUCKET'),
             'Prefix' => 'avatars/',
             'MaxKeys' => 10,
         ]);
-        
+
         $objects = [];
         if (isset($result['Contents'])) {
             foreach ($result['Contents'] as $object) {
                 $objects[] = $object['Key'];
             }
         }
-        
+
         // Test write operation
         $s3Client->putObject([
             'Bucket' => env('AWS_BUCKET'),
@@ -175,21 +177,21 @@ Route::get('/test-s3', function () {
             'Body' => 'Hello S3 Direct!',
             'ACL' => 'public-read',
         ]);
-        
+
         // Test read operation
         $getResult = $s3Client->getObject([
             'Bucket' => env('AWS_BUCKET'),
             'Key' => 'avatars/test.txt',
         ]);
-        
+
         $content = (string) $getResult['Body'];
-        
+
         // Clean up
         $s3Client->deleteObject([
             'Bucket' => env('AWS_BUCKET'),
             'Key' => 'avatars/test.txt',
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Direct S3 SDK working!',
@@ -202,7 +204,7 @@ Route::get('/test-s3', function () {
             'objects_found' => $objects,
             'test_content' => $content,
         ]);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
@@ -213,7 +215,7 @@ Route::get('/test-s3', function () {
                 'bucket' => env('AWS_BUCKET'),
                 'key_set' => env('AWS_ACCESS_KEY_ID') ? 'yes' : 'no',
                 'secret_set' => env('AWS_SECRET_ACCESS_KEY') ? 'yes' : 'no',
-            ]
+            ],
         ], 500);
     }
 });
@@ -223,9 +225,17 @@ Route::middleware(['auth', 'user.approval', 'admin'])->prefix('admin')->name('ad
     Route::get('/', [AdminController::class, 'index'])->name('index');
     Route::post('/execute-command', [AdminController::class, 'executeCommand'])->name('execute-command');
     Route::get('/command-status', [AdminController::class, 'commandStatus'])->name('command-status');
-    
+
+    Route::get('/registration', [AdminController::class, 'registrationSettings'])->name('registration.show');
+    Route::put('/registration', [AdminController::class, 'updateRegistrationMode'])->name('registration.update');
+    Route::get('/invites', [AdminController::class, 'getInvites'])->name('invites.index');
+    Route::post('/invites', [AdminController::class, 'storeInvite'])->name('invites.store');
+    Route::post('/invites/{invite}/send', [AdminController::class, 'sendInvite'])->name('invites.send');
+    Route::post('/invites/{invite}/revoke', [AdminController::class, 'revokeInvite'])->name('invites.revoke');
+
     // User Management Routes
     Route::get('/users', [AdminController::class, 'getUsers'])->name('users');
+    Route::post('/users/purge-unapproved', [AdminController::class, 'purgeUnapprovedUsers'])->name('users.purge-unapproved');
     Route::post('/users/{user}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
     Route::post('/users/{user}/disapprove', [AdminController::class, 'disapproveUser'])->name('users.disapprove');
     Route::post('/users/{user}/deny', [AdminController::class, 'denyUser'])->name('users.deny');

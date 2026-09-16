@@ -1,8 +1,11 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { computed, ref, onMounted, nextTick } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
 import TournamentLayout from '@/Layouts/TournamentLayout.vue';
 import axios from 'axios';
+
+const page = usePage();
+const isLocal = computed(() => page.props.isLocal === true);
 
 const commands = ref([]);
 const selectedCommand = ref(null);
@@ -20,6 +23,21 @@ const userSearch = ref('');
 const userLoading = ref(false);
 const userCurrentPage = ref(1);
 const userTotalPages = ref(1);
+const unapprovedCount = ref(0);
+const purgingUnapproved = ref(false);
+
+const registrationMode = ref('invite');
+const turnstileConfigured = ref(false);
+const registrationSaving = ref(false);
+const invites = ref([]);
+const invitesLoading = ref(false);
+const copiedInviteId = ref(null);
+const inviteForm = ref({
+    email: '',
+    note: '',
+    expires_in_days: 14,
+});
+const inviteBusy = ref(null);
 
 onMounted(async () => {
     try {
@@ -162,6 +180,8 @@ onMounted(() => {
         }, {});
     });
     loadUsers();
+    loadRegistration();
+    loadInvites();
 });
 
 // User Management Functions
@@ -178,6 +198,7 @@ const loadUsers = async (page = 1) => {
         users.value = response.data.data;
         userCurrentPage.value = response.data.current_page;
         userTotalPages.value = response.data.last_page;
+        unapprovedCount.value = response.data.unapproved_count ?? 0;
     } catch (error) {
         console.error('Failed to load users:', error);
         addToLog('Failed to load users: ' + (error.response?.data?.message || 'Unknown error'), 'error');
@@ -254,6 +275,163 @@ const removeUser = async (userId) => {
         addToLog('Failed to remove user: ' + (error.response?.data?.message || 'Unknown error'), 'error');
     }
 };
+
+const purgeUnapprovedUsers = async () => {
+    const count = unapprovedCount.value;
+    const confirmMessage = count > 0
+        ? `Permanently delete ${count} unapproved account${count === 1 ? '' : 's'} of any age?\n\nThis includes pending and denied users who never joined a tournament.\nApproved players are not touched.\nThis cannot be undone.`
+        : 'There are no unapproved users to delete.';
+
+    if (count === 0) {
+        addToLog(confirmMessage, 'info');
+        return;
+    }
+
+    if (!window.confirm(confirmMessage)) {
+        return;
+    }
+
+    purgingUnapproved.value = true;
+    try {
+        const response = await axios.post(route('admin.users.purge-unapproved'));
+        addToLog(response.data.message, 'success');
+        unapprovedCount.value = 0;
+        loadUsers(1);
+    } catch (error) {
+        addToLog('Failed to delete unapproved users: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    } finally {
+        purgingUnapproved.value = false;
+    }
+};
+
+const loadRegistration = async () => {
+    try {
+        const response = await axios.get(route('admin.registration.show'));
+        registrationMode.value = response.data.mode;
+        turnstileConfigured.value = response.data.turnstile_configured;
+    } catch (error) {
+        addToLog('Failed to load registration settings: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    }
+};
+
+const setRegistrationMode = async (mode) => {
+    if (registrationSaving.value || registrationMode.value === mode) {
+        return;
+    }
+
+    const confirmMessage = mode === 'public'
+        ? 'Turn on public registration? Anyone can submit the form. New accounts still need your approval, and Turnstile/rate limits/honeypot will apply.'
+        : 'Switch back to invite-only? The public signup form will close. Existing approved users can still log in.';
+
+    if (!window.confirm(confirmMessage)) {
+        return;
+    }
+
+    registrationSaving.value = true;
+    try {
+        const response = await axios.put(route('admin.registration.update'), { mode });
+        registrationMode.value = response.data.mode;
+        turnstileConfigured.value = response.data.turnstile_configured;
+        addToLog(response.data.message, 'success');
+    } catch (error) {
+        addToLog('Failed to update registration mode: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    } finally {
+        registrationSaving.value = false;
+    }
+};
+
+const loadInvites = async () => {
+    invitesLoading.value = true;
+    try {
+        const response = await axios.get(route('admin.invites.index'));
+        invites.value = response.data.data;
+    } catch (error) {
+        addToLog('Failed to load invites: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    } finally {
+        invitesLoading.value = false;
+    }
+};
+
+const createInvite = async (send = false) => {
+    if (inviteBusy.value) {
+        return;
+    }
+
+    if (send && !inviteForm.value.email) {
+        addToLog('Enter an email address to send an invite.', 'error');
+        return;
+    }
+
+    inviteBusy.value = send ? 'send' : 'copy';
+    try {
+        const response = await axios.post(route('admin.invites.store'), {
+            ...inviteForm.value,
+            send,
+        });
+        addToLog(response.data.message, response.data.sent === false && send ? 'error' : 'success');
+        inviteForm.value = { email: '', note: '', expires_in_days: 14 };
+        await loadInvites();
+        if (!send && response.data.invite?.url) {
+            await copyInviteUrl(response.data.invite);
+        }
+    } catch (error) {
+        addToLog('Failed to create invite: ' + (error.response?.data?.message || error.response?.data?.errors?.email?.[0] || 'Unknown error'), 'error');
+    } finally {
+        inviteBusy.value = null;
+    }
+};
+
+const sendInviteEmail = async (invite) => {
+    if (inviteBusy.value) {
+        return;
+    }
+
+    inviteBusy.value = `send-${invite.id}`;
+    try {
+        const response = await axios.post(route('admin.invites.send', invite.id));
+        addToLog(response.data.message, 'success');
+    } catch (error) {
+        addToLog('Failed to send invite: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    } finally {
+        inviteBusy.value = null;
+    }
+};
+
+const copyInviteUrl = async (invite) => {
+    try {
+        await navigator.clipboard.writeText(invite.url);
+        copiedInviteId.value = invite.id;
+        addToLog('Invite link copied to clipboard.', 'success');
+        setTimeout(() => {
+            if (copiedInviteId.value === invite.id) {
+                copiedInviteId.value = null;
+            }
+        }, 2000);
+    } catch (error) {
+        addToLog('Could not copy link. Select it from the table instead.', 'error');
+    }
+};
+
+const revokeInvite = async (invite) => {
+    if (!window.confirm('Revoke this invite link? It will no longer work.')) {
+        return;
+    }
+
+    try {
+        const response = await axios.post(route('admin.invites.revoke', invite.id));
+        addToLog(response.data.message, 'success');
+        loadInvites();
+    } catch (error) {
+        addToLog('Failed to revoke invite: ' + (error.response?.data?.message || 'Unknown error'), 'error');
+    }
+};
+
+const formatInviteDate = (value) => {
+    if (!value) {
+        return '—';
+    }
+    return new Date(value).toLocaleString();
+};
 </script>
 
 <template>
@@ -272,6 +450,189 @@ const removeUser = async (userId) => {
                         <i class="fas fa-shield-alt mr-2"></i>
                         Administrator
                     </span>
+                </div>
+            </div>
+        </div>
+        <!-- Registration settings -->
+        <div class="mb-6 bg-white rounded-xl shadow-lg border border-green-200 overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-green-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-user-lock text-green-600 mr-2"></i>
+                    Registration
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">
+                    Default is invite-only. Approved users can always log in with email and password.
+                </p>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">
+                            Current mode:
+                            <span class="font-semibold" :class="registrationMode === 'invite' ? 'text-green-700' : 'text-amber-700'">
+                                {{ registrationMode === 'invite' ? 'Invite only' : 'Public with approval' }}
+                            </span>
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <template v-if="registrationMode === 'invite'">
+                                The public signup form is closed. Share unique invite links below.
+                            </template>
+                            <template v-else>
+                                Anyone can request an account. New signups stay pending until you approve them, with Turnstile, a honeypot, rate limits, and auto-cleanup of stale bots.
+                            </template>
+                        </p>
+                    </div>
+                    <div class="inline-flex rounded-lg border border-gray-300 overflow-hidden">
+                        <button
+                            type="button"
+                            :disabled="registrationSaving"
+                            @click="setRegistrationMode('invite')"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium',
+                                registrationMode === 'invite' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                            ]"
+                        >
+                            Invite only
+                        </button>
+                        <button
+                            type="button"
+                            :disabled="registrationSaving"
+                            @click="setRegistrationMode('public')"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium border-l border-gray-300',
+                                registrationMode === 'public' ? 'bg-amber-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                            ]"
+                        >
+                            Public + approval
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    v-if="registrationMode === 'public' && !turnstileConfigured && isLocal"
+                    class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800"
+                >
+                    Turnstile is optional on localhost — public signup still works here without keys. After you deploy, add <code>TURNSTILE_SITE_KEY</code> and <code>TURNSTILE_SECRET_KEY</code> on the VPS before using public registration in production.
+                </div>
+                <div
+                    v-else-if="registrationMode === 'public' && !turnstileConfigured"
+                    class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800"
+                >
+                    Cloudflare Turnstile keys are not set. Add <code>TURNSTILE_SITE_KEY</code> and <code>TURNSTILE_SECRET_KEY</code> on the server before relying on public registration.
+                </div>
+
+                <div class="border-t border-gray-200 pt-6">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Create an invite link</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input
+                            v-model="inviteForm.email"
+                            type="email"
+                            placeholder="Email (optional lock)"
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <input
+                            v-model="inviteForm.note"
+                            type="text"
+                            placeholder="Note (e.g. Dave)"
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <input
+                            v-model.number="inviteForm.expires_in_days"
+                            type="number"
+                            min="1"
+                            max="90"
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 mt-3">
+                        <button
+                            type="button"
+                            :disabled="Boolean(inviteBusy)"
+                            @click="createInvite(false)"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium"
+                        >
+                            {{ inviteBusy === 'copy' ? 'Creating…' : 'Create & copy link' }}
+                        </button>
+                        <button
+                            type="button"
+                            :disabled="Boolean(inviteBusy) || !inviteForm.email"
+                            @click="createInvite(true)"
+                            class="px-4 py-2 bg-white border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400 rounded-lg font-medium"
+                        >
+                            {{ inviteBusy === 'send' ? 'Sending…' : 'Create & send invite' }}
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        Leave email blank for a universal link you can share anywhere. If you enter an email, only that address can use it, and you can email them the link. Default expiry is 14 days. Each link works once.
+                    </p>
+                </div>
+
+                <div>
+                    <div v-if="invitesLoading" class="text-sm text-gray-500">Loading invites…</div>
+                    <div v-else-if="invites.length === 0" class="text-sm text-gray-500">No invite links yet.</div>
+                    <div v-else class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Note / email</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr v-for="invite in invites" :key="invite.id">
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-gray-900">{{ invite.note || 'Invite link' }}</div>
+                                        <div class="text-xs text-gray-500">{{ invite.email || 'Any email' }}</div>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <span
+                                            :class="[
+                                                'px-2 py-1 rounded-full text-xs font-semibold',
+                                                invite.status === 'active' ? 'bg-green-100 text-green-800' :
+                                                invite.status === 'used' ? 'bg-blue-100 text-blue-800' :
+                                                'bg-gray-100 text-gray-700'
+                                            ]"
+                                        >
+                                            {{ invite.status }}
+                                        </span>
+                                        <div v-if="invite.used_by" class="text-xs text-gray-500 mt-1">
+                                            {{ invite.used_by.name }}
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-600">{{ formatInviteDate(invite.expires_at) }}</td>
+                                    <td class="px-3 py-2 text-right space-x-2">
+                                        <button
+                                            v-if="invite.status === 'active'"
+                                            type="button"
+                                            @click="copyInviteUrl(invite)"
+                                            class="text-green-700 hover:text-green-800 font-medium"
+                                        >
+                                            {{ copiedInviteId === invite.id ? 'Copied' : 'Copy' }}
+                                        </button>
+                                        <button
+                                            v-if="invite.status === 'active' && invite.email"
+                                            type="button"
+                                            :disabled="Boolean(inviteBusy)"
+                                            @click="sendInviteEmail(invite)"
+                                            class="text-green-700 hover:text-green-800 font-medium disabled:opacity-50"
+                                        >
+                                            {{ inviteBusy === `send-${invite.id}` ? 'Sending…' : 'Email' }}
+                                        </button>
+                                        <button
+                                            v-if="invite.status === 'active'"
+                                            type="button"
+                                            @click="revokeInvite(invite)"
+                                            class="text-red-600 hover:text-red-700 font-medium"
+                                        >
+                                            Revoke
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -359,11 +720,22 @@ const removeUser = async (userId) => {
         <!-- User Management Section -->
         <div class="mb-6 bg-white rounded-xl shadow-lg border border-green-200 overflow-hidden">
             <div class="bg-gray-50 px-6 py-4 border-b border-green-200">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 gap-4">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <i class="fas fa-users text-green-600 mr-2"></i>
                         User Management
                     </h3>
+                    <button
+                        type="button"
+                        :disabled="purgingUnapproved || unapprovedCount === 0"
+                        @click="purgeUnapprovedUsers"
+                        class="px-4 py-2 text-sm font-medium rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {{ purgingUnapproved
+                            ? 'Deleting…'
+                            : `Delete all unapproved${unapprovedCount ? ` (${unapprovedCount})` : ''}`
+                        }}
+                    </button>
                 </div>
                 
                 <!-- Search and Tabs -->

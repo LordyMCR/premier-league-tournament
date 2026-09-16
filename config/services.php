@@ -21,8 +21,6 @@ return [
         'scheme' => 'https',
     ],
 
-
-
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -68,6 +66,11 @@ return [
 
     'sports_db' => [
         'api_key' => env('SPORTS_DB_API_KEY', '123'), // TheSportsDB (free)
+    ],
+
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret' => env('TURNSTILE_SECRET_KEY'),
     ],
 
 ];

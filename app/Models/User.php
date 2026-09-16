@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -44,6 +45,7 @@ class User extends Authenticatable
         'denied_at',
         'approval_token',
         'is_admin',
+        'invite_id',
     ];
 
     /**
@@ -121,8 +123,8 @@ class User extends Authenticatable
     public function achievements()
     {
         return $this->belongsToMany(Achievement::class, 'user_achievements')
-                    ->withPivot('earned_at', 'progress_data', 'is_featured')
-                    ->withTimestamps();
+            ->withPivot('earned_at', 'progress_data', 'is_featured')
+            ->withTimestamps();
     }
 
     /**
@@ -143,14 +145,50 @@ class User extends Authenticatable
         return $this->hasMany(Tournament::class, 'creator_id');
     }
 
+    public function invite()
+    {
+        return $this->belongsTo(Invite::class);
+    }
+
+    /**
+     * Unapproved accounts that never joined a tournament (spam / leftover signups).
+     */
+    public function scopeUnapprovedJunk(Builder $query, ?int $olderThanDays = null): Builder
+    {
+        $query->where('is_approved', false)
+            ->where('is_admin', false)
+            ->whereNull('invite_id')
+            ->whereDoesntHave('tournaments');
+
+        if ($olderThanDays !== null && $olderThanDays > 0) {
+            $query->where('created_at', '<', now()->subDays($olderThanDays));
+        }
+
+        return $query;
+    }
+
+    public static function pruneUnapprovedJunk(?int $olderThanDays = null): int
+    {
+        $deleted = 0;
+
+        static::query()->unapprovedJunk($olderThanDays)->chunkById(100, function ($users) use (&$deleted) {
+            foreach ($users as $user) {
+                $user->forceDelete();
+                $deleted++;
+            }
+        });
+
+        return $deleted;
+    }
+
     /**
      * Get tournaments this user is participating in
      */
     public function tournaments()
     {
         return $this->belongsToMany(Tournament::class, 'tournament_participants')
-                    ->withPivot('joined_at', 'total_points')
-                    ->withTimestamps();
+            ->withPivot('joined_at', 'total_points')
+            ->withTimestamps();
     }
 
     /**
@@ -167,16 +205,17 @@ class User extends Authenticatable
     public function favoriteTournament()
     {
         $participation = $this->tournamentParticipations()
-                              ->where('is_favorite', true)
-                              ->with('tournament')
-                              ->first();
-        
+            ->where('is_favorite', true)
+            ->with('tournament')
+            ->first();
+
         if ($participation && $participation->tournament) {
             $tournament = $participation->tournament;
             $tournament->participants_count = $tournament->participants()->count();
+
             return $tournament;
         }
-        
+
         return null;
     }
 
@@ -214,7 +253,7 @@ class User extends Authenticatable
         parent::boot();
         static::created(function (User $user) {
             // Create default statistics and profile settings if missing
-            if (!$user->statistics) {
+            if (! $user->statistics) {
                 $user->statistics()->create([
                     'total_tournaments' => 0,
                     'tournaments_won' => 0,
@@ -233,7 +272,7 @@ class User extends Authenticatable
                     'longest_win_streak' => 0,
                 ]);
             }
-            if (!$user->profileSettings) {
+            if (! $user->profileSettings) {
                 $user->profileSettings()->create([
                     'profile_visible' => true,
                     'show_bio' => true,
@@ -252,6 +291,7 @@ class User extends Authenticatable
             }
         });
     }
+
     /**
      * Get the user's avatar URL
      */
@@ -268,14 +308,16 @@ class User extends Authenticatable
                 }
                 // Fallback to standard AWS pattern if url not set
                 $region = config('filesystems.disks.s3.region');
+
                 return 'https://'.$bucket.'.s3.'.$region.'.amazonaws.com/avatars/'.$this->avatar;
             }
+
             // Local/public disk: serve via storage symlink
-            return asset('storage/avatars/' . $this->avatar);
+            return asset('storage/avatars/'.$this->avatar);
         }
-        
+
         // Return default avatar
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=10B981&color=fff&size=150';
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&background=10B981&color=fff&size=150';
     }
 
     /**
@@ -320,7 +362,7 @@ class User extends Authenticatable
     {
         if ($viewer && $viewer->id !== $this->id) {
             $this->increment('profile_views');
-            
+
             // Update viewer's statistics
             if ($viewer->statistics) {
                 $viewer->statistics->increment('profile_views_given');
@@ -365,21 +407,21 @@ class User extends Authenticatable
      */
     public function awardAchievement($achievement, $progressData = null)
     {
-        if (!$this->hasAchievement($achievement->slug)) {
+        if (! $this->hasAchievement($achievement->slug)) {
             $this->achievements()->attach($achievement->id, [
                 'earned_at' => now(),
                 'progress_data' => $progressData ? json_encode($progressData) : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            
+
             // Update achievement count in statistics
             $this->getOrCreateStatistics()->increment('achievements_earned');
             $this->getOrCreateStatistics()->increment('achievement_points', $achievement->points);
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -390,7 +432,7 @@ class User extends Authenticatable
      */
     public function canCreateTournament()
     {
-        if (!config('app.restrictions_enabled')) {
+        if (! config('app.restrictions_enabled')) {
             return true;
         }
 
@@ -402,7 +444,7 @@ class User extends Authenticatable
      */
     public function canChangeAvatar()
     {
-        if (!config('app.restrictions_enabled')) {
+        if (! config('app.restrictions_enabled')) {
             return true;
         }
 
@@ -422,7 +464,7 @@ class User extends Authenticatable
      */
     public function isApproved()
     {
-        if (!config('app.restrictions_enabled')) {
+        if (! config('app.restrictions_enabled')) {
             return true;
         }
 
@@ -442,7 +484,7 @@ class User extends Authenticatable
         ]);
 
         // Send approval notification
-        $this->notify(new \App\Notifications\UserApproved());
+        $this->notify(new \App\Notifications\UserApproved);
     }
 
     /**
@@ -456,7 +498,7 @@ class User extends Authenticatable
         ]);
 
         // Send disapproval notification
-        $this->notify(new \App\Notifications\UserDisapproved());
+        $this->notify(new \App\Notifications\UserDisapproved);
     }
 
     /**
@@ -471,7 +513,7 @@ class User extends Authenticatable
         ]);
 
         // Send denial notification
-        $this->notify(new \App\Notifications\UserDenied());
+        $this->notify(new \App\Notifications\UserDenied);
     }
 
     // Admin Methods

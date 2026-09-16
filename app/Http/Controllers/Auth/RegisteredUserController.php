@@ -3,91 +3,185 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invite;
 use App\Models\User;
-use App\Notifications\NewUserRegistration;
+use App\Services\AppSettings;
+use App\Services\Turnstile;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Log;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
-    public function create(): Response
+    public function __construct(private Turnstile $turnstile) {}
+
+    public function create(Request $request): Response
     {
+        if (AppSettings::isInviteOnly()) {
+            return Inertia::render('Auth/Register', [
+                'mode' => 'invite_closed',
+            ]);
+        }
+
+        $request->session()->put('register_form_started_at', now()->timestamp);
+
         return Inertia::render('Auth/Register', [
-            'restrictionsEnabled' => config('app.restrictions_enabled'),
+            'mode' => 'public',
+            'restrictionsEnabled' => (bool) config('app.restrictions_enabled'),
+            'turnstileSiteKey' => $this->turnstile->siteKey(),
         ]);
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
-    public function store(Request $request): RedirectResponse
+    public function createInvite(Request $request, string $token): Response
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $invite = Invite::query()->usable()->where('token', $token)->first();
 
-        $restrictionsEnabled = config('app.restrictions_enabled');
-        
-        $userData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ];
-
-        // If restrictions are enabled, user needs approval
-        if ($restrictionsEnabled) {
-            $userData['is_approved'] = false;
-            $userData['approval_token'] = Str::random(32);
+        if (! $invite) {
+            return Inertia::render('Auth/Register', [
+                'mode' => 'invite_invalid',
+            ]);
         }
 
-        $user = User::create($userData);
+        $request->session()->put('register_form_started_at', now()->timestamp);
+
+        return Inertia::render('Auth/Register', [
+            'mode' => 'invite',
+            'inviteToken' => $invite->token,
+            'inviteEmail' => $invite->email,
+            'restrictionsEnabled' => false,
+            'turnstileSiteKey' => null,
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $invite = $this->resolveInvite($request);
+
+        if (! $invite && AppSettings::isInviteOnly()) {
+            return redirect()
+                ->route('register')
+                ->with('error', 'Registration is by invite only. Ask an admin for a unique invite link.');
+        }
+
+        if ($request->filled('website')) {
+            return $this->fakeSuccess($invite !== null);
+        }
+
+        if (! $invite && $this->submittedTooQuickly($request)) {
+            return $this->fakeSuccess(false);
+        }
+
+        if (! $invite && ! $this->turnstile->verify($request->input('turnstile_token'), $request->ip())) {
+            throw ValidationException::withMessages([
+                'turnstile_token' => 'Please confirm you are human and try again.',
+            ]);
+        }
+
+        $request->validate($this->rules($invite), [
+            'name.regex' => 'Please enter your full name (first and last name).',
+        ]);
+
+        if ($invite?->email && strcasecmp($invite->email, $request->email) !== 0) {
+            throw ValidationException::withMessages([
+                'email' => 'This invite is for a different email address.',
+            ]);
+        }
+
+        $user = DB::transaction(function () use ($request, $invite) {
+            if ($invite) {
+                $invite = Invite::query()->whereKey($invite->id)->lockForUpdate()->first();
+                if (! $invite?->isUsable()) {
+                    throw ValidationException::withMessages([
+                        'invite_token' => 'This invite link is no longer valid.',
+                    ]);
+                }
+            }
+
+            $restrictionsEnabled = (bool) config('app.restrictions_enabled');
+            $autoApprove = $invite !== null || ! $restrictionsEnabled;
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'invite_id' => $invite?->id,
+                'is_approved' => $autoApprove,
+                'approved_at' => $autoApprove ? now() : null,
+                'approval_token' => $autoApprove ? null : Str::random(32),
+            ]);
+
+            if ($invite) {
+                $invite->update([
+                    'used_at' => now(),
+                    'used_by' => $user->id,
+                ]);
+            }
+
+            return $user;
+        });
 
         event(new Registered($user));
 
-        // Send admin notification if restrictions are enabled and user needs approval
-        if ($restrictionsEnabled && !$user->is_approved) {
-            try {
-                $adminEmail = config('app.admin_email', 'daniel.lord18@gmail.com');
-                Log::info('Admin notification - Restrictions enabled: ' . ($restrictionsEnabled ? 'YES' : 'NO'));
-                Log::info('Admin notification - User approved: ' . ($user->is_approved ? 'YES' : 'NO'));
-                Log::info('Admin notification - Sending to: ' . $adminEmail);
-                Log::info('Admin notification - Mail driver: ' . config('mail.default'));
-                
-                Notification::route('mail', $adminEmail)
-                    ->notify(new NewUserRegistration($user));
-                    
-                Log::info('Admin notification sent successfully to: ' . $adminEmail);
-            } catch (\Exception $e) {
-                Log::error('Failed to send admin notification: ' . $e->getMessage());
-                Log::error('Exception trace: ' . $e->getTraceAsString());
-            }
-        } else {
-            Log::info('Admin notification NOT sent - Restrictions: ' . ($restrictionsEnabled ? 'YES' : 'NO') . ', User approved: ' . ($user->is_approved ? 'YES' : 'NO'));
-        }
-
-        // Only auto-login if not restricted or if approved
-        if (!$restrictionsEnabled || $user->is_approved) {
+        if ($invite || $user->is_approved) {
             Auth::login($user);
+
             return redirect(route('welcome', absolute: false));
         }
 
-        // If restricted and awaiting approval, redirect with message
-        return redirect(route('login'))->with('status', 'Your account has been created and is awaiting approval. You will receive an email once approved.');
+        return redirect()
+            ->route('login')
+            ->with('status', 'Your account has been created and is awaiting approval. You will receive an email once approved.');
+    }
+
+    private function resolveInvite(Request $request): ?Invite
+    {
+        $token = $request->input('invite_token');
+        if (blank($token)) {
+            return null;
+        }
+
+        return Invite::query()->usable()->where('token', $token)->first();
+    }
+
+    private function submittedTooQuickly(Request $request): bool
+    {
+        $started = $request->session()->get('register_form_started_at');
+
+        return ! is_numeric($started) || (now()->timestamp - (int) $started) < 2;
+    }
+
+    private function fakeSuccess(bool $fromInvite): RedirectResponse
+    {
+        if ($fromInvite) {
+            return redirect()->route('login')->with('status', 'Your account has been created. You can sign in now.');
+        }
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Your account has been created and is awaiting approval. You will receive an email once approved.');
+    }
+
+    private function rules(?Invite $invite): array
+    {
+        $nameRules = $invite
+            ? ['required', 'string', 'max:80']
+            : ['required', 'string', 'max:80', 'regex:/^[\p{L}]+(?:[ \'\-][\p{L}]+)+$/u'];
+
+        return [
+            'name' => $nameRules,
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'invite_token' => ['nullable', 'string'],
+            'website' => ['nullable', 'string', 'max:255'],
+            'turnstile_token' => ['nullable', 'string'],
+        ];
     }
 }

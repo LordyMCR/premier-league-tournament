@@ -1,10 +1,10 @@
 <?php
 
+use App\Console\Commands\ImportHistoricalData;
+use App\Services\FootballDataService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-use App\Console\Commands\ImportHistoricalData;
-use App\Services\FootballDataService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -25,11 +25,11 @@ Artisan::command('clear:historical-cache', function () {
 
 // Test historical data
 Artisan::command('test:historical-data', function () {
-    $service = new \App\Services\HistoricalDataService();
+    $service = new \App\Services\HistoricalDataService;
     $seasons = $service->getAvailableSeasons();
-    $this->info('Available seasons: ' . count($seasons));
+    $this->info('Available seasons: '.count($seasons));
     foreach ($seasons as $season) {
-        $this->info('- ' . $season['season'] . ' (' . $season['matches_count'] . ' matches)');
+        $this->info('- '.$season['season'].' ('.$season['matches_count'].' matches)');
     }
 })->purpose('Test historical data loading');
 
@@ -72,3 +72,6 @@ Schedule::command('squad:fetch')->dailyAt('03:00')->withoutOverlapping();
 // Schedule automatic pick scoring after auto-assignments (daily cleanup)
 Schedule::command('tournament:recalculate-points')->dailyAt('04:00')->withoutOverlapping();
 
+// Spam signup cleanup + one daily admin email instead of one per registration
+Schedule::command('users:prune-unapproved')->dailyAt('05:00')->withoutOverlapping();
+Schedule::command('users:pending-digest')->dailyAt('09:00')->withoutOverlapping();

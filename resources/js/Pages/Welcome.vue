@@ -66,6 +66,7 @@ const page = usePage();
                         <!-- Hero Buttons -->
                         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link
+                                v-if="canRegister"
                                 :href="route('register')"
                                 class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
                             >
@@ -192,6 +193,7 @@ const page = usePage();
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
+                                v-if="canRegister"
                                 :href="route('register')"
                                 class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
                             >

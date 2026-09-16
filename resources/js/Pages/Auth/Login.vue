@@ -5,7 +5,8 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -18,6 +19,9 @@ defineProps({
         type: String,
     },
 });
+
+const page = usePage();
+const canRegister = computed(() => page.props.canRegister === true);
 
 const form = useForm({
     email: '',
@@ -134,7 +138,7 @@ const submit = () => {
                 Sign In
             </PrimaryButton>
 
-            <div class="text-center">
+            <div v-if="canRegister" class="text-center">
                 <p class="text-gray-600 text-sm">
                     Don't have an account? 
                     <Link :href="route('register')" class="text-green-600 hover:text-green-700 font-medium">

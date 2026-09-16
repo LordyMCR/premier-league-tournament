@@ -160,6 +160,7 @@ const logout = () => {
                         Login
                     </Link>
                     <Link
+                        v-if="page.props.canRegister"
                         :href="route('register')"
                         class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                     >
@@ -264,6 +265,7 @@ const logout = () => {
                         Login
                     </Link>
                     <Link
+                        v-if="page.props.canRegister"
                         :href="route('register')"
                         class="block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >

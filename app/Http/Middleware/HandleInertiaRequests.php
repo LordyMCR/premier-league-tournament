@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AppSettings;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +42,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'csrf_token' => csrf_token(),
             'isLocal' => app()->environment('local'),
+            'registrationMode' => AppSettings::registrationMode(),
+            'canRegister' => AppSettings::isPublicRegistration(),
         ];
     }
 }

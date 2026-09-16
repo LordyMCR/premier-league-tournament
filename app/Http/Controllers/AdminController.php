@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Invite;
+use App\Models\Pick;
+use App\Models\TournamentParticipant;
+use App\Models\User;
+use App\Notifications\InviteCreated;
+use App\Services\AppSettings;
+use App\Services\Turnstile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use App\Models\User;
-use App\Models\TournamentParticipant;
-use App\Models\Pick;
 
 class AdminController extends Controller
 {
@@ -36,7 +43,7 @@ class AdminController extends Controller
             $query->where('is_approved', true);
         } elseif ($type === 'pending') {
             $query->where('is_approved', false)
-                  ->whereNull('denied_at'); // Pending users are not approved and not denied
+                ->whereNull('denied_at'); // Pending users are not approved and not denied
         } elseif ($type === 'denied') {
             $query->whereNotNull('denied_at'); // Denied users
         }
@@ -44,11 +51,11 @@ class AdminController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-            $users = $query->orderBy('created_at', 'desc')
+        $users = $query->orderBy('created_at', 'desc')
             ->paginate(20)
             ->through(function ($user) {
                 return [
@@ -66,7 +73,10 @@ class AdminController extends Controller
                 ];
             });
 
-        return response()->json($users);
+        $payload = $users->toArray();
+        $payload['unapproved_count'] = User::query()->unapprovedJunk()->count();
+
+        return response()->json($payload);
     }
 
     /**
@@ -98,7 +108,7 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($userId);
 
-        if (!$user->is_approved) {
+        if (! $user->is_approved) {
             return response()->json([
                 'success' => false,
                 'message' => 'User is already not approved.',
@@ -151,7 +161,7 @@ class AdminController extends Controller
         $user = User::findOrFail($userId);
 
         // Only allow removing approved users
-        if (!$user->is_approved) {
+        if (! $user->is_approved) {
             return response()->json([
                 'success' => false,
                 'message' => 'Can only remove approved users. Use deny for pending users.',
@@ -200,6 +210,27 @@ class AdminController extends Controller
         ]);
     }
 
+    public function purgeUnapprovedUsers()
+    {
+        $count = User::query()->unapprovedJunk()->count();
+
+        if ($count === 0) {
+            return response()->json([
+                'success' => true,
+                'deleted' => 0,
+                'message' => 'There are no unapproved users to delete.',
+            ]);
+        }
+
+        $deleted = User::pruneUnapprovedJunk();
+
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted,
+            'message' => "Permanently deleted {$deleted} unapproved user(s). Approved players were not touched.",
+        ]);
+    }
+
     /**
      * Execute an artisan command
      */
@@ -220,13 +251,14 @@ class AdminController extends Controller
             'football:update',
             'season:migrate-existing',
             'users:recalculate-stats',
+            'users:prune-unapproved',
             'cache:clear',
             'config:clear',
             'route:clear',
             'view:clear',
         ];
 
-        if (!in_array($command, $allowedCommands)) {
+        if (! in_array($command, $allowedCommands)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Command not allowed.',
@@ -238,7 +270,7 @@ class AdminController extends Controller
             $exitCode = Artisan::call($command, array_merge($arguments, [
                 '--no-interaction' => true,
             ]));
-            
+
             $output = Artisan::output();
 
             if ($exitCode === 0) {
@@ -250,14 +282,14 @@ class AdminController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Command returned non-zero exit code: ' . $exitCode,
+                    'message' => 'Command returned non-zero exit code: '.$exitCode,
                     'output' => $output,
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Command execution failed: ' . $e->getMessage(),
+                'message' => 'Command execution failed: '.$e->getMessage(),
                 'output' => $e->getTraceAsString(),
             ], 500);
         }
@@ -297,6 +329,11 @@ class AdminController extends Controller
                     'category' => 'Statistics',
                 ],
                 [
+                    'name' => 'users:prune-unapproved',
+                    'description' => 'Permanently delete unapproved users older than 7 days who never joined a tournament. Use the User Management button to delete all ages at once.',
+                    'category' => 'Users',
+                ],
+                [
                     'name' => 'cache:clear',
                     'description' => 'Clear application cache',
                     'category' => 'Maintenance',
@@ -317,6 +354,172 @@ class AdminController extends Controller
                     'category' => 'Maintenance',
                 ],
             ],
+        ]);
+    }
+
+    public function registrationSettings(Turnstile $turnstile)
+    {
+        return response()->json([
+            'mode' => AppSettings::registrationMode(),
+            'turnstile_configured' => $turnstile->isConfigured(),
+        ]);
+    }
+
+    public function updateRegistrationMode(Request $request, Turnstile $turnstile)
+    {
+        $validated = $request->validate([
+            'mode' => 'required|in:invite,public',
+        ]);
+
+        AppSettings::setRegistrationMode($validated['mode']);
+
+        return response()->json([
+            'success' => true,
+            'mode' => AppSettings::registrationMode(),
+            'turnstile_configured' => $turnstile->isConfigured(),
+            'message' => $validated['mode'] === 'invite'
+                ? 'Registration is now invite-only. Existing users can still log in.'
+                : 'Public registration is on. New accounts still need your approval.',
+        ]);
+    }
+
+    public function getInvites()
+    {
+        $invites = Invite::query()
+            ->with(['usedBy:id,name,email'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->map(fn (Invite $invite) => [
+                'id' => $invite->id,
+                'url' => $invite->url(),
+                'email' => $invite->email,
+                'note' => $invite->note,
+                'status' => $invite->status(),
+                'expires_at' => $invite->expires_at?->toIso8601String(),
+                'used_at' => $invite->used_at?->toIso8601String(),
+                'used_by' => $invite->usedBy ? [
+                    'id' => $invite->usedBy->id,
+                    'name' => $invite->usedBy->name,
+                    'email' => $invite->usedBy->email,
+                ] : null,
+                'created_at' => $invite->created_at->toIso8601String(),
+            ]);
+
+        return response()->json(['data' => $invites]);
+    }
+
+    public function storeInvite(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => [
+                Rule::requiredIf($request->boolean('send')),
+                'nullable',
+                'email',
+                'max:255',
+            ],
+            'note' => 'nullable|string|max:120',
+            'expires_in_days' => 'nullable|integer|min:1|max:90',
+            'send' => 'sometimes|boolean',
+        ]);
+
+        $invite = Invite::create([
+            'email' => $validated['email'] ?? null,
+            'note' => $validated['note'] ?? null,
+            'created_by' => $request->user()->id,
+            'expires_at' => now()->addDays($validated['expires_in_days'] ?? 14),
+        ]);
+
+        $sent = false;
+        if ($request->boolean('send')) {
+            try {
+                Notification::route('mail', $invite->email)
+                    ->notify(new InviteCreated($invite));
+                $sent = true;
+            } catch (\Throwable $e) {
+                Log::error('Failed to send invite email', [
+                    'invite_id' => $invite->id,
+                    'email' => $invite->email,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'sent' => false,
+                    'message' => 'Invite link created, but the email could not be sent. Copy the link and share it manually.',
+                    'invite' => $this->invitePayload($invite),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'sent' => $sent,
+            'message' => $sent
+                ? "Invite created and emailed to {$invite->email}."
+                : 'Invite link created.',
+            'invite' => $this->invitePayload($invite),
+        ]);
+    }
+
+    public function sendInvite(Invite $invite)
+    {
+        if (! $invite->isUsable()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This invite can no longer be sent.',
+            ], 400);
+        }
+
+        if (blank($invite->email)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Open invite links have no email to send to. Copy the link instead.',
+            ], 400);
+        }
+
+        Notification::route('mail', $invite->email)
+            ->notify(new InviteCreated($invite));
+
+        return response()->json([
+            'success' => true,
+            'message' => "Invite emailed to {$invite->email}.",
+        ]);
+    }
+
+    private function invitePayload(Invite $invite): array
+    {
+        return [
+            'id' => $invite->id,
+            'url' => $invite->url(),
+            'email' => $invite->email,
+            'note' => $invite->note,
+            'status' => $invite->status(),
+            'expires_at' => $invite->expires_at?->toIso8601String(),
+        ];
+    }
+
+    public function revokeInvite(Invite $invite)
+    {
+        if ($invite->used_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This invite has already been used.',
+            ], 400);
+        }
+
+        if ($invite->revoked_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This invite is already revoked.',
+            ], 400);
+        }
+
+        $invite->update(['revoked_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invite link revoked.',
         ]);
     }
 }

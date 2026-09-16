@@ -12,7 +12,9 @@ const props = defineProps({
     required: Boolean,
     autofocus: Boolean,
     autocomplete: String,
-    class: String
+    class: String,
+    disabled: Boolean,
+    readonly: Boolean,
 });
 
 defineEmits(['update:modelValue']);
@@ -37,7 +39,15 @@ defineExpose({ focus: () => input.value.focus() });
             :required="required"
             :autofocus="autofocus"
             :autocomplete="autocomplete"
-            class="w-full bg-white border border-gray-300 text-gray-900 placeholder-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+            :disabled="disabled"
+            :readonly="readonly"
+            :class="[
+                'w-full border border-gray-300 placeholder-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200',
+                disabled || readonly
+                    ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
+                    : 'bg-white text-gray-900',
+                props.class,
+            ]"
             :value="modelValue"
             @input="$emit('update:modelValue', $event.target.value)"
             ref="input"
