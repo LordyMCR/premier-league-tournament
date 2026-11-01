@@ -9,7 +9,7 @@ git checkout main
 git pull origin main
 
 echo "==> Building containers..."
-$COMPOSE build web scheduler queue
+$COMPOSE build --pull web scheduler queue
 
 echo "==> Starting containers..."
 $COMPOSE up -d

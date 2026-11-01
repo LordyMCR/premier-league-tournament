@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-bookworm AS base
+FROM php:8.2.35-fpm-bookworm AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
